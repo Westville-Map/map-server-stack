@@ -1,0 +1,46 @@
+services:
+#   westvillemap:
+#     image: joseluisq/static-web-server:2
+#     container_name: "westvillemap"
+# #     ports:
+# #       - 80:80
+#     restart: unless-stopped
+#     environment:
+#       # Note: those envs are customizable but also optional
+#       - SERVER_ROOT=/var/public
+#       #- SERVER_CONFIG_FILE=/etc/sws.toml
+#     volumes:
+#       - ./html:/var/public
+#       #- ./sws.toml:/etc/sws.toml
+  westvillemap_tunnel:
+    container_name: cloudflared-tunnel-westvillemap
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    env_file:
+      - .env
+  wvmap_webserver:
+    image: caddy:2-alpine
+    container_name: wvmap_webserver
+    restart: unless-stopped
+#     ports:
+#       - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./html:/var/www/html
+      - ./data:/var/www/html/data
+    depends_on:
+      - wvmap_backend
+
+  # API Backend for Disk Writes
+  wvmap_backend:
+    image: node:20-alpine
+    container_name: wvmap_backend
+    restart: unless-stopped
+    working_dir: /usr/src/app
+    volumes:
+      - ./app:/usr/src/app
+      - ./data:/usr/src/app/data
+    command: sh -c "npm install && node server.js"
+    env_file:
+      - .env

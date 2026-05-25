@@ -1,0 +1,11 @@
+.env
+.DS_Store
+/data/
+/unused/
+/app/data/
+/app/node_modules/
+/app/package-lock.json
+/html/control/
+/html/data/
+/html/westville-map-2.js
+

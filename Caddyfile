@@ -1,0 +1,8 @@
+map.westville.app:80 {
+    # Route API requests to the backend container
+    reverse_proxy /api/* wvmap_backend:3000
+
+    # Serve files from the public folder (including the mounted /downloads folder)
+    root * /var/www/html
+    file_server
+}
