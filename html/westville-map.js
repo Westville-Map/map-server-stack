@@ -1,6 +1,50 @@
-//
+const originalWarn = console.warn;
+console.warn = (...args) => {
+    if (args[0] && typeof args[0] === 'string' && args[0].includes('Image') && args[0].includes('could not be loaded')) {
+        return; 
+    }
+
+    // Allow other warnings through
+    originalWarn(...args);
+};
+
 import { LayerControl } from 'https://unpkg.com/maplibre-gl-layer-control/dist/index.mjs';
 let map;
+
+async function fetchGeoJsonFiles(files) {
+  try {
+    // 1. Map URLs to an array of fetch promises
+    const requestPromises = files.map(file => fetch(`/data/${file}.geojson`));
+
+    // 2. Wait for all requests to finish
+    const responses = await Promise.all(requestPromises);
+
+    // 3. Process all responses (e.g., convert to JSON)
+    // Each .json() call also returns a promise
+    const data = await Promise.all(responses.map(async (res, index) => {
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      //console.log(res);
+//       console.log(res.url);
+       const featureJson = await res.json();
+//       const resObj =  {"url": res.url, "data":  featureJson};
+//       return resObj;
+      return {[files[index]]: featureJson};
+    }));
+
+    // Action to perform once the LAST one has resolved
+    //console.log("All data received:", data);
+   return Object.fromEntries(
+      data.map(obj => Object.entries(obj)[0])
+);
+    //return data;
+  } catch (error) {
+    console.error("One or more requests failed:", error);
+  }
+}
+const geojsonfiles = ['parking', 'establishments', 'recreation'];
+const collections = await fetchGeoJsonFiles(geojsonfiles);
+
+//console.log(collections);
 
 function waitForElement(selector) {
   return new Promise(resolve => {
@@ -46,29 +90,14 @@ function isMobileDevice() {
   return false;
 }
 
-
     // 1. Fetch a base OpenMapTiles-compatible style
     // (Vector tiles provide raw data; the style JSON provides the visual instructions to render it.)
     const bounds = [ -75.1390197418999, 39.85893228827481, -75.11407050609648, 39.87873000870905];        
-    fetch ("data/map.geojson").then(response => response.json()) //Main Data Set
-    .then(customData => {
+
+      //console.log(establishments);
       fetch('welcome_to_westville.json')//Map Style 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
         .then(response => response.json())
-        .then(style => {
-            //attribution: '&copy; OpenStreetMap contributors'
-            // 2. Override the tile source to point exactly to your OSM US vector tiles
-            // MapLibre uses the TileJSON from this URL to figure out the tile paths automatically.
-//             if (style.sources && style.sources.openmaptiles) {
-//                 style.sources.openmaptiles = {
-//                     type: 'vector',
-//                     url: 'https://vector.openstreetmap.org/shortbread_v1/tilejson.json',
-//                     bounds: bounds
-//                     
-//                 };
-//             }
-
-            // 3. Initialize the MapLibre Map
-            
+        .then(style => {              
             let nav = new maplibregl.NavigationControl();
             map = new maplibregl.Map({
                 container: 'map',
@@ -78,31 +107,33 @@ function isMobileDevice() {
                 attributionControl: false
             });
             
-//             map.on('zoomend', () => {
-//                 console.log('Zoom ended at:', map.getZoom());
-//             });
-            
-          // 1. Store the original method
+
+          // Bind to setLayoutProperty in order to toggle fill and symbols simultaneously in layer control widget
           const originalSetLayoutProperty = map.setLayoutProperty.bind(map);
-          
-          // 2. Override the method to watch for changes
+          // Override the method to watch for changes
           map.setLayoutProperty = function (layerId, name, value) {
               
               // Call the original function first so the master layer updates
               originalSetLayoutProperty(layerId, name, value);
           
               // Check if the master layer's visibility is being changed
-              
-              //Tie Labels and Areas as needed (e.g. parking fill and parking symbols)
               if (layerId === 'custom-parking-fill' && name === 'visibility') {
-                  
                   // Force the dependent layer to match the new value
                   originalSetLayoutProperty('parking-layer-symbols', 'visibility', value);
               }
-              
+              if (layerId === 'custom-markers' && name === 'visibility') {
+                  // Force the dependent layer to match the new value
+                  originalSetLayoutProperty('custom-labels', 'visibility', value);
+              }
+              if (layerId === 'park-layer-fill' && name === 'visibility') {
+                  // Force the dependent layer to match the new value
+                  originalSetLayoutProperty('custom-park-outline', 'visibility', value); // custom-park-outline walkingpath-outline park-layer-symbols
+                  originalSetLayoutProperty('walkingpath-outline', 'visibility', value); // custom-park-outline walkingpath-outline park-layer-symbols
+                  originalSetLayoutProperty('park-layer-symbols', 'visibility', value); // custom-park-outline walkingpath-outline park-layer-symbols
+              }
               
               // Repeat if clause above here for additional paired sets 
-              
+              // as needed (e.g. parking fill and parking symbols)
           };
             
             
@@ -128,82 +159,99 @@ function isMobileDevice() {
                   map.addImage(e.id, image);
               });
 
-                const parkingicon_image =  await map.loadImage('images/parking.png');
-                map.addImage('parking-icon', parkingicon_image.data);
+              const parkingicon_image =  await map.loadImage('images/parking.png');
+              map.addImage('parking-icon', parkingicon_image.data);
 
-                // 4. Disable standard OSM Points of Interest (POIs)
-                // We iterate over all layers and hide those associated with native amenities/places.
-//                 const layers = map.getStyle().layers;
-//                 layers.forEach(layer => {
-//                     // OpenMapTiles schemas typically use these layer names for POIs and generic labels
-//                     if (layer.id.includes('poi') || layer.id.includes('place_') || layer.id.includes('housenumber')) {
-//                         map.setLayoutProperty(layer.id, 'visibility', 'none');
-//                     }
-//                 });
-                
-              map.addSource('raster-source', {
+
+              map.addSource('satellite-source', {
                 type: 'raster',
                 tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
                 tileSize: 256,
                 attribution: '&copy; ArcGIS'
               });
-        
-//               map.addLayer({
-//                 id: 'raster-layer',
-//                 type: 'raster',
-//                 source: 'raster-source',
-//                 paint: {
-//                   'raster-opacity': 0.3
-//                 }
-//               }); // Insert below fill layer
-// 
+              
+              map.addSource('establishments', {
+                type: 'geojson',
+                data: collections.establishments
+              });
+              
+              map.addSource('parking', {
+                type: 'geojson',
+                data: collections.parking
+              });
 
-                // 6. Add Custom GeoJSON Data Source
-                map.addSource('downtown-features', {
-                    type: 'geojson',
-                    data: customData
-                });
+              map.addSource('recreation', {
+                type: 'geojson',
+                data: collections.recreation
+              });
 
-                // 7. Map Rendering Layers
-                
-                // A) Render Parking Polygons
+              //add Satellite Map below parking fill layer
+              map.addLayer({
+                id: 'satellite-layer',
+                type: 'raster',
+                source: 'satellite-source',
+                "maxzoom": 18.5,
+                paint: {
+                  'raster-opacity': 0.3
+                }
+              }); 
+              
                 map.addLayer({
                     id: 'custom-parking-fill',
                     type: 'fill',
-                    source: 'downtown-features',
+                    source: 'parking',
                     filter: ['==', ['get', 'type'], 'parking'], // Only apply to parking features
                     paint: {
                         'fill-color': '#3b82f6', // Translucent blue
                         'fill-opacity': 0.4
                     }
                 });
-              map.addLayer({
-                id: 'raster-layer',
-                type: 'raster',
-                source: 'raster-source',
-                "maxzoom": 18.5,
-                paint: {
-                  'raster-opacity': 0.3
-                }
-              }, 'custom-parking-fill'); // Insert below fill layer
 
-//                 // Add an outline for the parking area
-//                 map.addLayer({
-//                     id: 'custom-parking-outline',
-//                     type: 'line',
-//                     source: 'downtown-features',
-//                     filter: ['==', ['get', 'type'], 'parking'],
+                map.addLayer({
+                    id: 'parking-layer-symbols',
+                    type: 'symbol',
+                    source: 'parking',
+                    filter: ['all',
+                      ['==', ['get', 'type'], 'parking',]
+                    ],
+                    layout: {
+                      'icon-image': 'images/parking.svg',
+                      'icon-size': 0.15, // Scale as needed
+                      'icon-allow-overlap': true,
+                      'icon-overlap': 'always',
+                      'text-overlap': 'always'
+                    }//,
 //                     paint: {
-//                         'line-color': '#1d4ed8',
-//                         'line-width': 1
+//                         'text-color': 'red',
+//                         'text-halo-color': '#ffffff',
+//                         'text-halo-width': 2
 //                     }
-//                 });
+                });
+
+                map.addLayer({
+                    id: 'custom-labels',
+                    type: 'symbol',
+                    source: 'establishments',
+                    filter: ['!=', ['get', 'type'], 'parking'],
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        "text-font": ["Noto Sans Regular"],
+                        'text-size': 12,
+                        'text-offset': [0, 1.2],
+                        'text-anchor': 'top'
+                    },
+                    paint: {
+                        'text-color': '#1f2937',
+                        'text-halo-color': '#ffffff',
+                        'text-halo-width': 2
+                    }
+                });
 
                 // B) Render Shop & Restaurant Markers
                 map.addLayer({
                     id: 'custom-markers',
                     type: 'circle',
-                    source: 'downtown-features',
+                    source: 'establishments',
                     minzoom: 17,
                     filter: ['all', 
                       ['!=', ['get', 'type'], 'parking'],
@@ -228,31 +276,10 @@ function isMobileDevice() {
                 });
 
 
-                // D) Icon Labels for parking
-                map.addLayer({
-                    id: 'parking-layer-symbols',
-                    type: 'symbol',
-                    source: 'downtown-features',
-                    filter: ['all',
-                      ['==', ['get', 'type'], 'parking',]
-                    ],
-                    layout: {
-                      'icon-image': 'images/parking.svg',
-                      'icon-size': 0.15, // Scale as needed
-                      'icon-allow-overlap': true,
-                      'icon-overlap': 'always',
-                      'text-overlap': 'always'
-                    }//,
-//                     paint: {
-//                         'text-color': 'red',
-//                         'text-halo-color': '#ffffff',
-//                         'text-halo-width': 2
-//                     }
-                });
                 map.addLayer({
                     id: 'park-layer-fill',
                     type: 'fill',
-                    source: 'downtown-features',
+                    source: 'recreation',
                     filter: ['==', ['get', 'type'], 'park',],
                     paint: {
                         'fill-color': '#32a852', // Translucent blue
@@ -265,11 +292,11 @@ function isMobileDevice() {
 //                     }
                 });
 
-                // Add an outline for the parking area
+                // Add an outline for the park area
                 map.addLayer({
                     id: 'custom-park-outline',
                     type: 'line',
-                    source: 'downtown-features',
+                    source: 'recreation',
                     filter: ['==', ['get', 'type'], 'park'],
                     paint: {
                         'line-color': '#1f6e34',
@@ -278,12 +305,12 @@ function isMobileDevice() {
                 });
                 
                 map.addLayer({
-                    id: 'custom-walkingpath-outline',
+                    id: 'walkingpath-outline',
                     type: 'line',
-                    source: 'downtown-features',
+                    source: 'recreation',
                     filter: ['==', ['get', 'type'], 'walkingpath'],
                     paint: {
-                        'line-color': '#cc99ff',
+                        'line-color': '#804703',
                         'line-width': 3
                     }
                 });
@@ -291,7 +318,7 @@ function isMobileDevice() {
                 map.addLayer({
                     id: 'park-layer-symbols',
                     type: 'symbol',
-                    source: 'downtown-features',
+                    source: 'recreation',
                     filter: ['all',
                       ['==', ['get', 'type'], 'park',]
                     ],
@@ -300,21 +327,8 @@ function isMobileDevice() {
                       'icon-size': 0.09, // Scale as needed
                       'icon-allow-overlap': true,
                       'icon-overlap': 'always',
-                      'text-overlap': 'always'
-                    }//,
-//                     paint: {
-//                         'text-color': 'red',
-//                         'text-halo-color': '#ffffff',
-//                         'text-halo-width': 2
-//                     }
-                });
-                // C) Text Labels for markers
-                map.addLayer({
-                    id: 'custom-labels',
-                    type: 'symbol',
-                    source: 'downtown-features',
-                    filter: ['!=', ['get', 'type'], 'parking'],
-                    layout: {
+                      'text-overlap': 'always',
+ 
                         'text-field': ['get', 'name'],
                         "text-font": ["Noto Sans Regular"],
                         'text-size': 12,
@@ -326,8 +340,10 @@ function isMobileDevice() {
                         'text-halo-color': '#ffffff',
                         'text-halo-width': 2
                     }
+
                 });
 
+              
       const layerControl = new LayerControl({
         collapsed: isMobileDevice(),
         showStyleEditor: true,
@@ -338,7 +354,17 @@ function isMobileDevice() {
              opacity: 1,
              name: 'Parking'
           },
-          'raster-layer': {
+          'custom-markers': {
+             visible: true,
+             
+             name: 'Establistments'
+          },
+          'park-layer-fill': {
+             visible: true,
+             
+             name: 'Recreation'
+          },
+          'satellite-layer': {
              visible: true,
              opacity: 0.3,
              name: 'Satellite'
@@ -349,7 +375,7 @@ function isMobileDevice() {
              name: 'Map'
           }
         },
-        layers: ['raster-layer','custom-parking-fill', 'custom-markers', 'custom-labels'],
+        layers: ['satellite-layer','custom-parking-fill', 'custom-markers', 'park-layer-fill'],
         basemapStyleUrl: '/welcome_to_westville.json',
         panelWidth: 320,
         panelMinWidth: 320,
@@ -357,27 +383,17 @@ function isMobileDevice() {
       });
        map.addControl(layerControl, 'bottom-right');
 
-  // Option 4: Manually specify layer states (for full control over names)
-  // const layerControl = new LayerControl({
-  //   collapsed: false,
-  //   layerStates: {
-  //     'my-layer': {
-  //       visible: true,
-  //       opacity: 0.5,
-  //       name: 'My Custom Layer Name'
-  //     }
-  //   }
+
   // });
       map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-left');
       document.querySelector("details.maplibregl-ctrl-attrib").classList.remove('maplibregl-compact-show');
-     
       document.querySelector("span.layer-control-panel-title").innerText = 'Welcome to Westville';
       
       
                 // 8. Interactivity: Popups on click
                 map.on('click', (e) => {
                     const features = map.queryRenderedFeatures(e.point, {
-                        layers: ['custom-markers', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill']
+                        layers: ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', ]
                     });
 
                     if (!features.length) return;
@@ -402,18 +418,18 @@ function isMobileDevice() {
                 });
 
                 // UI enhancement: change cursor to pointer on hover
-                const hoverLayers = ['custom-markers', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill'];
+                const hoverLayers = ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline'];
                 hoverLayers.forEach(layer => {
                     map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
                     map.on('mouseleave', layer, () => map.getCanvas().style.cursor = '');
                 });
                
-            });
-        })
-        .then(()=> {
+            })
+        
+      })
+      .then(()=> {
           (async function () {
             const bkgrndtxt = await waitForElement('span.layer-control-name[title="Background"]');
             bkgrndtxt.innerText = 'Map';
           })();
-        });
-    })
+        });;
