@@ -6,7 +6,7 @@
     "openmaptiles": {
       "type": "vector",
       "url": "https://tiles.openfreemap.org/planet",
-      "attribution": "&copy; <a href='https://westville-nj.com/'>Borough of Westville</a>, <a href='https://www.openstreetmap.org/about'>OpenStreetMap</a>, <a href='https://openfreemap.org/'>OpenFreeMap</a>"
+      "attribution": "<a href='https://westville-nj.com/'>Borough of Westville</a>, <a href='https://www.openstreetmap.org/about'>OpenStreetMap</a>, <a href='https://openfreemap.org/'>OpenFreeMap</a>"
     }
   },
   "sprite": "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",

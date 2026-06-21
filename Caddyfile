@@ -6,3 +6,9 @@ map.westville.app:80, map.westville.app:80 {
     root * /var/www/html
     file_server
 }
+
+westville.app:80, www.westville.app:80 {
+    # Serve static files
+    root * /srv/www
+    file_server
+}

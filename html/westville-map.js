@@ -78,8 +78,8 @@ function isMobileDevice() {
 const params = new URLSearchParams(window.location.search);
 const showParams = params.get('show') ? params.get('show').toLowerCase().split(',') : [];
 const hideParams = params.get('hide') ? params.get('hide').toLowerCase().split(',') : [];
-console.log(showParams);
-console.log(hideParams);
+//console.log(showParams);
+//console.log(hideParams);
 
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
@@ -142,9 +142,14 @@ try {
   map = new maplibregl.Map({
       container: 'map',
       style: style,
-      center: [-75.12647, 39.870731],
-      zoom: 17,
+      center: [-75.1316, 39.8679],
+      zoom: isMobileDevice() ? 12 : 14.25,
       attributionControl: false
+  });
+
+  map.on('zoom', () => {
+      const currentZoom = map.getZoom();
+      console.log(`The map zoom is changing: ${currentZoom}`);
   });
 
   // Bind to setLayoutProperty in order to toggle fill and symbols simultaneously in layer control widget
@@ -168,17 +173,20 @@ try {
           originalSetLayoutProperty('custom-park-outline', 'visibility', value);
           originalSetLayoutProperty('walkingpath-outline', 'visibility', value);
           originalSetLayoutProperty('park-layer-symbols', 'visibility', value);
+          originalSetLayoutProperty('walkingpath-layer-symbol', 'visibility', value);
       }
   };
 
+ 
+  if(!isMobileDevice() && window.self === window.top) map.addControl(new maplibregl.FullscreenControl(), 'top-left');
   map.addControl(nav, 'top-left');
-  if(!isMobileDevice()) map.addControl(new maplibregl.FullscreenControl(), 'bottom-right');
-
+  
   map.on('load', async () => {
       const existingImages = {};
       map.on('styleimagemissing', async (e) => {
           if (existingImages[e.id]) return;
           existingImages[e.id] = true;
+          console.log(e.id);
           const response = await fetch(e.id);
           const svgText = await response.text();
           const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
@@ -188,7 +196,9 @@ try {
           });
           image.src = svg;
           await promise; // Wait for the image to load
-          map.addImage(e.id, image);
+          let sdf = false;
+          sdf = e.id == 'images/person-walking-icon.svg'? true:false;
+          map.addImage(e.id, image, { sdf: sdf });
       });
 
       const parkingicon_image = await map.loadImage('images/parking.png');
@@ -221,7 +231,7 @@ try {
           id: 'satellite-layer',
           type: 'raster',
           source: 'satellite-source',
-          "maxzoom": 18.5,
+          maxzoom: 18.5,
           layout: {
               'visibility': layerStates['satellite-layer'].visible ? 'visible' : 'none'
           },
@@ -234,7 +244,8 @@ try {
           id: 'custom-parking-fill',
           type: 'fill',
           source: 'parking',
-          filter: ['==', ['get', 'type'], 'parking'], // Only apply to parking features
+          minzoom: 13.0,
+          filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']], // Only apply to parking features
           layout: {
               'visibility': layerStates['custom-parking-fill'].visible ? 'visible' : 'none'
           },
@@ -248,64 +259,15 @@ try {
           id: 'parking-layer-symbols',
           type: 'symbol',
           source: 'parking',
-          filter: ['all', ['==', ['get', 'type'], 'parking']],
+          minzoom: 13.0,
+          filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': layerStates['custom-parking-fill'].visible ? 'visible' : 'none',
               'icon-image': 'images/parking.svg',
               'icon-size': 0.15, // Scale as needed
-              'icon-allow-overlap': true,
-              'icon-overlap': 'always',
-              'text-overlap': 'always'
-          }
-      });
-
-      map.addLayer({
-          id: 'custom-labels',
-          type: 'symbol',
-          source: 'establishments',
-          filter: ['!=', ['get', 'type'], 'parking'],
-          layout: {
-              'visibility': layerStates['custom-markers'].visible ? 'visible' : 'none',
-              'text-field': ['get', 'name'],
-              "text-font": ["Noto Sans Regular"],
-              'text-size': 12,
-              'text-offset': [0, 1.2],
-              'text-anchor': 'top'
-          },
-          paint: {
-              'text-color': '#1f2937',
-              'text-halo-color': '#ffffff',
-              'text-halo-width': 2
-          }
-      });
-
-      // B) Render Shop & Restaurant Markers
-      map.addLayer({
-          id: 'custom-markers',
-          type: 'circle',
-          source: 'establishments',
-          minzoom: 17,
-          filter: ['all', 
-              ['!=', ['get', 'type'], 'parking'],
-              ['!=', ['get', 'type'], 'park'],
-              ['!=', ['get', 'type'], 'walkingpath']
-          ], // Exclude parking polygons
-          layout: {
-              'visibility': layerStates['custom-markers'].visible ? 'visible' : 'none'
-          },
-          paint: {
-              'circle-radius': 8,
-              'circle-color': [
-                  'match',
-                  ['get', 'type'],
-                  'shop', '#10b981',       // Green
-                  'brewery', '#ba103471',
-                  'Take Out', '#ba103471',
-                  'Banquet Hall', '#ba103471',
-                  '#888888'                // Default Gray
-              ],
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#ffffff'
+              'icon-allow-overlap': false,
+              'icon-overlap': 'cooperative',
+              'text-overlap': 'cooperative'
           }
       });
 
@@ -314,7 +276,8 @@ try {
           id: 'park-layer-fill',
           type: 'fill',
           source: 'recreation',
-          filter: ['==', ['get', 'type'], 'park'],
+          filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
+          minzoom: 13.0,
           layout: {
               'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none'
           },
@@ -329,7 +292,8 @@ try {
           id: 'custom-park-outline',
           type: 'line',
           source: 'recreation',
-          filter: ['==', ['get', 'type'], 'park'],
+          minzoom: 13.0,
+          filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none'
           },
@@ -343,25 +307,70 @@ try {
           id: 'walkingpath-outline',
           type: 'line',
           source: 'recreation',
-          filter: ['==', ['get', 'type'], 'walkingpath'],
+          minzoom: 13.0,
+          filter: ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none'
           },
           paint: {
-              'line-color': '#804703',
+              'line-color': '#1f6e34',
               'line-width': 3
           }
       });
       
       map.addLayer({
+          id: 'walkingpath-layer-symbol',
+          type: 'symbol',
+          source: 'recreation',
+          minzoom: 13.0,
+          filter: ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']],
+          layout: {
+              'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none',
+              'icon-image': 'images/person-walking-icon.svg',
+              'symbol-placement': 'line-center',
+              // 'icon-rotate': 180,
+              'icon-keep-upright': true,
+              'icon-rotation-alignment': 'map',
+              'icon-size': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+
+                13, 0.4,
+                14,  0.5,  // At zoom level 5 or below, scale factor is 0.5
+                15, 0.6,  // At zoom level 10, scale factor is 1.0
+                18, 1   // At zoom level 15 or above, scale factor is 2.0
+              ],
+
+              'icon-allow-overlap': false,
+              'icon-overlap': 'cooperative',
+              'text-overlap': 'cooperative'
+          },
+          paint: {
+            'icon-color': "#32ad86",
+            'icon-translate': [20, 0],
+          }
+      });
+
+      
+      map.addLayer({
           id: 'park-layer-symbols',
           type: 'symbol',
           source: 'recreation',
-          filter: ['all', ['==', ['get', 'type'], 'park']],
+          minzoom: 13.0,
+          filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none',
               'icon-image': 'images/park.svg',
-              'icon-size': 0.09, // Scale as needed
+              //'icon-size': 0.09, // Scale as needed
+              'icon-size': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                12,  0.1,  // At zoom level 5 or below, scale factor is 0.5
+                15, 0.5,  // At zoom level 10, scale factor is 1.0
+                18, 1   // At zoom level 15 or above, scale factor is 2.0
+              ],
               'icon-allow-overlap': true,
               'icon-overlap': 'always',
               'text-overlap': 'always',
@@ -369,18 +378,177 @@ try {
               "text-font": ["Noto Sans Regular"],
               'text-size': 12,
               'text-offset': [0, 1.2],
-              'text-anchor': 'top'
+              'text-anchor': 'top',
+              "text-variable-anchor": ["top", "bottom", "left", "right"],
+              'text-optional': true
           },
           paint: {
-              'text-color': '#1f2937',
+              'text-color':'#000000', //'#1f2937',
               'text-halo-color': '#ffffff',
               'text-halo-width': 2
           }
       });
 
+
+      // B) Render Shop & Restaurant Markers
+      map.addLayer({
+          id: 'custom-markers',
+          type: 'circle',
+          source: 'establishments',
+          minzoom: 15,
+          filter: ['all', 
+              ['!', ['in', 'Parking', ['coalesce', ['get', 'tags'], '']]],
+              ['!', ['in', 'Park', ['coalesce', ['get', 'tags'], '']]],
+              ['!', ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']]]
+          ], // Exclude parking polygons
+          layout: {
+              'visibility': layerStates['custom-markers'].visible ? 'visible' : 'none'
+          },
+          paint: {
+              'circle-radius': 8,
+              'circle-color': [
+                  'case',
+                  ['in', 'Shop', ['coalesce', ['get', 'tags'], '']], '#10b981',       // Green
+                  ['in', 'Brewery', ['coalesce', ['get', 'tags'], '']], '#ba103471',
+                  ['in', 'Take Out', ['coalesce', ['get', 'tags'], '']], '#ba103471',
+                  ['in', 'Banquet Hall', ['coalesce', ['get', 'tags'], '']], '#ba103471',
+                  '#888888'                // Default Gray
+              ],
+              'circle-stroke-width': 1,
+              'circle-stroke-color': '#ffffff'
+          }
+      });
+
+
+      map.addLayer({
+          id: 'custom-labels',
+          type: 'symbol',
+          source: 'establishments',
+          filter: ['all',
+              ['!', ['in', 'Parking', ['coalesce', ['get', 'tags'], '']]],
+              ['!', ['in', 'Park', ['coalesce', ['get', 'tags'], '']]],
+              ['!', ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']]]
+          ],
+          layout: {
+              'visibility': layerStates['custom-markers'].visible ? 'visible' : 'none',
+              'text-field': ['get', 'name'],
+              "text-font": ["Noto Sans Regular"],
+              'text-size': 12,
+              'text-offset': [0, 1.2],
+              'text-anchor': 'top',
+              "text-variable-anchor": ["top", "bottom", "left", "right"],
+              'text-optional': true
+          },
+          paint: {
+              'text-color':'#000000', //'#1f2937',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2
+          }
+      });
+
+
+
+      
+      // 8. Interactivity: Popups on click
+      map.on('click', (e) => {
+          const features = map.queryRenderedFeatures(e.point, {
+              layers: ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol']
+          });
+
+          if (!features.length) return;
+
+          const feature = features[0];
+          const props = feature.properties;
+          
+          // Pin the popup to the marker point, or the mouse location for polygons
+          const coordinates = feature.geometry.type === 'Point' 
+              ? feature.geometry.coordinates.slice() 
+              : e.lngLat;
+          showPopup(feature, coordinates);
+//           const linkedName = props.url != null ? `<a target="_blank" href="${props.url}">${props.name}</a>` : `${props.name}`;
+//           new maplibregl.Popup()
+//               .setLngLat(coordinates)
+//               .setHTML(`<div class="wv-map-popup">
+//                   <h3 class="wv-opensans">${linkedName}</h3>
+//                   <p class="wv-opensans"><strong>Type:</strong> ${props.type.charAt(0).toUpperCase() + props.type.slice(1)}</p>
+//                   <p class="wv-opensans">${props.description || ''}</p>
+//                   <hr>
+//                   <p class="wv-opensans">Address: ${props.address}, Westville, NJ 08093</p>
+//                   <p class="wv-opensans"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}" title="Google Maps Directions to ${props.name}">Directions</a></p>
+//               </div>`)
+//               .addTo(map);
+      });
+
+      // UI enhancement: change cursor to pointer on hover
+      const hoverLayers = ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol'];
+      hoverLayers.forEach(layer => {
+          map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
+          map.on('mouseleave', layer, () => map.getCanvas().style.cursor = '');
+      });
+
+      // ==========================================
+      // SEARCH & HIGHLIGHT UI 
+      // ==========================================
+      const searchContainer = document.createElement('div');
+      searchContainer.className = 'wv-search-control';
+      searchContainer.innerHTML = `
+        <div class="search-and-filter">
+        <input type="search" id="wv-search-input" placeholder="Search..." />
+        <select id="wv-search-filter">
+            <option value="all">All Types</option>
+            <option value="parking">Parking</option>
+            <option value="establishment">Establishments</option>
+            <option value="recreation">Recreation</option>
+        </select>
+        </div>
+        <div id="wv-search-results" class="wv-search-results"></div>
+      `;
+      // Inject search container into the layer control panel
+      waitForElement('.layer-control-panel').then(panel => {
+          const title = panel.querySelector('.layer-control-panel-title');
+          if (title && title.parentNode) {
+              if (title.nextSibling) {
+                  title.parentNode.insertBefore(searchContainer, title.nextSibling);
+              } else {
+                  title.parentNode.appendChild(searchContainer);
+              }
+          } else {
+              panel.insertBefore(searchContainer, panel.firstChild);
+          }
+      });
+
+      const searchInput = searchContainer.querySelector('#wv-search-input');
+      const searchFilter = searchContainer.querySelector('#wv-search-filter');
+      const searchResults = searchContainer.querySelector('#wv-search-results');
+      let selectedFeatureName = null;
+
+      // Highlight source & layers
+      map.addSource('highlight-point-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addSource('highlight-poly-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+
+      map.addLayer({
+          id: 'highlight-point-layer',
+          type: 'circle',
+          source: 'highlight-point-source',
+          paint: {
+              'circle-radius': 12,
+              'circle-color': 'transparent',
+              'circle-stroke-width': 4,
+              'circle-stroke-color': '#ffcc00'
+          }
+      });
+      map.addLayer({
+          id: 'highlight-poly-layer',
+          type: 'line',
+          source: 'highlight-poly-source',
+          paint: {
+              'line-width': 4,
+              'line-color': '#ffcc00'
+          }
+      });
       const layerControl = new LayerControl({
-          collapsed: isMobileDevice(),
-          showStyleEditor: true,
+          collapsed: (isMobileDevice() || window.self !== window.top), //true,
+          showStyleEditor: false,
           showOpacitySlider: true,
           layerStates: layerStates,
           layers: ['satellite-layer', 'custom-parking-fill', 'custom-markers', 'park-layer-fill'],
@@ -393,40 +561,256 @@ try {
 
       map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-left');
       document.querySelector("details.maplibregl-ctrl-attrib").classList.remove('maplibregl-compact-show');
-      document.querySelector("span.layer-control-panel-title").innerText = 'Welcome to Westville';
+      document.querySelector("span.layer-control-panel-title").innerHTML = '<a href="https://westville.app/" target="_blank">Welcome to Westville</a>';
       
-      // 8. Interactivity: Popups on click
-      map.on('click', (e) => {
-          const features = map.queryRenderedFeatures(e.point, {
-              layers: ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline']
+      // Build a flat list of features for searching
+      const allFeatures = [];
+      if (collections.parking) collections.parking.features.forEach(f => allFeatures.push({ ...f, _source: 'parking' }));
+      if (collections.establishments) collections.establishments.features.forEach(f => allFeatures.push({ ...f, _source: 'establishment' }));
+      if (collections.recreation) collections.recreation.features.forEach(f => allFeatures.push({ ...f, _source: 'recreation' }));
+
+      // Extract unique individual tags and dynamically populate filter select
+      const uniqueTags = new Set();
+      allFeatures.forEach(f => {
+          if (f.properties.tags) {
+              f.properties.tags.split(',').forEach(tag => {
+                  uniqueTags.add(tag.trim());
+              });
+          }
+      });
+      const sortedTags = Array.from(uniqueTags).sort();
+
+      searchFilter.innerHTML = '<option value="all">Categories & Tags</option>';
+      searchFilter.innerHTML += `
+          <optgroup label="Categories">
+              <option value="cat:parking">Parking</option>
+              <option value="cat:establishment">Establishments</option>
+              <option value="cat:recreation">Recreation</option>
+          </optgroup>
+      `;
+      let tagsGroup = '<optgroup label="Filter by Tag">';
+      sortedTags.forEach(tag => {
+          tagsGroup += `<option value="tag:${tag}">${tag}</option>`;
+      });
+      tagsGroup += '</optgroup>';
+      searchFilter.innerHTML += tagsGroup;
+
+      function performSearch() {
+          const term = searchInput.value.toLowerCase();
+          const filter = searchFilter.value;
+          
+          if (selectedFeatureName && term !== selectedFeatureName.toLowerCase()) {
+              selectedFeatureName = null;
+          }
+
+          searchResults.innerHTML = '';
+          if (term.length === 0 && filter === 'all') {
+              searchResults.classList.remove('active');
+              map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+              map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+              if (activePopup) activePopup.remove();
+              updateUrlParams();
+              return;
+          }
+
+          let results = allFeatures.filter(f => {
+              // Category filter
+              if (filter.startsWith('cat:')) {
+                  const cat = filter.slice(4);
+                  if (f._source !== cat) return false;
+              }
+              // Tag filter
+              else if (filter.startsWith('tag:')) {
+                  const tagToMatch = filter.slice(4).toLowerCase();
+                  const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
+                  if (!featureTags.includes(tagToMatch)) return false;
+              }
+              // Fallback backward / direct URL match
+              else if (filter !== 'all' && filter !== '') {
+                  const isSource = (f._source === filter);
+                  const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
+                  if (!isSource && !featureTags.includes(filter.toLowerCase())) return false;
+              }
+
+              if (term.length > 0) {
+                  const nameMatch = (f.properties.name || '').toLowerCase().includes(term);
+                  const descMatch = (f.properties.description || '').toLowerCase().includes(term);
+                  const tagsMatch = (f.properties.tags || '').toLowerCase().includes(term);
+                  return nameMatch || descMatch || tagsMatch;
+              }
+              return true;
           });
 
-          if (!features.length) return;
+          if (results.length > 0 && term.length > 0) {
+              searchResults.classList.add('active');
+              results.forEach(f => {
+                  const div = document.createElement('div');
+                  div.className = 'wv-search-result-item';
+                  div.innerHTML = `<div class="wv-search-result-title">${f.properties.name}</div>
+                                   <div class="wv-search-result-type">${f.properties.tags || f._source}</div>`;
+                  div.onclick = () => selectFeature(f);
+                  searchResults.appendChild(div);
+              });
+          } else {
+              searchResults.classList.remove('active');
+          }
 
-          const feature = features[0];
-          const props = feature.properties;
+          if (term.length === 0 && filter !== 'all') {
+              // Highlight all matching features in the filter
+              const pointFeatures = results.filter(f => f.geometry.type === 'Point');
+              const polyFeatures = results.filter(f => f.geometry.type !== 'Point');
+              
+              map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: pointFeatures });
+              map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: polyFeatures });
+              if (activePopup) activePopup.remove();
+              
+              const bounds = getFeaturesBounds(results);
+              if (bounds) {
+                  if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1]) {
+                      map.flyTo({ center: bounds[0], zoom: 18 });
+                  } else {
+                      map.fitBounds(bounds, { padding: 60, maxZoom: 18 });
+                  }
+              }
+          } else if (!selectedFeatureName) {
+              // Clear highlights if no specific feature is selected
+              map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+              map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+          }
+
+          updateUrlParams();
+      }
+
+      function getFeaturesBounds(features) {
+          if (!features || features.length === 0) return null;
+          let minLng = Infinity, minLat = Infinity;
+          let maxLng = -Infinity, maxLat = -Infinity;
+
+          features.forEach(f => {
+              let coordsList = [];
+              if (f.geometry.type === 'Point') {
+                  coordsList = [f.geometry.coordinates];
+              } else if (f.geometry.type === 'Polygon') {
+                  coordsList = f.geometry.coordinates[0];
+              } else if (f.geometry.type === 'MultiPolygon') {
+                  f.geometry.coordinates.forEach(poly => {
+                      coordsList.push(...poly[0]);
+                  });
+              } else if (f.geometry.type === 'LineString') {
+                  coordsList = f.geometry.coordinates;
+              }
+              
+              coordsList.forEach(coord => {
+                  if (coord[0] < minLng) minLng = coord[0];
+                  if (coord[0] > maxLng) maxLng = coord[0];
+                  if (coord[1] < minLat) minLat = coord[1];
+                  if (coord[1] > maxLat) maxLat = coord[1];
+              });
+          });
+
+          if (minLng === Infinity) return null;
+          return [[minLng, minLat], [maxLng, maxLat]];
+      }
+
+      function selectFeature(f) {
+          selectedFeatureName = f.properties.name;
+          searchInput.value = f.properties.name;
+          searchResults.classList.remove('active');
           
-          // Pin the popup to the marker point, or the mouse location for polygons
-          const coordinates = feature.geometry.type === 'Point' 
-              ? feature.geometry.coordinates.slice() 
-              : e.lngLat;
-          const linkedName = props.url != null ? `<a target="_blank" href="${props.url}">${props.name}</a>` : `${props.name}`;
-          new maplibregl.Popup()
-              .setLngLat(coordinates)
-              .setHTML(`
-                  <h3 class="wv-opensans">${linkedName}</h3>
-                  <p class="wv-opensans"><strong>Type:</strong> ${props.type.charAt(0).toUpperCase() + props.type.slice(1)}</p>
-                  <p class="wv-opensans">${props.description || ''}</p>
-              `)
-              .addTo(map);
-      });
+          // Clear previous highlights
+          map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+          map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
 
-      // UI enhancement: change cursor to pointer on hover
-      const hoverLayers = ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline'];
-      hoverLayers.forEach(layer => {
-          map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
-          map.on('mouseleave', layer, () => map.getCanvas().style.cursor = '');
-      });
+          if (f.geometry.type === 'Point') {
+              map.getSource('highlight-point-source').setData(f);
+              map.flyTo({ center: f.geometry.coordinates, zoom: 18 });
+              showPopup(f, f.geometry.coordinates);
+          } else {
+              map.getSource('highlight-poly-source').setData(f);
+              const bounds = getFeaturesBounds([f]);
+              if (bounds) {
+                  map.fitBounds(bounds, { padding: 60, maxZoom: 18 });
+                  const center = [(bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2];
+                  showPopup(f, center);
+              }
+          }
+          updateUrlParams();
+      }
+
+      let activePopup = null;
+      function showPopup(feature, coordinates) {
+          if (activePopup) activePopup.remove();
+          console.log(coordinates);
+          const props = feature.properties;
+          const linkedName = props.url != null ? `<a target="_blank" href="${props.url}">${props.name}</a>` : `${props.name}`;
+          const phone = props.phone != null ? `<p>${props.phone}</p>`: '';
+          const address =  props.address != null ? `<p>${props.address}, Westville, NJ 08093</p>`: '';
+          let lat, lng;
+          if (!Array.isArray(coordinates)){
+            lng = coordinates['lng'];
+            lat = coordinates['lat'];
+          } else {
+            lng = coordinates[1];
+            lat = coordinates[0];
+          }
+          activePopup = new maplibregl.Popup()
+              .setLngLat(coordinates)
+              .setHTML(`<div class="wv-map-popup">
+                  <h3 class="wv-opensans">${linkedName}</h3>
+                  <p class="wv-opensans"><strong>Tags:</strong> ${props.tags || ''}</p>
+                  <p class="wv-opensans">${props.description || ''}</p>
+                  <hr>
+                  ${phone}
+                  ${address}
+                  <p class="wv-opensans"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to ${props.name}">Directions</a></p>
+              </div>`)
+              .addTo(map);
+      }
+
+      searchInput.addEventListener('input', performSearch);
+      searchFilter.addEventListener('change', performSearch);
+
+      function updateUrlParams() {
+          const newParams = new URLSearchParams();
+          
+          // Compute show/hide based on checkboxes
+          const currentShows = [];
+          const currentHides = [];
+          const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
+          layerCheckboxes.forEach(cb => {
+              const span = cb.parentElement.querySelector('.layer-control-name');
+              if (span) {
+                  const title = span.getAttribute('title');
+                  const layerId = Object.keys(layerStates).find(id => layerStates[id].name === title);
+                  if (layerId) {
+                      const friendly = Object.keys(LAYER_ID_MAP).find(k => LAYER_ID_MAP[k] === layerId);
+                      if (friendly) {
+                          if (cb.checked) currentShows.push(friendly);
+                          else currentHides.push(friendly);
+                      }
+                  }
+              }
+          });
+
+          if (currentShows.length > 0) newParams.set('show', currentShows.join(','));
+          if (currentHides.length > 0) newParams.set('hide', currentHides.join(','));
+
+          const term = searchInput.value.trim();
+          if (selectedFeatureName) {
+              newParams.set('feature', selectedFeatureName);
+          } else if (term) {
+              newParams.set('search', term);
+          }
+          
+          const filter = searchFilter.value;
+          if (filter !== 'all') {
+              const cleanFilter = filter.startsWith('tag:') || filter.startsWith('cat:') ? filter.split(':')[1] : filter;
+              newParams.set('filter', cleanFilter);
+          }
+          
+          const newUrl = window.location.pathname + '?' + newParams.toString();
+          window.history.replaceState(null, '', newUrl);
+      }
 
       // Update background text and enforce initial checkbox state
       waitForElement('span.layer-control-name[title="Background"]').then(bkgrndtxt => {
@@ -440,6 +824,58 @@ try {
               }
           }
       });
+      
+      // Listen for layer control checkbox changes to sync URL
+      waitForElement('.maplibregl-ctrl-layer-control').then(panel => {
+          panel.addEventListener('change', updateUrlParams);
+      });
+      
+      // Hide highlight layers from the layer control UI
+      waitForElement('.layer-control-name[title="highlight-point-layer"]').then(el => {
+          const item = el.closest('.layer-control-item');
+          if (item) item.style.display = 'none';
+      });
+      waitForElement('.layer-control-name[title="highlight-poly-layer"]').then(el => {
+          const item = el.closest('.layer-control-item');
+          if (item) item.style.display = 'none';
+      });
+
+      // Initialize Search UI from URL params
+      const initUrl = new URLSearchParams(window.location.search);
+      const urlFilter = initUrl.get('filter');
+      if (urlFilter) {
+          let opt = Array.from(searchFilter.options).find(o => o.value === urlFilter);
+          if (!opt) {
+              opt = Array.from(searchFilter.options).find(o => o.value === 'tag:' + urlFilter);
+          }
+          if (!opt) {
+              opt = Array.from(searchFilter.options).find(o => o.value === 'cat:' + urlFilter);
+          }
+          if (opt) {
+              searchFilter.value = opt.value;
+          }
+      }
+      const initFeature = initUrl.get('feature');
+      const initSearchStr = initUrl.get('search');
+
+      if (initFeature) {
+          const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
+          if (match) {
+              selectFeature(match);
+          }
+      } else if (initSearchStr || initUrl.get('filter')) {
+          if (initSearchStr) searchInput.value = initSearchStr;
+          performSearch();
+      } else {
+        map.fitBounds([
+          [-75.145165, 39.856238],
+          [-75.112685, 39.887555]
+        ], {
+        padding: 10,      // Padding in pixels on all sides
+        //maxZoom: 15,      // Prevents extreme zooming on single-point features
+        duration: 1000    // Animation duration in milliseconds
+    });
+      }
   });
 } catch (error) {
   console.error('Error loading map:', error);
