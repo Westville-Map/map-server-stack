@@ -271,6 +271,7 @@
       display: flex;
       flex-direction: column;
       cursor: pointer;
+      min-width: 0; /* Prevents grid items from overflowing their container */
     }
 
     .facility-card:hover {
@@ -284,16 +285,19 @@
 
     .facility-header {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: flex-start;
       margin-bottom: 0.8rem;
-      gap: 10px;
+      gap: 8px;
+      max-width: 100%;
     }
 
     .facility-card h4 {
       font-size: 1.15rem;
       color: var(--primary-blue);
       margin: 0;
+      max-width: 100%;
+      word-wrap: break-word;
     }
 
     .facility-badge {
@@ -305,6 +309,10 @@
       text-transform: capitalize;
       font-weight: bold;
       white-space: nowrap;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .badge-parking { background-color: #dbeafe; color: #1e40af; }
@@ -315,6 +323,7 @@
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
+      max-width: 100%;
     }
 
     .facility-card p {
@@ -330,16 +339,102 @@
       font-style: italic;
     }
 
-    /* Map Frame Default Styling */
-    #mapFrame {
+    /* Map Frame and Container Styling */
+    .map-container {
       width: 100%;
       max-width: 800px;
-      height: 500px;
-      border: none;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      margin-bottom: 1.5rem;
+      margin: 0 auto 2rem auto;
+      border: 1.5px solid var(--accent-gold);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      background-color: var(--white);
       transition: all 0.3s ease;
+    }
+
+    .map-header {
+      background: var(--primary-blue);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1.5px solid var(--accent-gold);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .map-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #share-btn {
+      background-color: transparent;
+      border: 1.5px solid var(--accent-gold);
+      color: var(--white);
+    }
+
+    #share-btn.copied {
+      background-color: #10b981 !important; /* Emerald green */
+      border-color: #059669 !important; /* Slightly darker emerald */
+      color: var(--white) !important;
+      transform: scale(1.05); /* Slight pop scale animation */
+    }
+
+    .map-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .map-status-label {
+      color: var(--accent-gold);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .map-active-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .map-tag {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: var(--white);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .map-tag.highlight {
+      border-color: var(--accent-gold);
+      background-color: rgba(217, 119, 6, 0.3);
+    }
+
+    .no-filters-tag {
+      color: var(--white);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    #mapFrame {
+      width: 100%;
+      height: 500px;
+      display: block;
+      border: none;
     }
 
     /* Responsive - Mobile/Tablet */
@@ -363,10 +458,13 @@
         font-size: 3rem;
       }
 
-      #mapFrame {
+      .map-container {
         max-width: 100%;
-        height: 650px;
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      #mapFrame {
+        height: 650px;
       }
 
       .container {
@@ -380,6 +478,316 @@
         margin-right: auto;
       }
     }
+    
+    /* Portal Enhancement Styles */
+    .header-shortcuts {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: transparent;
+      border: 1.5px solid var(--accent-gold);
+      border-radius: 20px;
+      color: var(--white);
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s, transform 0.1s;
+      cursor: pointer;
+    }
+
+    .header-btn:hover {
+      background-color: var(--accent-gold);
+      color: var(--primary-blue);
+      transform: translateY(-1px);
+    }
+
+    .header-btn-icon {
+      font-size: 1rem;
+    }
+
+    /* Custom Multi-Select Dropdown */
+    .custom-multiselect {
+      position: relative;
+      min-width: 250px;
+      user-select: none;
+      flex: 1;
+    }
+
+    .multiselect-trigger {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: var(--white);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .custom-multiselect.active .multiselect-trigger {
+      border-color: var(--primary-blue);
+    }
+
+    .trigger-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .trigger-arrow {
+      font-size: 0.8rem;
+      color: #666;
+      transition: transform 0.2s;
+    }
+
+    .custom-multiselect.active .trigger-arrow {
+      transform: rotate(180deg);
+    }
+
+    .multiselect-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background-color: var(--white);
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .custom-multiselect.active .multiselect-dropdown {
+      display: block;
+    }
+
+    .multiselect-group-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: #888;
+      padding: 8px 16px 4px 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .multiselect-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background-color 0.1s;
+    }
+
+    .multiselect-option:hover {
+      background-color: #f5f5f5;
+    }
+
+    .multiselect-option input[type="checkbox"] {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary-blue);
+    }
+
+    .multiselect-option-label {
+      flex-grow: 1;
+      cursor: pointer;
+    }
+
+    .facility-details {
+      display: flex;
+      gap: 8px;
+      margin-top: 1rem;
+      border-top: 1px solid #eee;
+      padding-top: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .facility-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #555;
+      background-color: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    .facility-link:hover {
+      background-color: #e5e5e5;
+      border-color: #ccc;
+    }
+
+    .detail-icon {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    @media (max-width: 600px) {
+      .header-shortcuts {
+        justify-content: center;
+        width: 100%;
+      }
+      .header-btn {
+        font-size: 0.85rem;
+        padding: 5px 12px;
+      }
+    }
+
+    .header-btn {
+      font-family: inherit;
+    }
+
+    /* Help Pop-over (Overlay Model) */
+    .help-popover-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .help-popover-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Help Pop-over Card */
+    .help-popover-card {
+      background: var(--white);
+      padding: 2.5rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      position: relative;
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .help-popover-overlay.active .help-popover-card {
+      transform: scale(1);
+    }
+
+    .help-popover-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.25rem;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: #888;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .help-popover-close:hover {
+      color: var(--text-dark);
+    }
+
+    .help-popover-card h3 {
+      color: var(--primary-blue);
+      margin-top: 0;
+      margin-bottom: 0.8rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .help-popover-card p {
+      color: #555;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .help-popover-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 2rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .help-popover-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .help-popover-icon {
+      font-size: 1.25rem;
+      background: #f0f4f8;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .help-popover-list li strong {
+      display: block;
+      color: var(--text-dark);
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    .help-popover-list li span {
+      color: #666;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .help-popover-action-btn {
+      width: 100%;
+      margin: 0;
+      padding: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -389,34 +797,55 @@
       <div class="brand-icon-img"><img class="mapicon" src="https://map.westville.app/favicon.svg"/></div>
       <h1>Welcome to Westville</h1>
     </div>
-    <!-- div>Interactive Map</div -->
+    <div class="header-shortcuts">
+      <a href="https://map.westville.app/?hide=establishments&filter=parking" class="header-btn scroll-trigger" target="mapFrame">
+        <span class="header-btn-icon">🅿️</span>
+        <span class="header-btn-text">Public Parking</span>
+      </a>
+      <a href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="header-btn scroll-trigger" target="mapFrame">
+        <span class="header-btn-icon">🏢</span>
+        <span class="header-btn-text">Local Establishments</span>
+      </a>
+      <button id="help-btn" class="header-btn" title="How to Use the Map">
+        <span class="header-btn-icon">❓</span>
+        <span class="header-btn-text">How to Use</span>
+      </button>
+    </div>
   </header>
 
   <main>
     <section class="hero">
       <h2>Welcome to Westville</h2>
       <p>Welcome to the borough map portal. Whether you are looking for free public parking, exploring local businesses, or checking out our recreation facilities, our interactive map has you covered.</p>
-      <div>
-      <iframe 
-        name="mapFrame"
-        id="mapFrame"
-        src="https://map.westville.app" 
-        title="Welcome to Westville">
-      </iframe>
+      <div class="map-container">
+        <!-- Map Header Area -->
+        <div class="map-header">
+          <div class="map-status">
+            <div id="map-active-filters" class="map-active-filters">
+              <span class="no-filters-tag">Map</span>
+            </div>
+          </div>
+          <div class="map-header-actions">
+            <button id="share-btn" class="header-btn" title="Copy link to current view">
+              <span class="header-btn-icon">🔗</span>
+              <span class="header-btn-text">Share View</span>
+            </button>
+            <a id="full-map-link" href="https://map.westville.app" class="header-btn" target="_blank">
+              <span class="header-btn-icon">🗺️</span>
+              <span class="header-btn-text">Open Full Map</span>
+            </a>
+          </div>
+        </div>
+        <iframe 
+          name="mapFrame"
+          id="mapFrame"
+          src="https://map.westville.app" 
+          title="Welcome to Westville">
+        </iframe>
       </div>
-      <a href="https://map.westville.app/" class="btn-main" target="_blank">Open Full Interactive Map</a>
     </section>
 
     <div class="container">
-      <section class="instructions">
-        <h3>How to Use the Map</h3>
-        <p>The map is designed to let you filter exactly what you want to see. When you open the map:</p>
-        <ul>
-          <li><strong>Toggle Layers:</strong> Use the menu to turn different categories on and off (like Parking, Recreation, or Satellite view).</li>
-          <li><strong>Click for Details:</strong> Click on any highlighted feature or pin on the map to see more information, such as facility hours or parking rules.</li>
-          <li><strong>Use Shortcuts:</strong> Use the quick links below to jump directly to a pre-filtered view of the town.</li>
-        </ul>
-      </section>
 
       <h3 class="grid-header">Quick Views & Shortcuts</h3>
       
@@ -464,9 +893,17 @@
       <h3 class="directory-header">Westville Public Directory</h3>
       <div class="directory-controls">
         <input type="search" id="dir-search" class="directory-search" placeholder="Search facilities, parks, or parking..." />
-        <select id="dir-filter" class="directory-filter">
-          <option value="all">All Categories & Tags</option>
-        </select>
+        
+        <div class="custom-multiselect" id="dir-filter-container">
+          <div class="multiselect-trigger" id="dir-filter-trigger">
+            <span class="trigger-text">All Categories & Tags</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="multiselect-dropdown" id="dir-filter-dropdown">
+            <!-- Populated Dynamically via JS -->
+          </div>
+        </div>
+
         <select id="dir-sort" class="directory-filter">
           <option value="name_asc">Name (A-Z)</option>
           <option value="name_desc">Name (Z-A)</option>
@@ -484,16 +921,231 @@
     <p>&copy; 2026 Welcome to Westville Map Project. Not an official borough communication.</p>
   </footer>
 
+  <!-- Help Pop-over (Overlay Model) -->
+  <div id="help-popover" class="help-popover-overlay" role="dialog" aria-modal="true" aria-labelledby="help-popover-title">
+    <div class="help-popover-card">
+      <button id="help-popover-close-btn" class="help-popover-close" aria-label="Close dialog">&times;</button>
+      <h3 id="help-popover-title">How to Use the Map</h3>
+      <p>The map is designed to let you filter exactly what you want to see. When you open the map:</p>
+      <ul class="help-popover-list">
+        <li>
+          <span class="help-popover-icon">⚙️</span>
+          <div>
+            <strong>Toggle Layers:</strong>
+            <span>Use the menu to turn different categories on and off (like Parking, Recreation, or Satellite view).</span>
+          </div>
+        </li>
+        <li>
+          <span class="help-popover-icon">📍</span>
+          <div>
+            <strong>Click for Details:</strong>
+            <span>Click on any highlighted feature or pin on the map to see more information, such as facility hours or parking rules.</span>
+          </div>
+        </li>
+        <li>
+          <span class="help-popover-icon">⚡</span>
+          <div>
+            <strong>Use Shortcuts:</strong>
+            <span>Use the quick links below to jump directly to a pre-filtered view of the town.</span>
+          </div>
+        </li>
+      </ul>
+      <button id="help-popover-ok-btn" class="btn-main help-popover-action-btn">Got It!</button>
+    </div>
+  </div>
+
 </body>
 <script>
+// --- Share Button Logic ---
+const shareBtn = document.getElementById('share-btn');
+if (shareBtn) {
+  shareBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      shareBtn.classList.add('copied');
+      const icon = shareBtn.querySelector('.header-btn-icon');
+      const text = shareBtn.querySelector('.header-btn-text');
+      const oldIcon = icon ? icon.innerText : '🔗';
+      const oldText = text ? text.innerText : 'Share View';
+      
+      if (icon) icon.innerText = '✅';
+      if (text) text.innerText = 'Copied!';
+      
+      setTimeout(() => {
+        shareBtn.classList.remove('copied');
+        if (icon) icon.innerText = oldIcon;
+        if (text) text.innerText = oldText;
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  });
+}
+
+// --- Help Pop-over Dialog Logic ---
+const helpBtn = document.getElementById('help-btn');
+const helpPopover = document.getElementById('help-popover');
+const helpCloseBtn = document.getElementById('help-popover-close-btn');
+const helpOkBtn = document.getElementById('help-popover-ok-btn');
+
+if (helpBtn && helpPopover) {
+  const openPopover = () => {
+    helpPopover.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when open
+    if (helpCloseBtn) helpCloseBtn.focus();
+  };
+
+  const closePopover = () => {
+    helpPopover.classList.remove('active');
+    document.body.style.overflow = ''; // Restore scrolling
+    helpBtn.focus();
+  };
+
+  helpBtn.addEventListener('click', openPopover);
+
+  if (helpCloseBtn) {
+    helpCloseBtn.addEventListener('click', closePopover);
+  }
+
+  if (helpOkBtn) {
+    helpOkBtn.addEventListener('click', closePopover);
+  }
+
+  // Light dismiss: Close on overlay background click
+  helpPopover.addEventListener('click', (e) => {
+    if (e.target === helpPopover) {
+      closePopover();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && helpPopover.classList.contains('active')) {
+      closePopover();
+    }
+  });
+}
+
+// --- Map Header Synchronization ---
+function updateMapHeaderFromUrl(urlString) {
+  try {
+    const url = new URL(urlString);
+    const searchParams = url.searchParams;
+    const filterContainer = document.getElementById('map-active-filters');
+    const fullMapLink = document.getElementById('full-map-link');
+
+    if (!filterContainer) return;
+
+    if (fullMapLink) {
+      fullMapLink.href = urlString;
+    }
+
+    filterContainer.innerHTML = '';
+    const tags = [];
+
+    // 1. Highlighted feature
+    const feature = searchParams.get('feature');
+    if (feature) {
+      tags.push(`<span class="map-tag highlight">📍 Highlighted: ${feature}</span>`);
+    }
+
+    // 2. Active filters
+    const filter = searchParams.get('filter');
+    if (filter) {
+      const filters = filter.split(',');
+      filters.forEach(f => {
+        if (f.trim()) {
+          const label = f.trim().charAt(0).toUpperCase() + f.trim().slice(1);
+          tags.push(`<span class="map-tag">🔍 Filter: ${label}</span>`);
+        }
+      });
+    }
+
+    // 3. Search query
+    const searchStr = searchParams.get('search');
+    if (searchStr && !feature) {
+      tags.push(`<span class="map-tag">🔍 Search: "${searchStr}"</span>`);
+    }
+
+    // 4. Layers
+    const show = searchParams.get('show');
+    const hide = searchParams.get('hide');
+
+    if (show) {
+      const shows = show.split(',');
+      shows.forEach(s => {
+        const clean = s.trim().toLowerCase();
+        if (clean === 'satellite') {
+          tags.push(`<span class="map-tag">📡 Satellite View</span>`);
+        } else if (clean === 'establishments') {
+          tags.push(`<span class="map-tag">🏢 Establishments</span>`);
+        } else if (clean === 'recreation') {
+          tags.push(`<span class="map-tag">🌳 Recreation</span>`);
+        } else if (clean === 'parking') {
+          tags.push(`<span class="map-tag">🅿️ Parking</span>`);
+        }
+      });
+    }
+
+    if (tags.length === 0) {
+      filterContainer.innerHTML = '<span class="no-filters-tag">Map</span>';
+    } else {
+      filterContainer.innerHTML = tags.join('');
+    }
+  } catch (e) {
+    console.error('Error updating map header:', e);
+  }
+}
+
+// Listen for postMessage from the map iframe to sync URL & update the header in real-time
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'westville-map-state-change') {
+    updateMapHeaderFromUrl(event.data.url);
+
+    // Live-update parent browser address bar with iframe params
+    try {
+      const mapUrl = new URL(event.data.url);
+      const newSearchParams = mapUrl.searchParams;
+      const currentParentSearch = window.location.search;
+      const nextSearchString = newSearchParams.toString() ? '?' + newSearchParams.toString() : '';
+      
+      if (currentParentSearch !== nextSearchString) {
+        window.history.replaceState(null, '', window.location.pathname + nextSearchString);
+      }
+    } catch (err) {
+      console.error('Error syncing parent URL from map message:', err);
+    }
+  }
+});
+
+// Initialize map frame source from parent URL parameters on page boot
+const parentUrlParams = new URLSearchParams(window.location.search);
+const mapFrame = document.getElementById('mapFrame');
+if (mapFrame && parentUrlParams.toString()) {
+  mapFrame.src = 'https://map.westville.app?' + parentUrlParams.toString();
+  // Update map header immediately for smooth UI transition
+  updateMapHeaderFromUrl(mapFrame.src);
+}
+
 document.querySelectorAll('.scroll-trigger').forEach(link => {
   link.addEventListener('click', function(e) {
     console.log('clicked');
-    // 1. Find the target iframe element
     const iframe = document.getElementById('mapFrame');
     
     if (iframe) {
-      // 2. Safely scroll the iframe into the viewport
+      // update map header immediately for snappy UX
+      updateMapHeaderFromUrl(link.href);
+
+      // Update parent URL bar immediately for visual confirmation
+      try {
+        const url = new URL(link.href);
+        const searchStr = url.search;
+        if (searchStr !== window.location.search) {
+          window.history.replaceState(null, '', window.location.pathname + searchStr);
+        }
+      } catch (err) {
+        console.error('Error updating parent URL on shortcut click:', err);
+      }
+
       iframe.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'start' 
@@ -505,10 +1157,118 @@ document.querySelectorAll('.scroll-trigger').forEach(link => {
 // --- Directory Logic ---
 
 const dirSearch = document.getElementById('dir-search');
-const dirFilter = document.getElementById('dir-filter');
 const dirSort = document.getElementById('dir-sort');
 const dirGrid = document.getElementById('directory-grid');
+const dirFilterTrigger = document.getElementById('dir-filter-trigger');
+const dirFilterDropdown = document.getElementById('dir-filter-dropdown');
+const dirFilterContainer = document.getElementById('dir-filter-container');
+
 let allDirFeatures = [];
+let selectedFilters = new Set(['all']); // Default to all
+
+// Toggle Multiselect dropdown
+dirFilterTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dirFilterContainer.classList.toggle('active');
+});
+
+document.addEventListener('click', () => {
+  dirFilterContainer.classList.remove('active');
+});
+
+dirFilterDropdown.addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+// Dynamic tag-to-color mapping for orientation
+const tagColors = {
+  // Food & Dining (Red/Rose tones)
+  'restaurant': '#e11d48',
+  'dining': '#e11d48',
+  'food': '#e11d48',
+  'diner': '#be123c',
+  'take out': '#f43f5e',
+  'takeout': '#f43f5e',
+  'bbq': '#b91c1c',
+  'bakery': '#db2777',
+  'dessert': '#db2777',
+  'sweets': '#f472b6',
+  'cafe': '#be123c',
+  'coffee': '#9a3412',
+  
+  // Nightlife & Drinks (Amber/Gold tones)
+  'brewery': '#d97706',
+  'bar': '#d97706',
+  'pub': '#b45309',
+  'nightlife': '#d97706',
+  'craft beer': '#b45309',
+  
+  // Wellness (Teal)
+  'wellness': '#0d9488',
+  'fitness': '#0d9488',
+  'yoga': '#0d9488',
+  'health': '#0d9488',
+  
+  // Parks & Recreation (Green)
+  'park': '#16a34a',
+  'recreation': '#16a34a',
+  'public': '#16a34a',
+  'walking path': '#15803d',
+  'walkingpath': '#15803d',
+  
+  // Public/Gov Resources (Blue)
+  'borough offices': '#2563eb',
+  'public resource': '#1d4ed8',
+  'government': '#1d4ed8',
+  'library': '#2563eb',
+  'education': '#1e3a8a',
+  'community': '#2563eb',
+  'safety': '#dc2626',
+  'police station': '#dc2626',
+  'fire station': '#dc2626',
+  
+  // Retail & Services (Emerald / Gray)
+  'convenience store': '#059669',
+  'retail': '#059669',
+  'groceries': '#059669',
+  'laundry': '#4b5563',
+  'service': '#4b5563',
+  'laundromat': '#4b5563',
+  
+  // Autos (Gold/Yellow tones)
+  'auto repair': '#ffd700',
+  'dealership': '#ffd700',
+  'mechanic': '#ffd700',
+  'mechanic service': '#ffd700',
+  'auto service': '#ffd700',
+  
+  // Parking (Cobalt Blue)
+  'parking': '#2563eb',
+  'free': '#2563eb'
+};
+
+function updateFilterTriggerText() {
+  const triggerText = dirFilterTrigger.querySelector('.trigger-text');
+  if (selectedFilters.has('all') || selectedFilters.size === 0) {
+    triggerText.innerText = 'All Categories & Tags';
+  } else {
+    const labels = [];
+    selectedFilters.forEach(val => {
+      if (val === 'all') return;
+      if (val.startsWith('cat:')) {
+        const catName = val.slice(4);
+        labels.push(catName.charAt(0).toUpperCase() + catName.slice(1));
+      } else if (val.startsWith('tag:')) {
+        labels.push(val.slice(4));
+      }
+    });
+    if (labels.length === 1) {
+      triggerText.innerText = labels[0];
+    } else {
+      triggerText.innerText = `Filtered (${labels.length})`;
+    }
+  }
+}
 
 async function initDirectory() {
   try {
@@ -528,7 +1288,7 @@ async function initDirectory() {
     if (collections.establishments) collections.establishments.features.forEach(f => allDirFeatures.push({ ...f, _source: 'establishment' }));
     if (collections.recreation) collections.recreation.features.forEach(f => allDirFeatures.push({ ...f, _source: 'recreation' }));
 
-    // Extract unique individual tags and dynamically populate filter select
+    // Extract unique individual tags and dynamically populate filter dropdown checkboxes
     const uniqueTags = new Set();
     allDirFeatures.forEach(f => {
       if (f.properties.tags) {
@@ -539,21 +1299,110 @@ async function initDirectory() {
     });
     const sortedTags = Array.from(uniqueTags).sort();
 
-    dirFilter.innerHTML = '<option value="all">All Categories & Tags</option>';
-    dirFilter.innerHTML += `
-      <optgroup label="Categories">
-        <option value="cat:parking">Parking</option>
-        <option value="cat:establishment">Establishments</option>
-        <option value="cat:recreation">Recreation</option>
-      </optgroup>
-    `;
-    let tagsGroup = '<optgroup label="Filter by Tag">';
-    sortedTags.forEach(tag => {
-      tagsGroup += `<option value="tag:${tag}">${tag}</option>`;
-    });
-    tagsGroup += '</optgroup>';
-    dirFilter.innerHTML += tagsGroup;
+    // Check if initial filters are specified in parent URL on boot
+    const initialFilters = parentUrlParams.get('filter');
+    if (initialFilters) {
+      selectedFilters.clear();
+      const filterParts = initialFilters.split(',').map(s => s.trim().toLowerCase());
+      filterParts.forEach(part => {
+        // match category
+        const matchingCat = ['parking', 'establishment', 'recreation'].find(c => c.toLowerCase() === part);
+        if (matchingCat) {
+          selectedFilters.add('cat:' + matchingCat);
+        } else {
+          // match tag
+          const matchingTag = sortedTags.find(t => t.toLowerCase() === part);
+          if (matchingTag) {
+            selectedFilters.add('tag:' + matchingTag);
+          }
+        }
+      });
+      if (selectedFilters.size === 0) {
+        selectedFilters.add('all');
+      }
+    }
 
+    // Populate drop down checkboxes
+    let dropdownHtml = `
+      <div class="multiselect-option" data-value="all">
+        <input type="checkbox" id="dir-cb-all" ${selectedFilters.has('all') ? 'checked' : ''} />
+        <label class="multiselect-option-label" for="dir-cb-all">All Categories & Tags</label>
+      </div>
+      <div class="multiselect-group-title">Categories</div>
+      <div class="multiselect-option" data-value="cat:parking">
+        <input type="checkbox" id="dir-cb-cat-parking" ${selectedFilters.has('cat:parking') ? 'checked' : ''} />
+        <label class="multiselect-option-label" for="dir-cb-cat-parking">Parking</label>
+      </div>
+      <div class="multiselect-option" data-value="cat:establishment">
+        <input type="checkbox" id="dir-cb-cat-est" ${selectedFilters.has('cat:establishment') ? 'checked' : ''} />
+        <label class="multiselect-option-label" for="dir-cb-cat-est">Establishments</label>
+      </div>
+      <div class="multiselect-option" data-value="cat:recreation">
+        <input type="checkbox" id="dir-cb-cat-rec" ${selectedFilters.has('cat:recreation') ? 'checked' : ''} />
+        <label class="multiselect-option-label" for="dir-cb-cat-rec">Recreation</label>
+      </div>
+      <div class="multiselect-group-title">Filter by Tag</div>
+    `;
+
+    sortedTags.forEach((tag, idx) => {
+      const isChecked = selectedFilters.has(`tag:${tag}`);
+      dropdownHtml += `
+        <div class="multiselect-option" data-value="tag:${tag}">
+          <input type="checkbox" id="dir-cb-tag-${idx}" ${isChecked ? 'checked' : ''} />
+          <label class="multiselect-option-label" for="dir-cb-tag-${idx}">${tag}</label>
+        </div>
+      `;
+    });
+
+    dirFilterDropdown.innerHTML = dropdownHtml;
+
+    // Attach listeners to custom dropdown checkboxes
+    dirFilterDropdown.querySelectorAll('.multiselect-option').forEach(option => {
+      const cb = option.querySelector('input[type="checkbox"]');
+      
+      const handleToggle = () => {
+        const val = option.getAttribute('data-value');
+        if (val === 'all') {
+          if (cb.checked) {
+            selectedFilters.clear();
+            selectedFilters.add('all');
+            dirFilterDropdown.querySelectorAll('input[type="checkbox"]').forEach(otherCb => {
+              if (otherCb !== cb) otherCb.checked = false;
+            });
+          } else {
+            selectedFilters.delete('all');
+          }
+        } else {
+          if (cb.checked) {
+            selectedFilters.delete('all');
+            const allCb = document.getElementById('dir-cb-all');
+            if (allCb) allCb.checked = false;
+            selectedFilters.add(val);
+          } else {
+            selectedFilters.delete(val);
+          }
+        }
+
+        if (selectedFilters.size === 0) {
+          selectedFilters.add('all');
+          const allCb = document.getElementById('dir-cb-all');
+          if (allCb) allCb.checked = true;
+        }
+
+        updateFilterTriggerText();
+        renderDirectory();
+      };
+
+      option.addEventListener('click', (e) => {
+        if (e.target !== cb && e.target.tagName !== 'LABEL') {
+          cb.checked = !cb.checked;
+          handleToggle();
+        }
+      });
+      cb.addEventListener('change', handleToggle);
+    });
+
+    updateFilterTriggerText();
     renderDirectory();
   } catch (err) {
     console.error("Failed to load directory data:", err);
@@ -563,26 +1412,24 @@ async function initDirectory() {
 
 function renderDirectory() {
   const term = dirSearch.value.toLowerCase();
-  const filter = dirFilter.value;
   const sortVal = dirSort.value;
 
   const results = allDirFeatures.filter(f => {
-    // Category filter
-    if (filter.startsWith('cat:')) {
-      const cat = filter.slice(4);
-      if (f._source !== cat) return false;
-    }
-    // Tag filter
-    else if (filter.startsWith('tag:')) {
-      const tagToMatch = filter.slice(4).toLowerCase();
+    // Custom Multi-select OR logic
+    if (!selectedFilters.has('all') && selectedFilters.size > 0) {
+      const categories = [];
+      const tags = [];
+      selectedFilters.forEach(val => {
+        if (val.startsWith('cat:')) categories.push(val.slice(4));
+        else if (val.startsWith('tag:')) tags.push(val.slice(4).toLowerCase());
+      });
+
+      const categoryMatch = categories.includes(f._source);
       const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
-      if (!featureTags.includes(tagToMatch)) return false;
-    }
-    // Backward / direct URL match
-    else if (filter !== 'all' && filter !== '') {
-      const isSource = (f._source === filter);
-      const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
-      if (!isSource && !featureTags.includes(filter.toLowerCase())) return false;
+      const tagMatch = featureTags.some(t => tags.includes(t));
+
+      // Match category OR tag
+      if (!categoryMatch && !tagMatch) return false;
     }
 
     if (term.length > 0) {
@@ -620,10 +1467,84 @@ function renderDirectory() {
     card.className = 'facility-card';
     card.setAttribute('data-type', f._source);
     
+    // Determine the most used tag color for the card's left border
+    const cardTags = (f.properties.tags || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    if (cardTags.length > 0) {
+      const colorCounts = {};
+      cardTags.forEach(tag => {
+        const color = tagColors[tag];
+        if (color) {
+          colorCounts[color] = (colorCounts[color] || 0) + 1;
+        }
+      });
+      
+      let maxCount = 0;
+      let prominentColor = '';
+      cardTags.forEach(tag => {
+        const color = tagColors[tag];
+        if (color && colorCounts[color] > maxCount) {
+          maxCount = colorCounts[color];
+          prominentColor = color;
+        }
+      });
+      
+      if (prominentColor) {
+        card.style.borderLeftColor = prominentColor;
+      }
+    }
+    
     const tagBadges = (f.properties.tags || f._source)
       .split(',')
-      .map(tag => `<span class="facility-badge badge-${f._source}">${tag.trim()}</span>`)
+      .map(tag => {
+        const cleanTag = tag.trim();
+        const color = tagColors[cleanTag.toLowerCase()] || '#888888';
+        return `<span class="facility-badge" style="background-color: ${color}; color: #ffffff;">${cleanTag}</span>`;
+      })
       .join(' ');
+
+    // Extract Contact & Directions
+    const phone = f.properties.phone;
+    const url = f.properties.url;
+    
+    let directionsUrl = '';
+    if (f.geometry && f.geometry.type === 'Point') {
+      const coords = f.geometry.coordinates; // [lng, lat]
+      directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
+    } else if (f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')) {
+      if (f.bbox) {
+        const lat = (f.bbox[1] + f.bbox[3]) / 2;
+        const lng = (f.bbox[0] + f.bbox[2]) / 2;
+        directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      } else if (f.geometry.coordinates && f.geometry.coordinates[0] && f.geometry.coordinates[0][0]) {
+        const coords = f.geometry.coordinates[0][0];
+        directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
+      }
+    }
+
+    let phoneButton = phone ? `
+      <a href="tel:${phone.replace(/[^0-9]/g, '')}" class="facility-link phone-link" title="Call ${f.properties.name}" onclick="event.stopPropagation()">
+        <svg class="detail-icon" viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.5 10.38,15.74 13.09,17.18L15.29,14.98C15.56,14.71 15.96,14.63 16.3,14.74C17.43,15.11 18.64,15.31 19.89,15.31C20.5,15.31 21,15.81 21,16.42V19.89C21,20.5 20.5,21 19.89,21C10.56,21 3,13.44 3,4.11C3,3.5 3.5,3 4.11,3H7.58C8.19,3 8.69,3.5 8.69,4.11C8.69,5.36 8.89,6.57 9.26,7.7C9.37,8.04 9.29,8.44 9.02,8.71L6.62,10.79Z"/></svg>
+        <span>Call</span>
+      </a>` : '';
+
+    let webButton = url ? `
+      <a href="${url}" target="_blank" class="facility-link web-link" title="Visit website" onclick="event.stopPropagation()">
+        <svg class="detail-icon" viewBox="0 0 24 24"><path d="M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3H14Z"/></svg>
+        <span>Website</span>
+      </a>` : '';
+
+    let dirButton = directionsUrl ? `
+      <a href="${directionsUrl}" target="_blank" class="facility-link dir-link" title="Get directions on Google Maps" onclick="event.stopPropagation()">
+        <svg class="detail-icon" viewBox="0 0 24 24"><path d="M22.41 11.59l-8.5-8.5a3 3 0 0 0-4.24 0l-8.5 8.5a3 3 0 0 0 0 4.24l8.5 8.5a3 3 0 0 0 4.24 0l8.5-8.5a3 3 0 0 0 0-4.24zM12 18a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm1-5.5a1 1 0 0 1-2 0v-4a1 1 0 0 1 2 0v4z"/></svg>
+        <span>Directions</span>
+      </a>` : '';
+
+    let detailsHtml = (phoneButton || webButton || dirButton) ? `
+      <div class="facility-details">
+        ${phoneButton}
+        ${webButton}
+        ${dirButton}
+      </div>` : '';
     
     card.innerHTML = `
       <div class="facility-header">
@@ -632,13 +1553,29 @@ function renderDirectory() {
       </div>
       <p>${f.properties.description || ''}</p>
       <div class="facility-address">${f.properties.address || ''}</div>
+      ${detailsHtml}
     `;
 
     card.addEventListener('click', () => {
       const iframe = document.getElementById('mapFrame');
       if (iframe) {
-        // Automatically reveal all layers so the feature isn't hidden by a previous state
-        iframe.src = `https://map.westville.app/?show=all&feature=${encodeURIComponent(f.properties.name)}`;
+        const nextUrl = `https://map.westville.app/?show=all&feature=${encodeURIComponent(f.properties.name)}`;
+        iframe.src = nextUrl;
+        if (typeof updateMapHeaderFromUrl === 'function') {
+          updateMapHeaderFromUrl(nextUrl);
+        }
+        
+        // Update parent URL bar immediately for visual confirmation
+        try {
+          const url = new URL(nextUrl);
+          const searchStr = url.search;
+          if (searchStr !== window.location.search) {
+            window.history.replaceState(null, '', window.location.pathname + searchStr);
+          }
+        } catch (err) {
+          console.error('Error updating parent URL on card click:', err);
+        }
+
         iframe.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
@@ -648,7 +1585,6 @@ function renderDirectory() {
 }
 
 dirSearch.addEventListener('input', renderDirectory);
-dirFilter.addEventListener('change', renderDirectory);
 dirSort.addEventListener('change', renderDirectory);
 
 // Start fetching data

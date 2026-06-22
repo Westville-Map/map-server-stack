@@ -100,27 +100,61 @@ const layerStates = {
 // Apply URL overrides
 const allLayerNames = Object.keys(LAYER_ID_MAP);
 
-// 1. Handle magic 'all' keyword
+if (params.get('show')) {
+  if (showParams.includes('all')) {
+    allLayerNames.forEach(name => {
+      layerStates[LAYER_ID_MAP[name]].visible = true;
+    });
+  } else {
+    // 1. Hide thematic layers not explicitly listed in show
+    const thematicLayers = ['parking', 'establishments', 'recreation'];
+    thematicLayers.forEach(friendlyName => {
+      const layerId = LAYER_ID_MAP[friendlyName];
+      if (showParams.includes(friendlyName)) {
+        layerStates[layerId].visible = true;
+      } else {
+        layerStates[layerId].visible = false;
+      }
+    });
+
+    // 2. Map & Satellite exclusivity / visibility rules
+    if (showParams.includes('satellite')) {
+      layerStates['satellite-layer'].visible = true;
+    } else {
+      layerStates['satellite-layer'].visible = false;
+    }
+
+    if (showParams.includes('map')) {
+      layerStates['Background'].visible = true;
+    } else if (showParams.includes('satellite') && !showParams.includes('map')) {
+      layerStates['Background'].visible = false;
+    }
+  }
+}
+
+// 3. Handle magic 'all' hide
 if (hideParams.includes('all')) {
   allLayerNames.forEach(name => {
     layerStates[LAYER_ID_MAP[name]].visible = false;
   });
-} else if (showParams.includes('all')) {
-  allLayerNames.forEach(name => {
-    layerStates[LAYER_ID_MAP[name]].visible = true;
+} else {
+  // Apply specific hides
+  hideParams.forEach(friendlyName => {
+    const layerId = LAYER_ID_MAP[friendlyName];
+    if (layerId) {
+      layerStates[layerId].visible = false;
+    }
   });
 }
 
-// 2. Apply specific overrides
-allLayerNames.forEach(friendlyName => {
+// 4. Double check any specific show parameters are explicitly respected (if hide didn't block them)
+showParams.forEach(friendlyName => {
   const layerId = LAYER_ID_MAP[friendlyName];
-  if (showParams.includes(friendlyName)) {
+  if (layerId && friendlyName !== 'all') {
     layerStates[layerId].visible = true;
   }
-  if (hideParams.includes(friendlyName)) {
-    layerStates[layerId].visible = false;
-  }
 });
+
 
 const bounds = [-75.1390197418999, 39.85893228827481, -75.11407050609648, 39.87873000870905];
 
@@ -236,7 +270,7 @@ try {
               'visibility': layerStates['satellite-layer'].visible ? 'visible' : 'none'
           },
           paint: {
-              'raster-opacity': 0.3
+              'raster-opacity': layerStates['Background'].visible ? 0.3 : 1.0
           }
       }); 
       
@@ -408,11 +442,66 @@ try {
               'circle-radius': 8,
               'circle-color': [
                   'case',
-                  ['in', 'Shop', ['coalesce', ['get', 'tags'], '']], '#10b981',       // Green
-                  ['in', 'Brewery', ['coalesce', ['get', 'tags'], '']], '#ba103471',
-                  ['in', 'Take Out', ['coalesce', ['get', 'tags'], '']], '#ba103471',
-                  ['in', 'Banquet Hall', ['coalesce', ['get', 'tags'], '']], '#ba103471',
-                  '#888888'                // Default Gray
+                  // Nightlife & Drinks - Amber
+                  ['any',
+                      ['in', 'Brewery', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Bar', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Craft Beer', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Nightlife', ['coalesce', ['get', 'tags'], '']]
+                  ], '#d97706',
+                  // Food & Dining - Rose
+                  ['any',
+                      ['in', 'Restaurant', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Dining', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Food', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Cafe', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Banquet Hall', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Event Space', ['coalesce', ['get', 'tags'], '']],                      
+                      ['in', 'Diner', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Bakery', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Sweets', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Take Out', ['coalesce', ['get', 'tags'], '']]
+                  ], '#e11d48',
+                  // Wellness & Fitness - Teal
+                  ['any',
+                      ['in', 'Wellness', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Fitness', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Yoga', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Tai Chi', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Health', ['coalesce', ['get', 'tags'], '']]
+                  ], '#0d9488',
+                  // Shop & Retail & Services - Emerald
+                  ['any',
+                      ['in', 'Shop', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Retail', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Groceries', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Convenience Store', ['coalesce', ['get', 'tags'], '']]
+                  ], '#059669',
+                  // Public/Gov Resources - Royal Blue
+                  ['any',
+                      ['in', 'Borough Offices', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Public Resource', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Government', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Library', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Community', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Post Office', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Education', ['coalesce', ['get', 'tags'], '']]
+                  ], '#2563eb',
+                  // Safety - Red
+                  ['any',
+                      ['in', 'Safety', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Police Station', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Fire Station', ['coalesce', ['get', 'tags'], '']]
+                  ], '#dc2626',
+                  // Autos  - Gold
+                  ['any',
+                      ['in', 'Auto repair', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Auto Repair', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Dealership', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Mechanic', ['coalesce', ['get', 'tags'], '']]
+                  ], '#ffd700',
+                  // Default Gray
+                  '#888888'
               ],
               'circle-stroke-width': 1,
               'circle-stroke-color': '#ffffff'
@@ -493,13 +582,16 @@ try {
       searchContainer.className = 'wv-search-control';
       searchContainer.innerHTML = `
         <div class="search-and-filter">
-        <input type="search" id="wv-search-input" placeholder="Search..." />
-        <select id="wv-search-filter">
-            <option value="all">All Types</option>
-            <option value="parking">Parking</option>
-            <option value="establishment">Establishments</option>
-            <option value="recreation">Recreation</option>
-        </select>
+          <input type="search" id="wv-search-input" placeholder="Search..." />
+          <div class="wv-multiselect" id="wv-search-filter-container">
+            <div class="wv-multiselect-trigger" id="wv-search-filter-trigger">
+              <span class="wv-trigger-text">All Categories & Tags</span>
+              <span class="wv-trigger-arrow">▼</span>
+            </div>
+            <div class="wv-multiselect-dropdown" id="wv-search-filter-dropdown">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
         </div>
         <div id="wv-search-results" class="wv-search-results"></div>
       `;
@@ -518,9 +610,49 @@ try {
       });
 
       const searchInput = searchContainer.querySelector('#wv-search-input');
-      const searchFilter = searchContainer.querySelector('#wv-search-filter');
+      const searchFilterContainer = searchContainer.querySelector('#wv-search-filter-container');
+      const searchFilterTrigger = searchContainer.querySelector('#wv-search-filter-trigger');
+      const searchFilterDropdown = searchContainer.querySelector('#wv-search-filter-dropdown');
       const searchResults = searchContainer.querySelector('#wv-search-results');
       let selectedFeatureName = null;
+      let selectedFilters = new Set(['all']);
+
+      // Toggle Multiselect dropdown
+      searchFilterTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          searchFilterContainer.classList.toggle('active');
+      });
+
+      document.addEventListener('click', () => {
+          searchFilterContainer.classList.remove('active');
+      });
+
+      searchFilterDropdown.addEventListener('click', (e) => {
+          e.stopPropagation();
+      });
+
+      function updateFilterTriggerText() {
+          const triggerText = searchFilterTrigger.querySelector('.wv-trigger-text');
+          if (selectedFilters.has('all') || selectedFilters.size === 0) {
+              triggerText.innerText = 'All Categories & Tags';
+          } else {
+              const labels = [];
+              selectedFilters.forEach(val => {
+                  if (val === 'all') return;
+                  if (val.startsWith('cat:')) {
+                      const catName = val.slice(4);
+                      labels.push(catName.charAt(0).toUpperCase() + catName.slice(1));
+                  } else if (val.startsWith('tag:')) {
+                      labels.push(val.slice(4));
+                  }
+              });
+              if (labels.length === 1) {
+                  triggerText.innerText = labels[0];
+              } else {
+                  triggerText.innerText = `Filtered (${labels.length})`;
+              }
+          }
+      }
 
       // Highlight source & layers
       map.addSource('highlight-point-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
@@ -580,31 +712,101 @@ try {
       });
       const sortedTags = Array.from(uniqueTags).sort();
 
-      searchFilter.innerHTML = '<option value="all">Categories & Tags</option>';
-      searchFilter.innerHTML += `
-          <optgroup label="Categories">
-              <option value="cat:parking">Parking</option>
-              <option value="cat:establishment">Establishments</option>
-              <option value="cat:recreation">Recreation</option>
-          </optgroup>
-      `;
-      let tagsGroup = '<optgroup label="Filter by Tag">';
-      sortedTags.forEach(tag => {
-          tagsGroup += `<option value="tag:${tag}">${tag}</option>`;
-      });
-      tagsGroup += '</optgroup>';
-      searchFilter.innerHTML += tagsGroup;
+      function populateFilterDropdown() {
+          let dropdownHtml = `
+            <div class="wv-multiselect-option" data-value="all">
+              <input type="checkbox" id="wv-cb-all" ${selectedFilters.has('all') ? 'checked' : ''} />
+              <label class="wv-multiselect-option-label" for="wv-cb-all">All Categories & Tags</label>
+            </div>
+            <div class="wv-multiselect-group-title">Categories</div>
+            <div class="wv-multiselect-option" data-value="cat:parking">
+              <input type="checkbox" id="wv-cb-cat-parking" ${selectedFilters.has('cat:parking') ? 'checked' : ''} />
+              <label class="wv-multiselect-option-label" for="wv-cb-cat-parking">Parking</label>
+            </div>
+            <div class="wv-multiselect-option" data-value="cat:establishment">
+              <input type="checkbox" id="wv-cb-cat-est" ${selectedFilters.has('cat:establishment') ? 'checked' : ''} />
+              <label class="wv-multiselect-option-label" for="wv-cb-cat-est">Establishments</label>
+            </div>
+            <div class="wv-multiselect-option" data-value="cat:recreation">
+              <input type="checkbox" id="wv-cb-cat-rec" ${selectedFilters.has('cat:recreation') ? 'checked' : ''} />
+              <label class="wv-multiselect-option-label" for="wv-cb-cat-rec">Recreation</label>
+            </div>
+            <div class="wv-multiselect-group-title">Filter by Tag</div>
+          `;
+
+          sortedTags.forEach((tag, idx) => {
+              const isChecked = selectedFilters.has(`tag:${tag}`);
+              dropdownHtml += `
+                <div class="wv-multiselect-option" data-value="tag:${tag}">
+                  <input type="checkbox" id="wv-cb-tag-${idx}" ${isChecked ? 'checked' : ''} />
+                  <label class="wv-multiselect-option-label" for="wv-cb-tag-${idx}">${tag}</label>
+                </div>
+              `;
+          });
+
+          searchFilterDropdown.innerHTML = dropdownHtml;
+
+          // Attach listeners to custom dropdown checkboxes
+          searchFilterDropdown.querySelectorAll('.wv-multiselect-option').forEach(option => {
+              const cb = option.querySelector('input[type="checkbox"]');
+              
+              const handleToggle = () => {
+                  const val = option.getAttribute('data-value');
+                  if (val === 'all') {
+                      if (cb.checked) {
+                          selectedFilters.clear();
+                          selectedFilters.add('all');
+                          searchFilterDropdown.querySelectorAll('input[type="checkbox"]').forEach(otherCb => {
+                              if (otherCb !== cb) otherCb.checked = false;
+                          });
+                      } else {
+                          selectedFilters.delete('all');
+                      }
+                  } else {
+                      if (cb.checked) {
+                          selectedFilters.delete('all');
+                          const allCb = document.getElementById('wv-cb-all');
+                          if (allCb) allCb.checked = false;
+                          selectedFilters.add(val);
+                      } else {
+                          selectedFilters.delete(val);
+                      }
+                  }
+
+                  if (selectedFilters.size === 0) {
+                      selectedFilters.add('all');
+                      const allCb = document.getElementById('wv-cb-all');
+                      if (allCb) allCb.checked = true;
+                  }
+
+                  updateFilterTriggerText();
+                  performSearch();
+              };
+
+              option.addEventListener('click', (e) => {
+                  if (e.target !== cb && e.target.tagName !== 'LABEL') {
+                      cb.checked = !cb.checked;
+                      handleToggle();
+                  }
+              });
+              cb.addEventListener('change', handleToggle);
+          });
+          updateFilterTriggerText();
+      }
+
+      populateFilterDropdown();
 
       function performSearch() {
           const term = searchInput.value.toLowerCase();
-          const filter = searchFilter.value;
           
           if (selectedFeatureName && term !== selectedFeatureName.toLowerCase()) {
               selectedFeatureName = null;
           }
 
           searchResults.innerHTML = '';
-          if (term.length === 0 && filter === 'all') {
+          const hasFilter = !selectedFilters.has('all') && selectedFilters.size > 0;
+
+          if (term.length === 0 && !hasFilter) {
               searchResults.classList.remove('active');
               map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
               map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
@@ -614,22 +816,21 @@ try {
           }
 
           let results = allFeatures.filter(f => {
-              // Category filter
-              if (filter.startsWith('cat:')) {
-                  const cat = filter.slice(4);
-                  if (f._source !== cat) return false;
-              }
-              // Tag filter
-              else if (filter.startsWith('tag:')) {
-                  const tagToMatch = filter.slice(4).toLowerCase();
+              // Custom Multi-select OR logic
+              if (hasFilter) {
+                  const categories = [];
+                  const tags = [];
+                  selectedFilters.forEach(val => {
+                      if (val.startsWith('cat:')) categories.push(val.slice(4));
+                      else if (val.startsWith('tag:')) tags.push(val.slice(4).toLowerCase());
+                  });
+
+                  const categoryMatch = categories.includes(f._source);
                   const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
-                  if (!featureTags.includes(tagToMatch)) return false;
-              }
-              // Fallback backward / direct URL match
-              else if (filter !== 'all' && filter !== '') {
-                  const isSource = (f._source === filter);
-                  const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
-                  if (!isSource && !featureTags.includes(filter.toLowerCase())) return false;
+                  const tagMatch = featureTags.some(t => tags.includes(t));
+
+                  // Match category OR tag
+                  if (!categoryMatch && !tagMatch) return false;
               }
 
               if (term.length > 0) {
@@ -655,7 +856,7 @@ try {
               searchResults.classList.remove('active');
           }
 
-          if (term.length === 0 && filter !== 'all') {
+          if (term.length === 0 && hasFilter) {
               // Highlight all matching features in the filter
               const pointFeatures = results.filter(f => f.geometry.type === 'Point');
               const polyFeatures = results.filter(f => f.geometry.type !== 'Point');
@@ -768,32 +969,54 @@ try {
       }
 
       searchInput.addEventListener('input', performSearch);
-      searchFilter.addEventListener('change', performSearch);
 
       function updateUrlParams() {
           const newParams = new URLSearchParams();
           
-          // Compute show/hide based on checkboxes
-          const currentShows = [];
-          const currentHides = [];
-          const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
-          layerCheckboxes.forEach(cb => {
-              const span = cb.parentElement.querySelector('.layer-control-name');
-              if (span) {
-                  const title = span.getAttribute('title');
-                  const layerId = Object.keys(layerStates).find(id => layerStates[id].name === title);
-                  if (layerId) {
-                      const friendly = Object.keys(LAYER_ID_MAP).find(k => LAYER_ID_MAP[k] === layerId);
-                      if (friendly) {
-                          if (cb.checked) currentShows.push(friendly);
-                          else currentHides.push(friendly);
-                      }
-                  }
-              }
-          });
+           // Compute show/hide based on checkboxes if rendered, otherwise fall back to layerStates
+           const currentShows = [];
+           const currentHides = [];
+           const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
+           if (layerCheckboxes.length > 0) {
+               layerCheckboxes.forEach(cb => {
+                   const span = cb.parentElement.querySelector('.layer-control-name');
+                   if (span) {
+                       const title = span.getAttribute('title');
+                       const layerId = Object.keys(layerStates).find(id => id === title || layerStates[id].name === title);
+                       if (layerId) {
+                           const friendly = Object.keys(LAYER_ID_MAP).find(k => LAYER_ID_MAP[k] === layerId);
+                           if (friendly) {
+                               if (cb.checked) currentShows.push(friendly);
+                               else currentHides.push(friendly);
+                           }
+                       }
+                   }
+               });
+           } else {
+               // Fallback to layerStates before checkboxes are rendered
+               Object.keys(LAYER_ID_MAP).forEach(friendly => {
+                   const layerId = LAYER_ID_MAP[friendly];
+                   if (layerStates[layerId]) {
+                       if (layerStates[layerId].visible) {
+                           currentShows.push(friendly);
+                       } else {
+                           currentHides.push(friendly);
+                       }
+                   }
+               });
+           }
 
           if (currentShows.length > 0) newParams.set('show', currentShows.join(','));
           if (currentHides.length > 0) newParams.set('hide', currentHides.join(','));
+
+          // Dynamically adjust satellite opacity based on Map (Background) layer checkbox state
+          let mapVisible = layerStates['Background'].visible;
+          if (layerCheckboxes.length > 0) {
+              mapVisible = currentShows.includes('map');
+          }
+          if (map.getLayer('satellite-layer')) {
+              map.setPaintProperty('satellite-layer', 'raster-opacity', mapVisible ? 0.3 : 1.0);
+          }
 
           const term = searchInput.value.trim();
           if (selectedFeatureName) {
@@ -802,14 +1025,30 @@ try {
               newParams.set('search', term);
           }
           
-          const filter = searchFilter.value;
-          if (filter !== 'all') {
-              const cleanFilter = filter.startsWith('tag:') || filter.startsWith('cat:') ? filter.split(':')[1] : filter;
-              newParams.set('filter', cleanFilter);
+          if (!selectedFilters.has('all') && selectedFilters.size > 0) {
+              const filterValues = [];
+              selectedFilters.forEach(val => {
+                  if (val === 'all') return;
+                  const cleanVal = val.startsWith('tag:') || val.startsWith('cat:') ? val.split(':')[1] : val;
+                  if (!filterValues.some(v => v.toLowerCase() === cleanVal.toLowerCase())) {
+                      filterValues.push(cleanVal);
+                  }
+              });
+              if (filterValues.length > 0) {
+                  newParams.set('filter', filterValues.join(','));
+              }
           }
           
           const newUrl = window.location.pathname + '?' + newParams.toString();
           window.history.replaceState(null, '', newUrl);
+
+          // Post state change to parent window
+          if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                  type: 'westville-map-state-change',
+                  url: window.location.origin + window.location.pathname + '?' + newParams.toString()
+              }, '*');
+          }
       }
 
       // Update background text and enforce initial checkbox state
@@ -844,16 +1083,31 @@ try {
       const initUrl = new URLSearchParams(window.location.search);
       const urlFilter = initUrl.get('filter');
       if (urlFilter) {
-          let opt = Array.from(searchFilter.options).find(o => o.value === urlFilter);
-          if (!opt) {
-              opt = Array.from(searchFilter.options).find(o => o.value === 'tag:' + urlFilter);
+          selectedFilters.clear();
+          const filterParts = urlFilter.split(',').map(s => s.trim().toLowerCase());
+          
+          filterParts.forEach(part => {
+              const matchingCat = ['parking', 'establishment', 'recreation'].find(c => c.toLowerCase() === part);
+              if (matchingCat) {
+                  selectedFilters.add('cat:' + matchingCat);
+              } else {
+                  const matchingTag = sortedTags.find(t => t.toLowerCase() === part);
+                  if (matchingTag) {
+                      selectedFilters.add('tag:' + matchingTag);
+                  } else {
+                      const exactTag = sortedTags.find(t => t === part);
+                      if (exactTag) {
+                          selectedFilters.add('tag:' + exactTag);
+                      }
+                  }
+              }
+          });
+          
+          if (selectedFilters.size === 0) {
+              selectedFilters.add('all');
           }
-          if (!opt) {
-              opt = Array.from(searchFilter.options).find(o => o.value === 'cat:' + urlFilter);
-          }
-          if (opt) {
-              searchFilter.value = opt.value;
-          }
+          
+          populateFilterDropdown();
       }
       const initFeature = initUrl.get('feature');
       const initSearchStr = initUrl.get('search');
@@ -876,6 +1130,7 @@ try {
         duration: 1000    // Animation duration in milliseconds
     });
       }
+      updateUrlParams();
   });
 } catch (error) {
   console.error('Error loading map:', error);
