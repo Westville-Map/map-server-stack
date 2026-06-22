@@ -442,6 +442,12 @@ try {
               'circle-radius': 8,
               'circle-color': [
                   'case',
+                  // Safety - Red
+                  ['any',
+                      ['in', 'Safety', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Police Station', ['coalesce', ['get', 'tags'], '']],
+                      ['in', 'Fire Station', ['coalesce', ['get', 'tags'], '']]
+                  ], '#dc2626',
                   // Nightlife & Drinks - Amber
                   ['any',
                       ['in', 'Brewery', ['coalesce', ['get', 'tags'], '']],
@@ -487,12 +493,6 @@ try {
                       ['in', 'Post Office', ['coalesce', ['get', 'tags'], '']],
                       ['in', 'Education', ['coalesce', ['get', 'tags'], '']]
                   ], '#2563eb',
-                  // Safety - Red
-                  ['any',
-                      ['in', 'Safety', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Police Station', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Fire Station', ['coalesce', ['get', 'tags'], '']]
-                  ], '#dc2626',
                   // Autos  - Gold
                   ['any',
                       ['in', 'Auto repair', ['coalesce', ['get', 'tags'], '']],
@@ -582,9 +582,9 @@ try {
       searchContainer.className = 'wv-search-control';
       searchContainer.innerHTML = `
         <div class="search-and-filter">
-          <input type="search" id="wv-search-input" placeholder="Search..." />
+          <input type="search" id="wv-search-input" placeholder="Search..." aria-label="Search map facilities" />
           <div class="wv-multiselect" id="wv-search-filter-container">
-            <div class="wv-multiselect-trigger" id="wv-search-filter-trigger">
+            <div class="wv-multiselect-trigger" id="wv-search-filter-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter map by categories and tags">
               <span class="wv-trigger-text">All Categories & Tags</span>
               <span class="wv-trigger-arrow">▼</span>
             </div>
@@ -618,13 +618,26 @@ try {
       let selectedFilters = new Set(['all']);
 
       // Toggle Multiselect dropdown
+      function toggleMapDropdown(e) {
+          if (e) e.stopPropagation();
+          const isActive = searchFilterContainer.classList.toggle('active');
+          searchFilterTrigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+      }
+
       searchFilterTrigger.addEventListener('click', (e) => {
-          e.stopPropagation();
-          searchFilterContainer.classList.toggle('active');
+          toggleMapDropdown(e);
+      });
+
+      searchFilterTrigger.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleMapDropdown(e);
+          }
       });
 
       document.addEventListener('click', () => {
           searchFilterContainer.classList.remove('active');
+          searchFilterTrigger.setAttribute('aria-expanded', 'false');
       });
 
       searchFilterDropdown.addEventListener('click', (e) => {

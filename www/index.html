@@ -788,13 +788,24 @@
       font-family: inherit;
       border: none;
     }
+
+    /* Focus visible premium outline styles for keyboard accessibility (WCAG 2.4.7) */
+    :focus-visible {
+      outline: 3px solid var(--primary-blue) !important;
+      outline-offset: 3px !important;
+      box-shadow: 0 0 0 5px rgba(43, 101, 159, 0.35) !important;
+    }
+    
+    :focus {
+      outline: none;
+    }
   </style>
 </head>
 <body>
 
   <header>
     <div class="brand-logo">
-      <div class="brand-icon-img"><img class="mapicon" src="https://map.westville.app/favicon.svg"/></div>
+      <div class="brand-icon-img"><img class="mapicon" src="https://map.westville.app/favicon.svg" alt="" aria-hidden="true"/></div>
       <h1>Welcome to Westville</h1>
     </div>
     <div class="header-shortcuts">
@@ -840,7 +851,7 @@
           name="mapFrame"
           id="mapFrame"
           src="https://map.westville.app" 
-          title="Welcome to Westville">
+          title="Interactive map of Westville facilities, parks, and parking areas">
         </iframe>
       </div>
     </section>
@@ -892,10 +903,10 @@
       <!-- Directory Section -->
       <h3 class="directory-header">Westville Public Directory</h3>
       <div class="directory-controls">
-        <input type="search" id="dir-search" class="directory-search" placeholder="Search facilities, parks, or parking..." />
+        <input type="search" id="dir-search" class="directory-search" placeholder="Search facilities, parks, or parking..." aria-label="Search Westville directory" />
         
         <div class="custom-multiselect" id="dir-filter-container">
-          <div class="multiselect-trigger" id="dir-filter-trigger">
+          <div class="multiselect-trigger" id="dir-filter-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter directory by categories and tags">
             <span class="trigger-text">All Categories & Tags</span>
             <span class="trigger-arrow">▼</span>
           </div>
@@ -904,7 +915,7 @@
           </div>
         </div>
 
-        <select id="dir-sort" class="directory-filter">
+        <select id="dir-sort" class="directory-filter" aria-label="Sort directory results">
           <option value="name_asc">Name (A-Z)</option>
           <option value="name_desc">Name (Z-A)</option>
           <option value="tags_asc">Tag (A-Z)</option>
@@ -1167,13 +1178,26 @@ let allDirFeatures = [];
 let selectedFilters = new Set(['all']); // Default to all
 
 // Toggle Multiselect dropdown
+function toggleDirDropdown(e) {
+  if (e) e.stopPropagation();
+  const isActive = dirFilterContainer.classList.toggle('active');
+  dirFilterTrigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+}
+
 dirFilterTrigger.addEventListener('click', (e) => {
-  e.stopPropagation();
-  dirFilterContainer.classList.toggle('active');
+  toggleDirDropdown(e);
+});
+
+dirFilterTrigger.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleDirDropdown(e);
+  }
 });
 
 document.addEventListener('click', () => {
   dirFilterContainer.classList.remove('active');
+  dirFilterTrigger.setAttribute('aria-expanded', 'false');
 });
 
 dirFilterDropdown.addEventListener('click', (e) => {
@@ -1246,6 +1270,30 @@ const tagColors = {
   'parking': '#2563eb',
   'free': '#2563eb'
 };
+
+// WCAG 2.1 Compliant Relative Luminance & Contrast Ratio calculation helper
+function getContrastColor(hexcolor) {
+  if (!hexcolor) return '#ffffff';
+  let hex = hexcolor.replace('#', '').trim();
+  if (hex.length === 3) {
+    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  }
+  if (hex.length !== 6) return '#ffffff';
+  
+  const rgb = [
+    parseInt(hex.substring(0, 2), 16) / 255,
+    parseInt(hex.substring(2, 4), 16) / 255,
+    parseInt(hex.substring(4, 6), 16) / 255
+  ].map(val => {
+    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+  });
+  
+  const luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  const ratioWhite = 1.05 / (luminance + 0.05);
+  const ratioDark = (luminance + 0.05) / 0.06; // #111827 relative luminance is ~0.01
+  
+  return ratioDark > ratioWhite ? '#111827' : '#ffffff';
+}
 
 function updateFilterTriggerText() {
   const triggerText = dirFilterTrigger.querySelector('.trigger-text');
@@ -1466,6 +1514,11 @@ function renderDirectory() {
     const card = document.createElement('div');
     card.className = 'facility-card';
     card.setAttribute('data-type', f._source);
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    const tagsString = (f.properties.tags || f._source || '').toLowerCase().split(',').map(t => t.trim()).join(', ');
+    const ariaLabel = `${f.properties.name || 'Unnamed'}. Tags: ${tagsString}. Press Enter or Space to show on map.`;
+    card.setAttribute('aria-label', ariaLabel);
     
     // Determine the most used tag color for the card's left border
     const cardTags = (f.properties.tags || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
@@ -1498,7 +1551,8 @@ function renderDirectory() {
       .map(tag => {
         const cleanTag = tag.trim();
         const color = tagColors[cleanTag.toLowerCase()] || '#888888';
-        return `<span class="facility-badge" style="background-color: ${color}; color: #ffffff;">${cleanTag}</span>`;
+        const textColor = getContrastColor(color);
+        return `<span class="facility-badge" style="background-color: ${color}; color: ${textColor};">${cleanTag}</span>`;
       })
       .join(' ');
 
@@ -1577,6 +1631,13 @@ function renderDirectory() {
         }
 
         iframe.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.click();
       }
     });
 
