@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=fallback" rel="stylesheet">
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 
   <style>
     :root {
@@ -57,7 +58,12 @@
       align-items: center;
       gap: 15px;
     }
-
+    
+    .brand-logo a {
+    text-decoration: unset;
+    color: unset;
+    }
+    
     .brand-icon {
       width: 40px;
       height: 40px;
@@ -87,7 +93,7 @@
       align-items: center;
       justify-content: center;
       
-      filter: drop-shadow(0px 1.5px 2px white);
+      /* filter: drop-shadow(0px 1.5px 2px white); */
     }
     
    .brand-icon-img img path, .mapicon path{
@@ -134,6 +140,11 @@
       background-color: #1c4672;
     }
 
+    .btn-icon {
+      margin-right: 5px;
+      display: inline-block;
+    }
+
     /* Container for content */
     .container {
       max-width: 1000px;
@@ -166,47 +177,72 @@
     }
 
     /* Grid for Shortcut Cards */
-    .grid-header {
-      text-align: center;
+    .shortcuts-wrapper-card {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
       margin-bottom: 2rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.015);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .shortcuts-wrapper-card:hover {
+      border-color: #94a3b8;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.03);
+    }
+
+    .shortcuts-wrapper-card.collapsed {
+      padding: 1rem;
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .grid-header {
+      text-align: left;
+      margin-top: 0;
+      margin-bottom: 1rem;
       color: var(--primary-blue);
-      font-size: 1.8rem;
+      font-size: 1.15rem;
+      font-weight: 700;
     }
 
     .shortcuts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
     }
 
     .card {
       background: var(--white);
-      padding: 1.5rem;
+      padding: 0.9rem;
       border-radius: 8px;
       text-decoration: none;
       color: inherit;
-      border: 1px solid #ddd;
+      border: 1px solid #cbd5e1;
       border-left: 5px solid var(--primary-blue);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
       display: flex;
       flex-direction: column;
     }
 
     .card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.06);
       border-left-color: var(--accent-gold);
     }
 
     .card h4 {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      margin-top: 0;
+      margin-bottom: 0.3rem;
       color: var(--primary-blue);
     }
 
     .card p {
-      font-size: 0.95rem;
-      color: #666;
+      font-size: 0.76rem;
+      color: #555;
+      line-height: 1.4;
       flex-grow: 1;
     }
 
@@ -437,11 +473,185 @@
       border: none;
     }
 
-    /* Responsive - Mobile/Tablet */
-    @media (max-width: 600px) {
-      .hero h2 { font-size: 2rem; }
-      header { flex-direction: column; text-align: center; gap: 10px; }
-      .directory-controls { flex-direction: column; }
+    /* Shortcuts Collapsible Toggle Arrow Style */
+    .shortcuts-toggle-arrow {
+      display: none; /* Hidden on desktop */
+      font-size: 0.95rem;
+      margin-left: 8px;
+      color: var(--primary-blue);
+      transition: transform 0.2s ease;
+      vertical-align: middle;
+    }
+
+    /* Responsive - Mobile/Tablet (Up to 768px) */
+    @media (max-width: 768px) {
+      /* Reclaim wasted space at the top by hiding repeated introductory hero text */
+      .hero h2,
+      .hero p {
+        display: none !important;
+      }
+      
+      .hero {
+        padding: 0.5rem 0.5rem;
+        border-bottom: none;
+      }
+
+      /* Symmetrical layout: Brand logo on left, Help button on right of same top row */
+      header {
+        position: relative;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.6rem 0.8rem;
+        gap: 10px;
+      }
+
+      .brand-logo {
+        width: 100%;
+        justify-content: flex-start;
+        margin: 0;
+        gap: 8px; /* Reduce gap between icon and title text */
+        padding-right: 75px; /* Leave space for Help button on top-right */
+        box-sizing: border-box;
+      }
+
+      .brand-logo h1 {
+        width: auto;
+        text-align: left;
+        font-size: 1.15rem;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Inline brand icon in logo flow */
+      .brand-icon-img {
+        position: static;
+        display: flex;
+        align-items: center;
+      }
+
+      .brand-icon-img img {
+        max-width: 28px;
+        height: 28px;
+      }
+
+      /* Position Help button on the top-right of the header row */
+      #help-btn {
+        position: absolute;
+        right: 10px;
+        top: 8px;
+        margin: 0;
+      }
+
+      /* Tighten and center the two remaining shortcuts underneath */
+      .header-shortcuts {
+        justify-content: center;
+        width: 100%;
+        gap: 8px;
+      }
+
+      .header-shortcuts .header-btn {
+        font-size: 0.82rem;
+        padding: 4px 8px; /* Slightly tightened padding */
+        gap: 4px;
+      }
+
+      /* Compact map header actions and prevent text wrap */
+      .map-header {
+        padding: 8px 14px; /* Added back 2px padding on left/right for easier scrolling */
+      }
+
+      .map-header-actions {
+        width: 100%;
+        justify-content: center;
+        gap: 3px;
+      }
+
+      .map-header-actions .header-btn {
+        font-size: 0.76rem;
+        padding: 4px 5px;
+        gap: 4px;
+        flex: 1; /* Distribute space evenly on small screens */
+        justify-content: center;
+        min-width: 0;
+      }
+
+      .container {
+        margin: 1.5rem auto;
+        padding: 0 1rem;
+      }
+
+      /* Collapsible Quick Views & Shortcuts container rules */
+      .shortcuts-wrapper-card {
+        padding: 1.2rem 1rem;
+        margin-bottom: 1.5rem;
+        background: #ffffff;
+        border: 2px solid var(--primary-blue);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+      }
+
+      .shortcuts-wrapper-card.collapsed {
+        padding: 0.8rem 1rem;
+        background: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        box-shadow: none;
+      }
+
+      #shortcuts-trigger {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: transparent !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        margin-bottom: 0 !important;
+        user-select: none;
+        outline-offset: 2px;
+        width: 100%;
+        color: var(--primary-blue);
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+
+      #shortcuts-trigger.active {
+        margin-bottom: 0.8rem !important;
+      }
+
+      #shortcuts-trigger:hover {
+        background-color: transparent !important;
+      }
+
+      #shortcuts-trigger:focus-visible {
+        outline: 3px solid var(--accent-gold) !important;
+        outline-offset: 4px !important;
+        border-radius: 4px !important;
+      }
+
+      .shortcuts-toggle-arrow {
+        display: inline-block;
+      }
+
+      .shortcuts-grid.collapsed {
+        display: none !important;
+      }
+
+      #shortcuts-trigger.collapsed .shortcuts-toggle-arrow {
+        transform: rotate(0deg);
+      }
+
+      #shortcuts-trigger.active .shortcuts-toggle-arrow {
+        transform: rotate(180deg);
+      }
+
+      .directory-controls {
+        flex-direction: column;
+      }
+
+      .help-popover-card {
+        padding: 1.5rem 1.2rem;
+        max-height: 90vh;
+      }
     }
 
     /* Responsive - Large Desktop Viewports */
@@ -501,6 +711,7 @@
       text-decoration: none;
       transition: background-color 0.2s, color 0.2s, transform 0.1s;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .header-btn:hover {
@@ -646,16 +857,15 @@
       fill: currentColor;
     }
 
-    @media (max-width: 600px) {
-      .header-shortcuts {
-        justify-content: center;
-        width: 100%;
-      }
-      .header-btn {
-        font-size: 0.85rem;
-        padding: 5px 12px;
-      }
+    .detail-icon.stroke-icon {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
+
+
 
     .header-btn {
       font-family: inherit;
@@ -688,18 +898,55 @@
     /* Help Pop-over Card */
     .help-popover-card {
       background: var(--white);
-      padding: 2.5rem;
-      border-radius: 12px;
-      max-width: 500px;
+      border-radius: 16px;
+      max-width: 580px;
       width: 90%;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      max-height: 85vh;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
       position: relative;
       transform: scale(0.92);
       transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .help-popover-overlay.active .help-popover-card {
       transform: scale(1);
+    }
+
+    .help-popover-header {
+      padding: 1.5rem 2rem 1rem 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      position: relative;
+    }
+
+    .help-popover-body {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      max-height: 48vh;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .help-popover-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .help-popover-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .help-popover-body::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .help-popover-footer {
+      padding: 1rem 2rem 1.2rem 2rem;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
     }
 
     .help-popover-close {
@@ -795,9 +1042,386 @@
       outline-offset: 3px !important;
       box-shadow: 0 0 0 5px rgba(43, 101, 159, 0.35) !important;
     }
+
+    .header-btn:focus-visible {
+      outline: 3px solid var(--accent-gold) !important;
+      outline-offset: 3px !important;
+      box-shadow: 0 0 0 5px rgba(229, 193, 88, 0.4) !important;
+    }
     
     :focus {
       outline: none;
+    }
+
+    /* Print Modal & Option Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--white);
+      padding: 2.2rem;
+      border-radius: 12px;
+      max-width: 520px;
+      width: 90%;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      position: relative;
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.8rem;
+    }
+
+    .modal-header h3 {
+      color: var(--primary-blue);
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-grow: 1;
+      margin-right: 12px;
+      min-width: 0;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: #888;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: var(--text-dark);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: left;
+    }
+
+    .form-group label {
+      font-size: 0.95rem;
+      color: var(--text-dark);
+    }
+
+    .form-control {
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--white);
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus-visible {
+      border-color: var(--primary-blue);
+    }
+
+    .checkbox-group {
+      flex-direction: row !important;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      cursor: pointer;
+      margin-bottom: 0;
+      user-select: none;
+    }
+
+    .print-loading-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #eef5fa;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-top: 1rem;
+      color: var(--primary-blue);
+      font-size: 0.9rem;
+      border: 1px solid #d0e1ec;
+    }
+
+    .print-loading-status .spinner {
+      animation: spin 1.5s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .modal-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 2rem;
+      border-top: 1px solid #eee;
+      padding-top: 1.2rem;
+      align-items: stretch;
+    }
+
+    .action-buttons-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .modal-footer .btn-main,
+    .modal-footer .btn-secondary {
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      margin: 0;
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: var(--text-dark);
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #d4d4d4;
+    }
+
+    .btn-secondary:focus-visible {
+      outline: 3px solid #888 !important;
+      outline-offset: 3px !important;
+      box-shadow: 0 0 0 5px rgba(128, 128, 128, 0.4) !important;
+    }
+
+    .font-bold {
+      font-weight: 700;
+    }
+
+    /* Print Layout Container (Default Invisible in Screen) */
+    #print-layout-container {
+      display: none;
+    }
+
+    /* Media query rules optimized for high-contrast, ink-saving printing and page-budgeting */
+    @media print {
+      /* Hide standard page layout elements completely */
+      body > *:not(#print-layout-container) {
+        display: none !important;
+      }
+
+      html, body {
+        background: #fff !important;
+        color: #000 !important;
+        font-family: "Open Sans", Arial, sans-serif !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 11pt !important;
+        height: auto !important;
+      }
+
+      /* Make sure background colors and images print cleanly */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* Show and style our custom print container */
+      #print-layout-container {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+      }
+
+      .print-header {
+        border-bottom: 2px solid #333;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+
+      .print-header h1 {
+        font-size: 11.5pt;
+        color: #1a4d7c;
+        margin: 0;
+        font-weight: bold;
+      }
+
+      .print-header .print-meta {
+        font-size: 9pt;
+        color: #555;
+        text-align: right;
+      }
+
+      .print-subheader {
+        font-size: 10pt;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 10px;
+        font-style: italic;
+      }
+
+      .print-map-wrapper {
+        margin-bottom: 25px;
+        border: 1px solid #ccc;
+        background: #fafafa;
+        text-align: center;
+        page-break-inside: avoid;
+      }
+
+      .print-map-image {
+        max-width: 100%;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+      }
+
+      /* Allow map to fill the print page when printing map only or as a primary element */
+      #print-layout-container.print-portrait .print-map-image {
+        max-height: 7.8in; /* Expands to fill page height in portrait */
+      }
+
+      #print-layout-container.print-landscape .print-map-image {
+        max-height: 5.4in; /* Expands to fill page height in landscape */
+      }
+
+      .print-section-title {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #1a4d7c;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+        page-break-after: avoid;
+      }
+
+      /* Multi-column layout optimized for directory card page-budgeting */
+      .print-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .print-card {
+        border: 1px solid #ccc;
+        border-left: 6px solid #1a4d7c;
+        border-radius: 4px;
+        padding: 10px;
+        background: #fff;
+        page-break-inside: avoid;
+        font-size: 9.5pt;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .print-card-title {
+        font-weight: bold;
+        font-size: 11pt;
+        color: #1a4d7c;
+        margin: 0 0 2px 0;
+      }
+
+      .print-card-category {
+        font-weight: 600;
+        color: #666;
+        font-size: 8.5pt;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      .print-card-meta {
+        margin: 1px 0;
+        color: #333;
+      }
+
+      .print-card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 4px;
+      }
+
+      .print-card-tag {
+        font-size: 7.5pt;
+        background: #eee;
+        color: #444;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+      }
+
+      /* Force page breaks neatly if there are many pages */
+      .page-break {
+        page-break-before: always;
+      }
     }
   </style>
 </head>
@@ -805,21 +1429,31 @@
 
   <header>
     <div class="brand-logo">
-      <div class="brand-icon-img"><img class="mapicon" src="https://map.westville.app/favicon.svg" alt="" aria-hidden="true"/></div>
-      <h1>Welcome to Westville</h1>
+      <div class="brand-icon-img"><a href="/"><img class="mapicon" src="/images/w-pin.svg" alt="Westville Map Project Site Logo" aria-hidden="true"/></a></div>
+      <h1><a href="/" class="header_link">Welcome to Westville</a></h1>
     </div>
     <div class="header-shortcuts">
       <a href="https://map.westville.app/?hide=establishments&filter=parking" class="header-btn scroll-trigger" target="mapFrame">
-        <span class="header-btn-icon">🅿️</span>
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <img style="width:20px; height:20x;" src="/images/parking.svg"/>
+        </span>
         <span class="header-btn-text">Public Parking</span>
       </a>
       <a href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="header-btn scroll-trigger" target="mapFrame">
-        <span class="header-btn-icon">🏢</span>
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <img style="width:20px; height:20x;" src="/images/store.svg"/>
+        </span>
         <span class="header-btn-text">Local Establishments</span>
       </a>
       <button id="help-btn" class="header-btn" title="How to Use the Map">
-        <span class="header-btn-icon">❓</span>
-        <span class="header-btn-text">How to Use</span>
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+            <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+            <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+            <path d="M12 14h.01" />
+          </svg>
+        </span>
+        <span class="header-btn-text">Help</span>
       </button>
     </div>
   </header>
@@ -839,11 +1473,15 @@
           <div class="map-header-actions">
             <button id="share-btn" class="header-btn" title="Copy link to current view">
               <span class="header-btn-icon">🔗</span>
-              <span class="header-btn-text">Share View</span>
+              <span class="header-btn-text">Share</span>
+            </button>
+            <button id="print-btn" class="header-btn" title="Print map or directory cards">
+              <span class="header-btn-icon">🖨️</span>
+              <span class="header-btn-text">Print</span>
             </button>
             <a id="full-map-link" href="https://map.westville.app" class="header-btn" target="_blank">
               <span class="header-btn-icon">🗺️</span>
-              <span class="header-btn-text">Open Full Map</span>
+              <span class="header-btn-text">Full Map</span>
             </a>
           </div>
         </div>
@@ -858,46 +1496,50 @@
 
     <div class="container">
 
-      <h3 class="grid-header">Quick Views & Shortcuts</h3>
-      
-      <div class="shortcuts-grid">
-        <!-- Parking Only -->
-        <a href="https://map.westville.app/?hide=establishments&filter=parking" class="card scroll-trigger"  target="mapFrame">
-          <h4>Public Parking</h4>
-          <p>View a street map highlighting all free and permitted parking areas in the township.</p>
-        </a>
+      <div class="shortcuts-wrapper-card">
+        <h3 class="grid-header" id="shortcuts-trigger" tabindex="0" role="button" aria-expanded="true" aria-controls="shortcuts-grid-container">
+          Quick Views & Shortcuts <span class="shortcuts-toggle-arrow">▼</span>
+        </h3>
+        
+        <div class="shortcuts-grid" id="shortcuts-grid-container">
+          <!-- Parking Only -->
+          <a href="https://map.westville.app/?hide=establishments&filter=parking" class="card scroll-trigger"  target="mapFrame">
+            <h4>Public Parking</h4>
+            <p>View a street map highlighting all free and permitted parking areas in the township.</p>
+          </a>
 
-        <!-- Highlighted Feature -->
-<!-- 
-        <a href="https://map.westville.app/?show=parking&feature=Highland+Avenue+Free+Public+Parking" class="card scroll-trigger"  target="mapFrame">
-          <h4>Highland Ave Parking</h4>
-          <p>Jump directly to the details and location for the Highland Avenue Free Public Parking lot.</p>
-        </a>
- -->
+          <!-- Highlighted Feature -->
+  <!-- 
+          <a href="https://map.westville.app/?show=parking&feature=Highland+Avenue+Free+Public+Parking" class="card scroll-trigger"  target="mapFrame">
+            <h4>Highland Ave Parking</h4>
+            <p>Jump directly to the details and location for the Highland Avenue Free Public Parking lot.</p>
+          </a>
+   -->
 
-        <!-- Establishments -->
-        <a href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="card scroll-trigger"  target="mapFrame">
-          <h4>Local Establishments</h4>
-          <p>Discover local shops, dining, and businesses across Westville.</p>
-        </a>
+          <!-- Establishments -->
+          <a href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="card scroll-trigger"  target="mapFrame">
+            <h4>Local Establishments</h4>
+            <p>Discover local shops, dining, and businesses across Westville.</p>
+          </a>
 
-        <!-- Recreation -->
-        <a href="https://map.westville.app/?show=recreation&hide=establishments" class="card scroll-trigger" target="mapFrame">
-          <h4>Parks & Recreation</h4>
-          <p>Find public parks, sports fields, and recreational facilities.</p>
-        </a>
+          <!-- Recreation -->
+          <a href="https://map.westville.app/?show=recreation&hide=establishments" class="card scroll-trigger" target="mapFrame">
+            <h4>Parks & Recreation</h4>
+            <p>Find public parks, sports fields, and recreational facilities.</p>
+          </a>
 
-        <!-- Satellite View -->
-        <a href="https://map.westville.app/?show=satellite" class="card scroll-trigger" target="mapFrame">
-          <h4>Satellite View</h4>
-          <p>Explore the township using high-resolution aerial satellite imagery.</p>
-        </a>
+          <!-- Satellite View -->
+          <a href="https://map.westville.app/?show=satellite" class="card scroll-trigger" target="mapFrame">
+            <h4>Satellite View</h4>
+            <p>Explore the township using high-resolution aerial satellite imagery.</p>
+          </a>
 
-        <!-- Street Map -->
-        <a href="https://map.westville.app/?hide=satellite" class="card scroll-trigger" target="mapFrame">
-          <h4>Standard Street Map</h4>
-          <p>Open a clean, uncluttered street map with no extra layers enabled.</p>
-        </a>
+          <!-- Street Map -->
+          <a href="https://map.westville.app/?hide=satellite" class="card scroll-trigger" target="mapFrame">
+            <h4>Standard Street Map</h4>
+            <p>Open a clean, uncluttered street map with no extra layers enabled.</p>
+          </a>
+        </div>
       </div>
 
       <!-- Directory Section -->
@@ -935,38 +1577,157 @@
   <!-- Help Pop-over (Overlay Model) -->
   <div id="help-popover" class="help-popover-overlay" role="dialog" aria-modal="true" aria-labelledby="help-popover-title">
     <div class="help-popover-card">
-      <button id="help-popover-close-btn" class="help-popover-close" aria-label="Close dialog">&times;</button>
-      <h3 id="help-popover-title">How to Use the Map</h3>
-      <p>The map is designed to let you filter exactly what you want to see. When you open the map:</p>
-      <ul class="help-popover-list">
-        <li>
-          <span class="help-popover-icon">⚙️</span>
-          <div>
-            <strong>Toggle Layers:</strong>
-            <span>Use the menu to turn different categories on and off (like Parking, Recreation, or Satellite view).</span>
-          </div>
-        </li>
-        <li>
-          <span class="help-popover-icon">📍</span>
-          <div>
-            <strong>Click for Details:</strong>
-            <span>Click on any highlighted feature or pin on the map to see more information, such as facility hours or parking rules.</span>
-          </div>
-        </li>
-        <li>
-          <span class="help-popover-icon">⚡</span>
-          <div>
-            <strong>Use Shortcuts:</strong>
-            <span>Use the quick links below to jump directly to a pre-filtered view of the town.</span>
-          </div>
-        </li>
-      </ul>
-      <button id="help-popover-ok-btn" class="btn-main help-popover-action-btn">Got It!</button>
+      <div class="help-popover-header">
+        <h3 id="help-popover-title">Interactive Map Guide</h3>
+        <button id="help-popover-close-btn" class="help-popover-close" aria-label="Close dialog">&times;</button>
+      </div>
+      
+      <div class="help-popover-body">
+        <p>Welcome to the Westville Map Portal! This interactive companion helps you explore public amenities, local establishments, parking zones, and park activities in the township. Here is a guide to the key features:</p>
+        <ul class="help-popover-list">
+          <li>
+            <span class="help-popover-icon">🗺️</span>
+            <div>
+              <strong>Interactive Map &amp; Layers:</strong>
+              <span>Toggle standard street view, recreation parks, public parking, local establishments, or high-resolution satellite imagery using the layer controls inside the map frame.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">📍</span>
+            <div>
+              <strong>Interactive Establishment Cards:</strong>
+              <span>Clicking any card in the directory will center, highlight, and zoom the map onto that establishment. Cards feature category-colored left borders (e.g., gold for auto-related tags) to help you visually identify establishments at a glance.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">🧭</span>
+            <div>
+              <strong>Directions &amp; Website Links:</strong>
+              <span>Inside each establishment card, tap the <strong>Call</strong> button to place a call to the establishment, tap the <strong>Directions</strong> button to get precise navigation routes on Google Maps, or tap <strong>Website</strong> to visit their online site directly.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">🔍</span>
+            <div>
+              <strong>Advanced Multi-Filter Search:</strong>
+              <span>Type terms into the search bar or use the "All Categories &amp; Tags" multi-select dropdown. Filters instantly narrow down both the public directory cards and map markers in real-time.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">⚡</span>
+            <div>
+              <strong>Quick View Shortcuts:</strong>
+              <span>Use the collapsible <strong>Quick Views &amp; Shortcuts</strong> container to load pre-configured views (e.g. Free Public Parking, Local Establishments, Satellite Layer) in one click. On mobile devices, this container collapses to save screen space.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">🔗</span>
+            <div>
+              <strong>Instant Share:</strong>
+              <span>The URL updates dynamically as you search, toggle layers, or select cards. Tap "Share View" in the map header to copy a link that restores your exact view, layers, and selections.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">🖨️</span>
+            <div>
+              <strong>Custom Printing &amp; PDFs:</strong>
+              <span>Engage the printer icon next to the "Full Page Map" button to configure customized landscape or portrait print setups or generate multi-page PDFs. Printing directory cards is disabled by default to save ink but can be toggled on if desired.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="help-popover-footer">
+        <button id="help-popover-ok-btn" class="btn-main help-popover-action-btn">Got It!</button>
+      </div>
     </div>
   </div>
 
+  <!-- Print Options Modal (Config Window) -->
+  <div id="print-modal" class="modal-overlay" role="dialog" aria-labelledby="print-modal-title" aria-modal="true" style="display: none;">
+    <div class="modal-content glass-card animate-zoom">
+      <div class="modal-header">
+        <h3 id="print-modal-title">🖨️ Print & Export Options</h3>
+        <button id="print-modal-close-btn" class="close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="print-orientation"><strong>Orientation:</strong></label>
+          <select id="print-orientation" class="form-control">
+            <option value="portrait" selected>Portrait (8.5" x 11")</option>
+            <option value="landscape">Landscape (11" x 8.5")</option>
+          </select>
+        </div>
+        
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="print-include-map" checked>
+          <label for="print-include-map"><strong>Include Map View</strong></label>
+        </div>
+        
+        <div class="form-group">
+          <label for="print-include-cards"><strong>Include Directory Cards:</strong></label>
+          <select id="print-include-cards" class="form-control">
+            <option value="none" selected>Do not include cards</option>
+            <option value="filtered">Filtered / visible cards only</option>
+            <option value="all">All directory cards</option>
+          </select>
+        </div>
+
+        <div id="print-loading-msg" class="print-loading-status" style="display: none;">
+          <span class="spinner">⏳</span> <span id="print-loading-text">Capturing current map state...</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="action-buttons-group">
+          <button id="print-pdf-btn" class="btn-main">
+            <span class="btn-icon">💾</span> Save PDF
+          </button>
+          <button id="print-execute-btn" class="btn-main font-bold">
+            <span class="btn-icon">🖨️</span> Print
+          </button>
+        </div>
+        <button id="print-cancel-btn" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden container used solely for browser native printing -->
+  <div id="print-layout-container"></div>
+
 </body>
 <script>
+// --- Map Domain & URL Synchronization ---
+function getMapDomain() {
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  if (host.includes('westville.app')) {
+    return `${protocol}//map.westville.app`;
+  } else if (host.includes('westville.app')) {
+    return `${protocol}//map.westville.app`;
+  } else {
+    // Fallback for local development or arbitrary hosts
+    return `${protocol}//map.westville.app`;
+  }
+}
+const MAP_DOMAIN = getMapDomain();
+
+// Dynamically rewrite all static HTML links/sources to point to the resolved map domain
+function initializeMapUrls() {
+  const elements = document.querySelectorAll('[href*="map.westville.app"], [src*="map.westville.app"]');
+  elements.forEach(el => {
+    if (el.tagName === 'IFRAME') {
+      el.src = el.src.replace('https://map.westville.app', MAP_DOMAIN);
+    } else if (el.hasAttribute('href')) {
+      el.setAttribute('href', el.getAttribute('href').replace('https://map.westville.app', MAP_DOMAIN));
+    } else if (el.hasAttribute('src')) {
+      el.setAttribute('src', el.getAttribute('src').replace('https://map.westville.app', MAP_DOMAIN));
+    }
+  });
+}
+
+// Execute link rewriting immediately on load
+initializeMapUrls();
+
 // --- Share Button Logic ---
 const shareBtn = document.getElementById('share-btn');
 if (shareBtn) {
@@ -1131,8 +1892,12 @@ window.addEventListener('message', (event) => {
 // Initialize map frame source from parent URL parameters on page boot
 const parentUrlParams = new URLSearchParams(window.location.search);
 const mapFrame = document.getElementById('mapFrame');
-if (mapFrame && parentUrlParams.toString()) {
-  mapFrame.src = 'https://map.westville.app?' + parentUrlParams.toString();
+if (mapFrame) {
+  if (parentUrlParams.toString()) {
+    mapFrame.src = MAP_DOMAIN + '?' + parentUrlParams.toString();
+  } else {
+    mapFrame.src = MAP_DOMAIN;
+  }
   // Update map header immediately for smooth UI transition
   updateMapHeaderFromUrl(mapFrame.src);
 }
@@ -1589,7 +2354,7 @@ function renderDirectory() {
 
     let dirButton = directionsUrl ? `
       <a href="${directionsUrl}" target="_blank" class="facility-link dir-link" title="Get directions on Google Maps" onclick="event.stopPropagation()">
-        <svg class="detail-icon" viewBox="0 0 24 24"><path d="M22.41 11.59l-8.5-8.5a3 3 0 0 0-4.24 0l-8.5 8.5a3 3 0 0 0 0 4.24l8.5 8.5a3 3 0 0 0 4.24 0l8.5-8.5a3 3 0 0 0 0-4.24zM12 18a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm1-5.5a1 1 0 0 1-2 0v-4a1 1 0 0 1 2 0v4z"/></svg>
+        <svg class="detail-icon stroke-icon" viewBox="0 0 24 24"><path d="M12 3L21 12L12 21L3 12ZM10 16v-4.5a2.5 2.5 0 0 1 2.5-2.5h3.5M14 6l3 3-3 3"/></svg>
         <span>Directions</span>
       </a>` : '';
 
@@ -1613,7 +2378,7 @@ function renderDirectory() {
     card.addEventListener('click', () => {
       const iframe = document.getElementById('mapFrame');
       if (iframe) {
-        const nextUrl = `https://map.westville.app/?show=all&feature=${encodeURIComponent(f.properties.name)}`;
+        const nextUrl = `${MAP_DOMAIN}/?show=all&feature=${encodeURIComponent(f.properties.name)}`;
         iframe.src = nextUrl;
         if (typeof updateMapHeaderFromUrl === 'function') {
           updateMapHeaderFromUrl(nextUrl);
@@ -1647,6 +2412,989 @@ function renderDirectory() {
 
 dirSearch.addEventListener('input', renderDirectory);
 dirSort.addEventListener('change', renderDirectory);
+
+// --- Print & PDF Generation Logic ---
+const printBtn = document.getElementById('print-btn');
+const printModal = document.getElementById('print-modal');
+const printModalCloseBtn = document.getElementById('print-modal-close-btn');
+const printCancelBtn = document.getElementById('print-cancel-btn');
+const printOrientation = document.getElementById('print-orientation');
+const printIncludeMap = document.getElementById('print-include-map');
+const printIncludeCards = document.getElementById('print-include-cards');
+const printLoadingMsg = document.getElementById('print-loading-msg');
+const printLoadingText = document.getElementById('print-loading-text');
+const printPdfBtn = document.getElementById('print-pdf-btn');
+const printExecuteBtn = document.getElementById('print-execute-btn');
+const printLayoutContainer = document.getElementById('print-layout-container');
+
+let mapCapturePromiseCallbacks = null;
+
+// Handle messages from map iframe (for canvas capture response)
+window.addEventListener('message', (event) => {
+  if (event.data) {
+    if (event.data.type === 'map-capture-response') {
+      if (mapCapturePromiseCallbacks) {
+        mapCapturePromiseCallbacks.resolve(event.data.dataUrl);
+        mapCapturePromiseCallbacks = null;
+      }
+    } else if (event.data.type === 'map-capture-error') {
+      if (mapCapturePromiseCallbacks) {
+        mapCapturePromiseCallbacks.reject(new Error(event.data.error));
+        mapCapturePromiseCallbacks = null;
+      }
+    }
+  }
+});
+
+// Capture map from iframe as PNG data URL
+function captureMap(orientation) {
+  return new Promise((resolve, reject) => {
+    const iframe = document.getElementById('mapFrame');
+    if (!iframe || !iframe.contentWindow) {
+      reject(new Error("Map iframe not found or inaccessible"));
+      return;
+    }
+    
+    // Save original styles
+    const origWidth = iframe.style.width;
+    const origHeight = iframe.style.height;
+    const origMaxWidth = iframe.style.maxWidth;
+    const origMaxHeight = iframe.style.maxHeight;
+
+    // Apply print-optimal sizing depending on orientation to avoid wide-screen letterbox mapping
+    if (orientation === 'landscape') {
+      iframe.style.width = '1024px';
+      iframe.style.height = '665px'; // Aspect ratio matches printable landscape (~1.54)
+    } else {
+      iframe.style.width = '800px';
+      iframe.style.height = '890px'; // Aspect ratio matches printable portrait (~0.9)
+    }
+    iframe.style.maxWidth = 'none';
+    iframe.style.maxHeight = 'none';
+
+    // Wait brief frame for layout to settle, then request iframe capture
+    setTimeout(() => {
+      mapCapturePromiseCallbacks = {
+        resolve: (dataUrl) => {
+          // Restore dimensions
+          iframe.style.width = origWidth;
+          iframe.style.height = origHeight;
+          iframe.style.maxWidth = origMaxWidth;
+          iframe.style.maxHeight = origMaxHeight;
+          resolve(dataUrl);
+        },
+        reject: (err) => {
+          // Restore dimensions
+          iframe.style.width = origWidth;
+          iframe.style.height = origHeight;
+          iframe.style.maxWidth = origMaxWidth;
+          iframe.style.maxHeight = origMaxHeight;
+          reject(err);
+        }
+      };
+      iframe.contentWindow.postMessage({ type: 'request-map-capture' }, '*');
+    }, 150);
+    
+    // Timeout if map iframe doesn't respond in 4 seconds
+    setTimeout(() => {
+      if (mapCapturePromiseCallbacks) {
+        // Restore dimensions
+        iframe.style.width = origWidth;
+        iframe.style.height = origHeight;
+        iframe.style.maxWidth = origMaxWidth;
+        iframe.style.maxHeight = origMaxHeight;
+        
+        mapCapturePromiseCallbacks.reject(new Error("Map capture timed out"));
+        mapCapturePromiseCallbacks = null;
+      }
+    }, 4000);
+  });
+}
+
+// Open/close modal logic
+let previousActiveElement = null;
+
+if (printBtn && printModal) {
+  printBtn.addEventListener('click', () => {
+    previousActiveElement = document.activeElement;
+    printModal.style.display = 'flex';
+    // Trigger animation frame for transition
+    requestAnimationFrame(() => {
+      printModal.classList.add('active');
+    });
+    if (printModalCloseBtn) printModalCloseBtn.focus();
+  });
+}
+
+function closeModal() {
+  if (printModal) {
+    printModal.classList.remove('active');
+    setTimeout(() => {
+      printModal.style.display = 'none';
+      if (previousActiveElement) {
+        previousActiveElement.focus();
+        previousActiveElement = null;
+      }
+    }, 250);
+  }
+}
+
+if (printModalCloseBtn) printModalCloseBtn.addEventListener('click', closeModal);
+if (printCancelBtn) printCancelBtn.addEventListener('click', closeModal);
+
+// Close on escape key
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && printModal && printModal.classList.contains('active')) {
+    closeModal();
+  }
+});
+
+// Close on clicking backdrop
+if (printModal) {
+  printModal.addEventListener('click', (e) => {
+    if (e.target === printModal) {
+      closeModal();
+    }
+  });
+}
+
+// Helper to compile selections from the current URL to display on printed header
+function getPrintHeaderTitle() {
+  const url = new URL(window.location.href);
+  const searchParams = url.searchParams;
+  const selections = [];
+  
+  const feature = searchParams.get('feature');
+  if (feature) selections.push(feature);
+  
+  const filter = searchParams.get('filter');
+  if (filter) {
+    filter.split(',').forEach(f => {
+      const clean = f.trim().toLowerCase();
+      if (clean && clean !== 'satellite') {
+        const label = f.trim().charAt(0).toUpperCase() + f.trim().slice(1);
+        selections.push(label);
+      }
+    });
+  }
+  
+  const search = searchParams.get('search');
+  if (search && !feature) selections.push(`Search: "${search}"`);
+  
+  const show = searchParams.get('show');
+  if (show) {
+    show.split(',').forEach(s => {
+      const clean = s.trim().toLowerCase();
+      if (clean === 'establishments') selections.push('Establishments');
+      else if (clean === 'recreation') selections.push('Recreation');
+      else if (clean === 'parking') selections.push('Parking');
+    });
+  }
+  
+  if (selections.length === 0) {
+    return "Westville";
+  }
+  
+  return "Westville - " + selections.join(', ');
+}
+
+// Helper to filter directory features
+function getFilteredCards(includeAll = false) {
+  if (includeAll) {
+    return [...allDirFeatures].sort((a, b) => (a.properties.name || '').localeCompare(b.properties.name || ''));
+  }
+  
+  const term = dirSearch.value.toLowerCase();
+  const sortVal = dirSort.value;
+
+  const results = allDirFeatures.filter(f => {
+    if (!selectedFilters.has('all') && selectedFilters.size > 0) {
+      const categories = [];
+      const tags = [];
+      selectedFilters.forEach(val => {
+        if (val.startsWith('cat:')) categories.push(val.slice(4));
+        else if (val.startsWith('tag:')) tags.push(val.slice(4).toLowerCase());
+      });
+
+      const categoryMatch = categories.includes(f._source);
+      const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
+      const tagMatch = featureTags.some(t => tags.includes(t));
+
+      if (!categoryMatch && !tagMatch) return false;
+    }
+
+    if (term.length > 0) {
+      const nameMatch = (f.properties.name || '').toLowerCase().includes(term);
+      const descMatch = (f.properties.description || '').toLowerCase().includes(term);
+      const tagsMatch = (f.properties.tags || '').toLowerCase().includes(term);
+      return nameMatch || descMatch || tagsMatch;
+    }
+    return true;
+  });
+
+  results.sort((a, b) => {
+    if (sortVal === 'name_asc') {
+      return (a.properties.name || '').localeCompare(b.properties.name || '');
+    } else if (sortVal === 'name_desc') {
+      return (b.properties.name || '').localeCompare(a.properties.name || '');
+    } else if (sortVal === 'category_asc') {
+      return (a._source || '').localeCompare(b._source || '') || (a.properties.name || '').localeCompare(b.properties.name || '');
+    } else if (sortVal === 'category_desc') {
+      return (b._source || '').localeCompare(a._source || '') || (a.properties.name || '').localeCompare(b.properties.name || '');
+    }
+    return 0;
+  });
+  
+  return results;
+}
+
+// Simple text word wrapper for standard character lengths
+function wrapText(text, maxLength) {
+  if (maxLength <= 0) return [text];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = '';
+  
+  words.forEach(word => {
+    if ((currentLine + ' ' + word).length <= maxLength) {
+      currentLine = currentLine ? currentLine + ' ' + word : word;
+    } else {
+      if (word.length > maxLength) {
+        // Handle long words (e.g. URLs) by wrapping/breaking them at delimiters
+        const subWords = [];
+        // Split on standard URL delimiters: period, slash, question mark, ampersand, hashmark, equal sign, dash, underscore, colon, comma
+        const parts = word.split(/([./?&#\-_=,:])/);
+        parts.forEach(part => {
+          if (!part) return;
+          if (part.length <= maxLength) {
+            subWords.push(part);
+          } else {
+            // Hard split if a single part still exceeds maxLength
+            let rem = part;
+            while (rem.length > maxLength) {
+              subWords.push(rem.substring(0, maxLength));
+              rem = rem.substring(maxLength);
+            }
+            if (rem) subWords.push(rem);
+          }
+        });
+
+        // Append subWords greedily WITHOUT space between them, except optionally a space before the first subWord
+        let isFirstSub = true;
+        subWords.forEach(sub => {
+          if (isFirstSub) {
+            if ((currentLine + ' ' + sub).length <= maxLength) {
+              currentLine = currentLine ? currentLine + ' ' + sub : sub;
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = sub;
+            }
+            isFirstSub = false;
+          } else {
+            if ((currentLine + sub).length <= maxLength) {
+              currentLine = currentLine + sub;
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = sub;
+            }
+          }
+        });
+      } else {
+        if (currentLine) lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+  });
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+// Helper to construct HTML for native print layout
+function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
+  const container = document.getElementById('print-layout-container');
+  if (!container) return;
+  
+  // Set orientation class for dynamic media sizing
+  container.className = `print-${orientation}`;
+  
+  const title = getPrintHeaderTitle();
+  const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  
+  let mapHtml = '';
+  if (mapDataUrl) {
+    mapHtml = `
+      <div class="print-map-wrapper">
+        <img src="${mapDataUrl}" class="print-map-image" alt="Captured Map View">
+      </div>
+    `;
+  }
+  
+  let cardsHtml = '';
+  if (cards && cards.length > 0) {
+    const cardItemsHtml = cards.map(f => {
+      const cleanSource = f._source === 'parking' ? 'Parking' : f._source === 'establishment' ? 'Local Establishment' : 'Parks & Recreation';
+      const tagsList = (f.properties.tags || f._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
+      const tagSpanList = tagsList.map(tag => `<span class="print-card-tag">${tag}</span>`).join('');
+      
+      const desc = f.properties.description ? `<p class="print-card-meta"><strong>About:</strong> ${f.properties.description}</p>` : '';
+      const addr = f.properties.address ? `<p class="print-card-meta"><strong>Location:</strong> ${f.properties.address}</p>` : '';
+      const phone = f.properties.phone ? `<p class="print-card-meta"><strong>Phone:</strong> ${f.properties.phone}</p>` : '';
+      const web = f.properties.url ? `<p class="print-card-meta"><strong>Website:</strong> ${f.properties.url}</p>` : '';
+      
+      let borderColor = '#1a4d7c';
+      if (typeof tagColors !== 'undefined') {
+        const firstTag = tagsList[0] ? tagsList[0].toLowerCase() : '';
+        if (tagColors[firstTag]) {
+          borderColor = tagColors[firstTag];
+        }
+      }
+      
+      return `
+        <div class="print-card" style="border-left-color: ${borderColor};">
+          <div class="print-card-title">${f.properties.name || 'Unnamed'}</div>
+          <div class="print-card-category">${cleanSource}</div>
+          ${desc}
+          ${addr}
+          ${phone}
+          ${web}
+          <div class="print-card-tags">${tagSpanList}</div>
+        </div>
+      `;
+    }).join('');
+    
+    cardsHtml = `
+      <div class="print-section-title">Borough Directory Listings (${cards.length} items)</div>
+      <div class="print-cards-grid">
+        ${cardItemsHtml}
+      </div>
+    `;
+  }
+  
+  container.innerHTML = `
+    <div class="print-header">
+      <h1>${title}</h1>
+      <div class="print-meta">
+        <div>Date: ${dateStr}</div>
+        <div>URL: ${window.location.origin + window.location.pathname}</div>
+      </div>
+    </div>
+    <div class="print-subheader">Westville Borough Map & Directory Portal</div>
+    ${mapHtml}
+    ${cardsHtml}
+  `;
+}
+
+// Run Browser Native Printing
+if (printExecuteBtn) {
+  printExecuteBtn.addEventListener('click', async () => {
+    try {
+      const orientation = printOrientation.value;
+      const includeMap = printIncludeMap.checked;
+      const includeCardsVal = printIncludeCards.value;
+      
+      // Update UI loading status
+      if (printLoadingMsg) {
+        printLoadingText.innerText = "Capturing map state...";
+        printLoadingMsg.style.display = 'flex';
+      }
+      
+      let mapDataUrl = null;
+      if (includeMap) {
+        try {
+          mapDataUrl = await captureMap(orientation);
+        } catch (captureErr) {
+          console.error("Failed to capture map canvas:", captureErr);
+          alert("Could not capture interactive map. Printing other selections.");
+        }
+      }
+      
+      let cards = [];
+      if (includeCardsVal === 'filtered') {
+        cards = getFilteredCards(false);
+      } else if (includeCardsVal === 'all') {
+        cards = getFilteredCards(true);
+      }
+      
+      if (printLoadingMsg) {
+        printLoadingText.innerText = "Formatting print page...";
+      }
+      
+      // Generate print container contents
+      generatePrintLayoutHTML(cards, mapDataUrl, orientation);
+      
+      // Close modal configuration cleanly
+      closeModal();
+      
+      // Set orientation in media print rules dynamically
+      const printStyle = document.createElement('style');
+      printStyle.id = 'dynamic-print-page-style';
+      printStyle.innerHTML = `@page { size: ${orientation}; margin: 0.5in; }`;
+      document.head.appendChild(printStyle);
+      
+      // Trigger native browser printing block
+      setTimeout(() => {
+        window.print();
+        
+        // Clean up print-layout container and style tags on finish
+        printStyle.remove();
+        const container = document.getElementById('print-layout-container');
+        if (container) container.innerHTML = '';
+        if (printLoadingMsg) printLoadingMsg.style.display = 'none';
+      }, 350);
+      
+    } catch (err) {
+      console.error("Failed to complete printing operation:", err);
+      alert("Error printing portal view: " + err.message);
+      if (printLoadingMsg) printLoadingMsg.style.display = 'none';
+    }
+  });
+}
+
+// Convert data URL to array buffer for pdf-lib standard loading
+function base64ToUint8Array(base64) {
+  const base64Data = base64.split(',')[1] || base64;
+  const binaryString = atob(base64Data);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+// Helper to draw left border and text block inside PDF dynamically
+function drawPdfCard(pdfDoc, page, helvetica, helveticaBold, x, y, width, f, tColors) {
+  const name = f.properties.name || 'Unnamed';
+  const cleanSource = f._source === 'parking' ? 'Parking' : f._source === 'establishment' ? 'Local Establishment' : 'Parks & Recreation';
+  const desc = f.properties.description || '';
+  const addr = f.properties.address || '';
+  const phone = f.properties.phone || '';
+  const web = f.properties.url || '';
+  
+  // Wrap details
+  const wrapWidth = Math.floor(width / 6); // character width approximation
+  const descLines = desc ? wrapText(`About: ${desc}`, wrapWidth) : [];
+  const addrLines = addr ? wrapText(`Location: ${addr}`, wrapWidth) : [];
+  const phoneLines = phone ? [`Phone: ${phone}`] : [];
+  const webLines = web ? wrapText(`Website: ${web}`, wrapWidth) : [];
+  const tagsList = (f.properties.tags || f._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
+  const tagsLine = tagsList.length > 0 ? `Tags: ${tagsList.join(', ')}` : '';
+  const tagsLines = tagsLine ? wrapText(tagsLine, wrapWidth) : [];
+  
+  // Calculate heights
+  let lineCount = 2 + descLines.length + addrLines.length + phoneLines.length + webLines.length + tagsLines.length;
+  const cardHeight = lineCount * 12 + 15;
+  
+  // Get tag color or default primary blue
+  let tagColorHex = '#1a4d7c';
+  if (tColors && tagsList[0]) {
+    const firstTag = tagsList[0].toLowerCase();
+    if (tColors[firstTag]) {
+      tagColorHex = tColors[firstTag];
+    }
+  }
+  
+  // Parse Hex color to RGB
+  let r = 26/255, g = 77/255, b = 124/255;
+  if (tagColorHex.startsWith('#')) {
+    const hex = tagColorHex.replace('#', '');
+    if (hex.length === 6) {
+      r = parseInt(hex.substring(0, 2), 16) / 255;
+      g = parseInt(hex.substring(2, 4), 16) / 255;
+      b = parseInt(hex.substring(4, 6), 16) / 255;
+    }
+  }
+  
+  // Draw card border boundary box
+  page.drawRectangle({
+    x: x,
+    y: y - cardHeight,
+    width: width,
+    height: cardHeight,
+    borderColor: PDFLib.rgb(0.8, 0.8, 0.8),
+    borderWidth: 1,
+    color: PDFLib.rgb(1, 1, 1),
+  });
+  
+  // Draw prominent left-hand color strip
+  page.drawRectangle({
+    x: x,
+    y: y - cardHeight,
+    width: 6,
+    height: cardHeight,
+    color: PDFLib.rgb(r, g, b),
+  });
+  
+  // Draw Card Contents
+  let currY = y - 16;
+  
+  // Draw Title
+  page.drawText(name, {
+    x: x + 15,
+    y: currY,
+    size: 11,
+    font: helveticaBold,
+    color: PDFLib.rgb(26/255, 77/255, 124/255),
+  });
+  currY -= 13;
+  
+  // Draw Category
+  page.drawText(cleanSource, {
+    x: x + 15,
+    y: currY,
+    size: 8.5,
+    font: helveticaBold,
+    color: PDFLib.rgb(0.4, 0.4, 0.4),
+  });
+  currY -= 13;
+  
+  const drawTextLines = (lines) => {
+    lines.forEach(line => {
+      page.drawText(line, {
+        x: x + 15,
+        y: currY,
+        size: 9,
+        font: helvetica,
+        color: PDFLib.rgb(0.2, 0.2, 0.2),
+      });
+      currY -= 11;
+    });
+  };
+  
+  // Draw Details
+  if (desc) drawTextLines(descLines);
+  if (addr) drawTextLines(addrLines);
+  if (phone) drawTextLines(phoneLines);
+  if (web) drawTextLines(webLines);
+  if (tagsLine) {
+    tagsLines.forEach(line => {
+      page.drawText(line, {
+        x: x + 15,
+        y: currY,
+        size: 8,
+        font: helvetica,
+        color: PDFLib.rgb(0.4, 0.4, 0.4),
+      });
+      currY -= 10;
+    });
+  }
+  
+  return cardHeight;
+}
+
+// Client-side multi-page PDF Compiler using pdf-lib
+if (printPdfBtn) {
+  printPdfBtn.addEventListener('click', async () => {
+    try {
+      const orientation = printOrientation.value;
+      const includeMap = printIncludeMap.checked;
+      const includeCardsVal = printIncludeCards.value;
+      
+      if (printLoadingMsg) {
+        printLoadingText.innerText = "Preparing vector workspace...";
+        printLoadingMsg.style.display = 'flex';
+      }
+      
+      const { PDFDocument, rgb, StandardFonts } = PDFLib;
+      const pdfDoc = await PDFDocument.create();
+      
+      const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      let mapDataUrl = null;
+      if (includeMap) {
+        if (printLoadingMsg) {
+          printLoadingText.innerText = "Rendering high-contrast map...";
+        }
+        try {
+          mapDataUrl = await captureMap(orientation);
+        } catch (captureErr) {
+          console.error("Failed to capture map canvas:", captureErr);
+          alert("Could not capture interactive map. Compiling text directory entries.");
+        }
+      }
+      
+      // Determine page size dimensions
+      const isLandscape = orientation === 'landscape';
+      const pageWidth = isLandscape ? 792 : 612;
+      const pageHeight = isLandscape ? 612 : 792;
+      
+      const title = getPrintHeaderTitle();
+      const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      
+      // --- Page 1 Header and Map ---
+      const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
+      
+      // Main Page Title (Slightly larger (3 pts) than metadata size of 8.5)
+      page1.drawText(title, {
+        x: 50,
+        y: pageHeight - 45,
+        size: 11.5,
+        font: helveticaBold,
+        color: rgb(43/255, 101/255, 159/255),
+      });
+      
+      // Subtitle
+      page1.drawText("Westville Borough Map & Directory Portal", {
+        x: 50,
+        y: pageHeight - 58,
+        size: 10,
+        font: helvetica,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      // Metadata (Date & Domain)
+      const metaText = `Generated on: ${dateStr}  |  URL: ${window.location.origin + window.location.pathname}`;
+      page1.drawText(metaText, {
+        x: 50,
+        y: pageHeight - 70,
+        size: 8.5,
+        font: helvetica,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+      
+      // Draw border dividing header
+      page1.drawLine({
+        start: { x: 50, y: pageHeight - 76 },
+        end: { x: pageWidth - 50, y: pageHeight - 76 },
+        thickness: 1.5,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      
+      let nextY = pageHeight - 88;
+      
+      // Embed map if chosen
+      if (mapDataUrl) {
+        if (printLoadingMsg) {
+          printLoadingText.innerText = "Embedding WebGL canvas layers...";
+        }
+        try {
+          const imageBytes = base64ToUint8Array(mapDataUrl);
+          const mapImgEmbed = await pdfDoc.embedPng(imageBytes);
+          
+          // Calculate fitted map proportions cleanly within borders
+          const maxMapWidth = pageWidth - 100;
+          const maxMapHeight = nextY - 60; // Leave space for page index footer
+          
+          let mapW = mapImgEmbed.width;
+          let mapH = mapImgEmbed.height;
+          
+          const ratio = Math.min(maxMapWidth / mapW, maxMapHeight / mapH);
+          mapW = mapW * ratio;
+          mapH = mapH * ratio;
+          
+          const mapX = 50 + (maxMapWidth - mapW) / 2;
+          const mapY = nextY - mapH;
+          
+          // Draw image
+          page1.drawImage(mapImgEmbed, {
+            x: mapX,
+            y: mapY,
+            width: mapW,
+            height: mapH,
+          });
+          
+          // Draw border boundary
+          page1.drawRectangle({
+            x: mapX,
+            y: mapY,
+            width: mapW,
+            height: mapH,
+            borderColor: rgb(0.8, 0.8, 0.8),
+            borderWidth: 1,
+          });
+          
+          nextY = mapY - 20;
+        } catch (embedErr) {
+          console.error("Failed to embed map in PDF:", embedErr);
+          page1.drawText("Error loading map image: " + embedErr.message, {
+            x: 50,
+            y: nextY - 30,
+            size: 10,
+            font: helvetica,
+            color: rgb(0.8, 0.2, 0.2),
+          });
+          nextY -= 50;
+        }
+      } else {
+        page1.drawText("Portal directory view (map excluded). See directory lists on succeeding pages.", {
+          x: 50,
+          y: nextY - 30,
+          size: 10,
+          font: helvetica,
+          color: rgb(0.4, 0.4, 0.4),
+        });
+        nextY -= 50;
+      }
+      
+      // Draw Page 1 Footer index
+      page1.drawText("Page 1 of Directory Portal", {
+        x: pageWidth - 160,
+        y: 35,
+        size: 8.5,
+        font: helvetica,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+      
+      // --- Process Cards ---
+      let cards = [];
+      if (includeCardsVal === 'filtered') {
+        cards = getFilteredCards(false);
+      } else if (includeCardsVal === 'all') {
+        cards = getFilteredCards(true);
+      }
+      
+      if (cards.length > 0) {
+        if (printLoadingMsg) {
+          printLoadingText.innerText = "Wrapping text & drawing directory cards...";
+        }
+        
+        let currPage = pdfDoc.addPage([pageWidth, pageHeight]);
+        let pageNum = 2;
+        let cardY = pageHeight - 65;
+        
+        // Header on succeeding page
+        currPage.drawText(`Borough Directory - Continued (${cards.length} items)`, {
+          x: 50,
+          y: pageHeight - 40,
+          size: 12,
+          font: helveticaBold,
+          color: rgb(43/255, 101/255, 159/255),
+        });
+        
+        currPage.drawLine({
+          start: { x: 50, y: pageHeight - 48 },
+          end: { x: pageWidth - 50, y: pageHeight - 48 },
+          thickness: 1,
+          color: rgb(0.7, 0.7, 0.7),
+        });
+        
+        // Two-column layout parameters
+        const leftColX = 50;
+        const rightColX = isLandscape ? 410 : 315;
+        const colWidth = isLandscape ? 332 : 247;
+        
+        let isLeftColumn = true;
+        let leftColY = cardY;
+        let rightColY = cardY;
+        
+        for (let i = 0; i < cards.length; i++) {
+          const f = cards[i];
+          
+          // Estimate card height first to handle overflow
+          const name = f.properties.name || 'Unnamed';
+          const desc = f.properties.description || '';
+          const addr = f.properties.address || '';
+          const phone = f.properties.phone || '';
+          const web = f.properties.url || '';
+          const tagsList = (f.properties.tags || f._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
+          const tagsLine = tagsList.length > 0 ? `Tags: ${tagsList.join(', ')}` : '';
+          
+          const wrapWidth = Math.floor(colWidth / 6);
+          const descLines = desc ? wrapText(`About: ${desc}`, wrapWidth) : [];
+          const addrLines = addr ? wrapText(`Location: ${addr}`, wrapWidth) : [];
+          const phoneLines = phone ? [`Phone: ${phone}`] : [];
+          const webLines = web ? wrapText(`Website: ${web}`, wrapWidth) : [];
+          const tagsLines = tagsLine ? wrapText(tagsLine, wrapWidth) : [];
+          
+          const lineCount = 2 + descLines.length + addrLines.length + phoneLines.length + webLines.length + tagsLines.length;
+          const cardHeight = lineCount * 12 + 15;
+          
+          // Choose column and check page overflow
+          let targetX = leftColX;
+          let targetY = leftColY;
+          
+          if (!isLeftColumn) {
+            targetX = rightColX;
+            targetY = rightColY;
+          }
+          
+          // Does it overflow the page?
+          if (targetY - cardHeight < 60) {
+            if (isLeftColumn) {
+              isLeftColumn = false;
+              targetX = rightColX;
+              targetY = rightColY;
+              
+              if (targetY - cardHeight < 60) {
+                currPage.drawText(`Page ${pageNum}`, {
+                  x: pageWidth - 80,
+                  y: 35,
+                  size: 8.5,
+                  font: helvetica,
+                  color: rgb(0.5, 0.5, 0.5),
+                });
+                
+                currPage = pdfDoc.addPage([pageWidth, pageHeight]);
+                pageNum++;
+                currPage.drawText(`Borough Directory - Continued (${cards.length} items)`, {
+                  x: 50,
+                  y: pageHeight - 40,
+                  size: 12,
+                  font: helveticaBold,
+                  color: rgb(43/255, 101/255, 159/255),
+                });
+                currPage.drawLine({
+                  start: { x: 50, y: pageHeight - 48 },
+                  end: { x: pageWidth - 50, y: pageHeight - 48 },
+                  thickness: 1,
+                  color: rgb(0.7, 0.7, 0.7),
+                });
+                
+                isLeftColumn = true;
+                leftColY = pageHeight - 65;
+                rightColY = pageHeight - 65;
+                targetX = leftColX;
+                targetY = leftColY;
+              }
+            } else {
+              currPage.drawText(`Page ${pageNum}`, {
+                x: pageWidth - 80,
+                y: 35,
+                size: 8.5,
+                font: helvetica,
+                color: rgb(0.5, 0.5, 0.5),
+              });
+              
+              currPage = pdfDoc.addPage([pageWidth, pageHeight]);
+              pageNum++;
+              currPage.drawText(`Borough Directory - Continued (${cards.length} items)`, {
+                x: 50,
+                y: pageHeight - 40,
+                size: 12,
+                font: helveticaBold,
+                color: rgb(43/255, 101/255, 159/255),
+              });
+              currPage.drawLine({
+                start: { x: 50, y: pageHeight - 48 },
+                end: { x: pageWidth - 50, y: pageHeight - 48 },
+                thickness: 1,
+                color: rgb(0.7, 0.7, 0.7),
+              });
+              
+              isLeftColumn = true;
+              leftColY = pageHeight - 65;
+              rightColY = pageHeight - 65;
+              targetX = leftColX;
+              targetY = leftColY;
+            }
+          }
+          
+          const drawnHeight = drawPdfCard(pdfDoc, currPage, helvetica, helveticaBold, targetX, targetY, colWidth, f, typeof tagColors !== 'undefined' ? tagColors : null);
+          
+          if (isLeftColumn) {
+            leftColY = targetY - drawnHeight - 15;
+          } else {
+            rightColY = targetY - drawnHeight - 15;
+          }
+          
+          isLeftColumn = !isLeftColumn;
+        }
+        
+        currPage.drawText(`Page ${pageNum}`, {
+          x: pageWidth - 80,
+          y: 35,
+          size: 8.5,
+          font: helvetica,
+          color: rgb(0.5, 0.5, 0.5),
+        });
+      }
+      
+      if (printLoadingMsg) {
+        printLoadingText.innerText = "Compiling PDF document...";
+      }
+      
+      const pdfBytes = await pdfDoc.save();
+      
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const downloadLink = document.createElement("a");
+      const cleanTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      downloadLink.href = URL.createObjectURL(blob);
+      downloadLink.download = `${cleanTitle}-portal-export.pdf`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      closeModal();
+      if (printLoadingMsg) printLoadingMsg.style.display = 'none';
+      
+    } catch (err) {
+      console.error("Failed to compile export PDF:", err);
+      alert("Error generating PDF: " + err.message);
+      if (printLoadingMsg) printLoadingMsg.style.display = 'none';
+    }
+  });
+}
+
+// Initialize collapsible Quick Views & Shortcuts on mobile
+const shortcutsTrigger = document.getElementById('shortcuts-trigger');
+const shortcutsGrid = document.getElementById('shortcuts-grid-container');
+
+if (shortcutsTrigger && shortcutsGrid) {
+  const shortcutsWrapper = shortcutsTrigger.closest('.shortcuts-wrapper-card');
+
+  // Check if we are on mobile on load (768px is the media breakpoint)
+  const checkCollapsibleInit = () => {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      shortcutsGrid.classList.add('collapsed');
+      shortcutsTrigger.classList.add('collapsed');
+      if (shortcutsWrapper) shortcutsWrapper.classList.add('collapsed');
+      shortcutsTrigger.classList.remove('active');
+      shortcutsTrigger.setAttribute('aria-expanded', 'false');
+      shortcutsTrigger.setAttribute('role', 'button');
+      shortcutsTrigger.setAttribute('tabindex', '0');
+    } else {
+      shortcutsGrid.classList.remove('collapsed');
+      shortcutsTrigger.classList.remove('collapsed');
+      if (shortcutsWrapper) shortcutsWrapper.classList.remove('collapsed');
+      shortcutsTrigger.classList.add('active');
+      shortcutsTrigger.setAttribute('aria-expanded', 'true');
+      shortcutsTrigger.removeAttribute('role');
+      shortcutsTrigger.removeAttribute('tabindex');
+    }
+  };
+
+  // Initial check
+  checkCollapsibleInit();
+
+  // Re-verify on resize so it naturally matches standard screen transitions
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      shortcutsGrid.classList.remove('collapsed');
+      shortcutsTrigger.classList.remove('collapsed');
+      if (shortcutsWrapper) shortcutsWrapper.classList.remove('collapsed');
+      shortcutsTrigger.classList.add('active');
+      shortcutsTrigger.setAttribute('aria-expanded', 'true');
+      shortcutsTrigger.removeAttribute('role');
+      shortcutsTrigger.removeAttribute('tabindex');
+    } else {
+      // Initialize as mobile-collapsible on downsize if not already set
+      if (!shortcutsTrigger.hasAttribute('role')) {
+        checkCollapsibleInit();
+      }
+    }
+  });
+
+  // Toggle on click/tap
+  shortcutsTrigger.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      const isCollapsed = shortcutsGrid.classList.toggle('collapsed');
+      shortcutsTrigger.classList.toggle('collapsed', isCollapsed);
+      shortcutsTrigger.classList.toggle('active', !isCollapsed);
+      if (shortcutsWrapper) shortcutsWrapper.classList.toggle('collapsed', isCollapsed);
+      shortcutsTrigger.setAttribute('aria-expanded', !isCollapsed ? 'true' : 'false');
+    }
+  });
+
+  // Keyboard navigation support for accessibility
+  shortcutsTrigger.addEventListener('keydown', (e) => {
+    if (window.innerWidth <= 768 && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      shortcutsTrigger.click();
+    }
+  });
+}
 
 // Start fetching data
 initDirectory();

@@ -74,12 +74,17 @@ function isMobileDevice() {
   return false;
 }
 
-// Parse URL parameters for layer visibility
 const params = new URLSearchParams(window.location.search);
 const showParams = params.get('show') ? params.get('show').toLowerCase().split(',') : [];
 const hideParams = params.get('hide') ? params.get('hide').toLowerCase().split(',') : [];
 //console.log(showParams);
 //console.log(hideParams);
+
+// Interaction gate for initial clean boot load (WCAG / UX quality)
+let hasInteracted = false;
+if (params.has('show') || params.has('hide') || params.has('filter') || params.has('search') || params.has('feature')) {
+    hasInteracted = true;
+}
 
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
@@ -178,7 +183,8 @@ try {
       style: style,
       center: [-75.1316, 39.8679],
       zoom: isMobileDevice() ? 12 : 14.25,
-      attributionControl: false
+      attributionControl: false,
+      preserveDrawingBuffer: true
   });
 
   map.on('zoom', () => {
@@ -546,6 +552,7 @@ try {
 
           if (!features.length) return;
 
+          hasInteracted = true;
           const feature = features[0];
           const props = feature.properties;
           
@@ -764,6 +771,7 @@ try {
               const cb = option.querySelector('input[type="checkbox"]');
               
               const handleToggle = () => {
+                  hasInteracted = true;
                   const val = option.getAttribute('data-value');
                   if (val === 'all') {
                       if (cb.checked) {
@@ -810,6 +818,7 @@ try {
       populateFilterDropdown();
 
       function performSearch() {
+          hasInteracted = true;
           const term = searchInput.value.toLowerCase();
           
           if (selectedFeatureName && term !== selectedFeatureName.toLowerCase()) {
@@ -948,6 +957,7 @@ try {
                   showPopup(f, center);
               }
           }
+          hasInteracted = true;
           updateUrlParams();
       }
 
@@ -982,6 +992,7 @@ try {
       }
 
       searchInput.addEventListener('input', performSearch);
+      let lastMapVisible = null;
 
       function updateUrlParams() {
           const newParams = new URLSearchParams();
@@ -992,11 +1003,13 @@ try {
            const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
            if (layerCheckboxes.length > 0) {
                layerCheckboxes.forEach(cb => {
-                   const span = cb.parentElement.querySelector('.layer-control-name');
-                   if (span) {
-                       const title = span.getAttribute('title');
+                   const item = cb.closest('.layer-control-item');
+                   if (item) {
+                       const labelEl = item.querySelector('.layer-control-name');
+                       const title = labelEl ? labelEl.getAttribute('title') : '';
                        const layerId = Object.keys(layerStates).find(id => id === title || layerStates[id].name === title);
                        if (layerId) {
+                           layerStates[layerId].visible = cb.checked; // Synchronize layerStates!
                            const friendly = Object.keys(LAYER_ID_MAP).find(k => LAYER_ID_MAP[k] === layerId);
                            if (friendly) {
                                if (cb.checked) currentShows.push(friendly);
@@ -1022,13 +1035,32 @@ try {
           if (currentShows.length > 0) newParams.set('show', currentShows.join(','));
           if (currentHides.length > 0) newParams.set('hide', currentHides.join(','));
 
-          // Dynamically adjust satellite opacity based on Map (Background) layer checkbox state
+          // Dynamically adjust satellite opacity based on Map (Background) layer checkbox state changes
           let mapVisible = layerStates['Background'].visible;
           if (layerCheckboxes.length > 0) {
               mapVisible = currentShows.includes('map');
           }
-          if (map.getLayer('satellite-layer')) {
-              map.setPaintProperty('satellite-layer', 'raster-opacity', mapVisible ? 0.3 : 1.0);
+          if (lastMapVisible === null) {
+              lastMapVisible = mapVisible;
+          } else if (mapVisible !== lastMapVisible) {
+              if (map.getLayer('satellite-layer')) {
+                  const newOpacity = mapVisible ? 0.3 : 1.0;
+                  map.setPaintProperty('satellite-layer', 'raster-opacity', newOpacity);
+                  layerStates['satellite-layer'].opacity = newOpacity;
+                  
+                  // Keep UI range slider element in sync
+                  const labelSpan = document.querySelector('.layer-control-name[title="Satellite"]');
+                  if (labelSpan) {
+                      const item = labelSpan.closest('.layer-control-item');
+                      if (item) {
+                          const slider = item.querySelector('input[type="range"]');
+                          if (slider) {
+                              slider.value = newOpacity;
+                          }
+                      }
+                  }
+              }
+              lastMapVisible = mapVisible;
           }
 
           const term = searchInput.value.trim();
@@ -1052,15 +1084,17 @@ try {
               }
           }
           
-          const newUrl = window.location.pathname + '?' + newParams.toString();
-          window.history.replaceState(null, '', newUrl);
+          if (hasInteracted) {
+              const newUrl = window.location.pathname + '?' + newParams.toString();
+              window.history.replaceState(null, '', newUrl);
 
-          // Post state change to parent window
-          if (window.parent && window.parent !== window) {
-              window.parent.postMessage({
-                  type: 'westville-map-state-change',
-                  url: window.location.origin + window.location.pathname + '?' + newParams.toString()
-              }, '*');
+              // Post state change to parent window
+              if (window.parent && window.parent !== window) {
+                  window.parent.postMessage({
+                      type: 'westville-map-state-change',
+                      url: window.location.origin + window.location.pathname + '?' + newParams.toString()
+                  }, '*');
+              }
           }
       }
 
@@ -1077,9 +1111,12 @@ try {
           }
       });
       
-      // Listen for layer control checkbox changes to sync URL
-      waitForElement('.maplibregl-ctrl-layer-control').then(panel => {
-          panel.addEventListener('change', updateUrlParams);
+      // Listen for layer control checkbox changes to sync URL and set interaction state
+      waitForElement('.layer-control-panel').then(panel => {
+          panel.addEventListener('change', () => {
+              hasInteracted = true;
+              updateUrlParams();
+          });
       });
       
       // Hide highlight layers from the layer control UI
@@ -1148,3 +1185,43 @@ try {
 } catch (error) {
   console.error('Error loading map:', error);
 }
+
+// Handle parent window requests to capture the map canvas for printing or PDF exports
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'request-map-capture') {
+        try {
+            if (!map) {
+                throw new Error('Map is not initialized or ready yet.');
+            }
+            
+            // Force map boundary and WebGL viewport synchronization
+            map.resize();
+            
+            // Register a one-time render handler to capture WebGL synchronously
+            map.once('render', () => {
+                try {
+                    const mapImage = map.getCanvas().toDataURL('image/png');
+                    window.parent.postMessage({
+                        type: 'map-capture-response',
+                        dataUrl: mapImage
+                    }, '*');
+                } catch (err) {
+                    console.error('Error capturing map canvas:', err);
+                    window.parent.postMessage({
+                        type: 'map-capture-error',
+                        error: err.message
+                    }, '*');
+                }
+            });
+            
+            // Trigger an immediate redraw
+            map.triggerRepaint();
+        } catch (err) {
+            console.error('Error initiating map capture:', err);
+            window.parent.postMessage({
+                type: 'map-capture-error',
+                error: err.message
+            }, '*');
+        }
+    }
+});

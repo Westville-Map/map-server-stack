@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="200" height="240">
+  <path d="M 50 115 
+           C 50 115 10 70 10 45 
+           A 40 40 0 1 1 90 45 
+           C 90 70 50 115 50 115 Z"
+        fill="#4e73ac"
+        stroke="#e5c158"
+        stroke-width="5"
+        stroke-linejoin="round"/>
+        
+  <text x="52" y="76"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="60"
+        fill="#2a3f5f"
+        opacity="0.7"
+        text-anchor="middle">W</text>
+
+  <text x="50" y="74"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="60"
+        fill="#ffffff"
+        text-anchor="middle">W</text>
+</svg>
