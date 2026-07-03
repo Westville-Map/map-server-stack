@@ -560,19 +560,23 @@ try {
           const coordinates = feature.geometry.type === 'Point' 
               ? feature.geometry.coordinates.slice() 
               : e.lngLat;
+              
+          selectedFeatureName = props.name;
+          searchInput.value = props.name;
+          searchResults.classList.remove('active');
+          
+          // Clear previous highlights
+          map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+          map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+
+          if (feature.geometry.type === 'Point') {
+              map.getSource('highlight-point-source').setData(feature);
+          } else {
+              map.getSource('highlight-poly-source').setData(feature);
+          }
+
           showPopup(feature, coordinates);
-//           const linkedName = props.url != null ? `<a target="_blank" href="${props.url}">${props.name}</a>` : `${props.name}`;
-//           new maplibregl.Popup()
-//               .setLngLat(coordinates)
-//               .setHTML(`<div class="wv-map-popup">
-//                   <h3 class="wv-opensans">${linkedName}</h3>
-//                   <p class="wv-opensans"><strong>Type:</strong> ${props.type.charAt(0).toUpperCase() + props.type.slice(1)}</p>
-//                   <p class="wv-opensans">${props.description || ''}</p>
-//                   <hr>
-//                   <p class="wv-opensans">Address: ${props.address}, Westville, NJ 08093</p>
-//                   <p class="wv-opensans"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}" title="Google Maps Directions to ${props.name}">Directions</a></p>
-//               </div>`)
-//               .addTo(map);
+          updateUrlParams();
       });
 
       // UI enhancement: change cursor to pointer on hover
@@ -989,6 +993,16 @@ try {
                   <p class="wv-opensans"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to ${props.name}">Directions</a></p>
               </div>`)
               .addTo(map);
+
+          activePopup.on('close', () => {
+              if (selectedFeatureName === props.name) {
+                  selectedFeatureName = '';
+                  searchInput.value = '';
+                  map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+                  map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+                  updateUrlParams();
+              }
+          });
       }
 
       searchInput.addEventListener('input', performSearch);
