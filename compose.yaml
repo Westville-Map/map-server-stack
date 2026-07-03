@@ -13,8 +13,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./html:/var/www/html
-      - ./data:/var/www/html/data
+      - ./map:/var/www/map
+      - ./data:/var/www/map/data
       - ./www:/srv/www/
       - ./data:/srv/www/data/
     depends_on:

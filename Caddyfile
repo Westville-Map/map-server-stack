@@ -3,7 +3,7 @@ map.westville.app:80, map.westville.app:80 {
     reverse_proxy /api/* wvmap_backend:3000
 
     # Serve static files
-    root * /var/www/html
+    root * /var/www/map
     file_server
 }
 
