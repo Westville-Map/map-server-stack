@@ -1,9 +1,10 @@
 /* Hero Section */
 .hero {
-  background-color: var(--white);
+  background-color: transparent;
   text-align: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #ddd;
+  padding: 0.6rem 1rem;
+  border: none;
+  box-shadow: none;
 }
 
 .hero h2 {
@@ -43,8 +44,8 @@
 /* Container for content */
 .container {
   max-width: 1000px;
-  margin: 3rem auto;
-  padding: 0 2rem;
+  margin: 1rem auto;
+  padding: 0 1rem;
 }
 
 /* How to Use Section */
@@ -144,7 +145,7 @@
 /* Directory Search & Filters */
 .directory-header {
   text-align: center;
-  margin: 4rem 0 2rem 0;
+  margin: 2rem 0 2rem 0;
   color: var(--primary-blue);
   font-size: 1.8rem;
 }
@@ -962,8 +963,11 @@
   }
   
   .hero {
-    padding: 0.5rem 0.5rem;
-    border-bottom: none;
+    padding: 0.2rem 0.4rem;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
   }
 
   /* Compact map header actions and prevent text wrap */
@@ -1054,7 +1058,11 @@
   .directory-controls {
     flex-direction: column;
   }
-
+  
+  /* Directory Search & Filters */
+  .directory-header {
+    margin: 0;
+  }
   .help-popover-card {
     padding: 1.5rem 1.2rem;
     max-height: 90vh;
@@ -1064,7 +1072,7 @@
 /* Responsive - Large Desktop Overrides */
 @media (min-width: 1024px) {
   .hero {
-    padding: 2.5rem 4rem;
+    padding: 1rem 1rem;
   }
 
   .hero h2 {
@@ -1084,6 +1092,11 @@
     max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .container {
+    max-width: 1800px;
+    padding: 0 4rem;
   }
 }
 
