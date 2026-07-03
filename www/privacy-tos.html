@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-title" content="Privacy & TOS" />
+  <title>Privacy & Terms of Service - Welcome to Westville</title>
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />   
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=fallback" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-blue: #2B659F;
+      --accent-gold: #E5C158;
+      --text-dark: #333333;
+      --bg-light: #F4F7F6;
+      --white: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Open Sans", sans-serif; 
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header styling matching main site */
+    header {
+      background-color: var(--primary-blue);
+      color: var(--white);
+      padding: 1.5rem 2rem;
+      border-bottom: 5px solid var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .brand-logo a {
+      text-decoration: unset;
+      color: unset;
+    }
+    
+    .brand-icon-img img, .mapicon {
+      max-width: 40px;
+      height: 40px;
+    }
+
+    .header-shortcuts {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: transparent;
+      border: 1.5px solid var(--accent-gold);
+      border-radius: 20px;
+      color: var(--white);
+      height: 34px; /* Explicit height */
+      padding: 0 14px; /* Left/right padding only */
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s, transform 0.1s;
+      white-space: nowrap;
+      box-sizing: border-box; /* Crucial for explicit height */
+      line-height: 1; /* Normalize text height */
+    }
+
+    button.header-btn {
+      font-family: inherit;
+      line-height: inherit;
+      margin: 0;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    .header-btn:hover {
+      background-color: var(--accent-gold);
+      color: var(--primary-blue);
+      transform: translateY(-1px);
+    }
+
+    /* Main Content */
+    main {
+      flex-grow: 1;
+      padding: 3rem 1.5rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--white);
+      padding: 2.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      border-left: 5px solid var(--primary-blue);
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      color: var(--primary-blue);
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      color: var(--primary-blue);
+      font-size: 1.3rem;
+      margin: 1.5rem 0 0.75rem 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: #4a4a4a;
+    }
+
+    ul {
+      margin: 1rem 0 1.5rem 1.5rem;
+      color: #4a4a4a;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Highlights */
+    .note-box {
+      background-color: rgba(43, 101, 159, 0.05);
+      border-left: 4px solid var(--primary-blue);
+      padding: 1.25rem;
+      border-radius: 4px;
+      margin: 1.5rem 0;
+    }
+
+    .note-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Footer styling matching header */
+    footer {
+      background-color: var(--primary-blue);
+      color: var(--white);
+      padding: 1.5rem 2rem;
+      border-top: 5px solid var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: auto;
+    }
+
+    .footer-copyright {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      color: var(--white);
+      margin: 0;
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    .footer-shortcuts {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      header {
+        position: relative;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.6rem 0.8rem;
+        gap: 10px;
+      }
+
+      .brand-logo {
+        width: 100%;
+        justify-content: flex-start;
+        padding-right: 75px;
+      }
+
+      .brand-logo h1 {
+        font-size: 1.15rem;
+      }
+
+      .brand-icon-img img {
+        max-width: 28px;
+        height: 28px;
+      }
+
+      #header-help-btn {
+        position: absolute;
+        right: 10px;
+        top: 8px;
+        margin: 0;
+        font-size: 0.82rem;
+        height: 28px;
+        padding: 0 8px;
+      }
+
+      .header-shortcuts {
+        justify-content: center;
+        width: 100%;
+        gap: 8px;
+      }
+
+      .header-shortcuts .header-btn:not(#header-help-btn) {
+        font-size: 0.82rem;
+        height: 28px;
+        padding: 0 8px;
+      }
+
+      /* Footer Mobile Responsive */
+      footer {
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem 0.8rem;
+        gap: 12px;
+      }
+
+      footer .brand-logo {
+        padding-right: 0;
+        justify-content: center;
+      }
+
+      footer .footer-copyright {
+        font-size: 0.8rem;
+        text-align: center;
+        width: 100%;
+      }
+
+      .footer-shortcuts {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .footer-shortcuts .header-btn {
+        font-size: 0.82rem;
+        height: 28px;
+        padding: 0 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-logo">
+      <div class="brand-icon-img"><a href="/"><img class="mapicon" src="/images/w-pin.svg" alt="Westville Map Project Site Logo" aria-hidden="true"/></a></div>
+      <h1><a href="/">Welcome to Westville</a></h1>
+    </div>
+    <div class="header-shortcuts">
+      <a href="/?hide=establishments&filter=parking" class="header-btn">
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <img style="width:20px; height:20px;" src="/images/parking.svg"/>
+        </span>
+        <span class="header-btn-text">Public Parking</span>
+      </a>
+      <a href="/?hide=all&show=establishments,map,satellite" class="header-btn">
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <img style="width:20px; height:20px;" src="/images/store.svg"/>
+        </span>
+        <span class="header-btn-text">Local Establishments</span>
+      </a>
+      <a href="/?help=true" id="header-help-btn" class="header-btn" title="How to Use the Map">
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+            <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+            <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+            <path d="M12 14h.01" />
+          </svg>
+        </span>
+        <span class="header-btn-text">Help</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      
+      <!-- Privacy Policy Section -->
+      <section class="card">
+        <h2>Privacy Policy</h2>
+        <p>This privacy statement explains in clear, plain language how user data is utilized on the Welcome to Westville Map Project. We value your privacy and process data solely as necessary to provide features of this website and map.</p>
+        
+        <h3>No Personal Tracking or Collection</h3>
+        <p>This website is a passive, public informational resource. We do not collect, store, track, profile, or sell any personal data. Specifically:</p>
+        <ul>
+          <li>We do not set any commercial, tracking, or profiling cookies.</li>
+          <li>We do not integrate third-party web analytics scripts or trackers.</li>
+          <li>We do not require user accounts, emails, or personal login information.</li>
+        </ul>
+
+        <h3>How Geolocation Works (Strictly On-Device)</h3>
+        <p>The interactive map includes a <strong>"My Location"</strong> button and a <strong>"Share my location"</strong> feature. These features require your browser's Geolocation API to function:</p>
+        <ul>
+          <li>Your exact coordinates are calculated entirely within your web browser on your own device.</li>
+          <li>We <strong>do not transmit</strong>, save, or log your location coordinates on our backend servers.</li>
+          <li>When you use the "Share my location" button, a custom shareable link is generated locally and copied to your clipboard. This link contains coordinates solely as URL parameters, so anyone you share the link with can see that location, but no location history is recorded by us.</li>
+        </ul>
+
+        <div class="note-box">
+          <p><strong>Note on Third-Party Requests:</strong> To load map imagery and satellite layers, your browser fetches tiles directly from open tile servers (OpenFreeMap and Esri). These external servers naturally receive standard HTTP request details (IP address and browser user-agent) required to transmit the map images to you. No other personal data is shared with them.</p>
+        </div>
+      </section>
+
+      <!-- Terms of Service Section -->
+      <section class="card">
+        <h2>Terms of Service</h2>
+        <p>Welcome to the Welcome to Westville Map Project portal. This is a public resource designed to make it easy for residents and visitors to explore our township's parking, establishments, and recreation options.</p>
+
+        <h3>1. Public Resource & User Rights</h3>
+        <p>This portal is provided entirely as a free public service. This agreement is designed to protect your rights, not restrict them:</p>
+        <ul>
+          <li>You retain all rights to how you browse and use this public data.</li>
+          <li>We do not claim ownership over any searches you perform or coordinates you view.</li>
+          <li>The source code of this mapping site is open-source, promoting transparency and community development.</li>
+        </ul>
+
+        <h3>2. Accuracy & Disclaimer</h3>
+        <p>While we make every effort to maintain the accuracy and currency of the borough boundary, public parking lots, recreation assets, and local establishments, all data is provided <strong>"as is"</strong> without formal warranties:</p>
+        <ul>
+          <li>Map boundaries, facility lists, and establishment hours are subject to change.</li>
+          <li>Users are encouraged to verify critical information independently (such as local street parking signs, regulatory parking hours, or private establishment business hours).</li>
+          <li>This mapping application is an independent community map project and is not an official, legally binding borough communication.</li>
+        </ul>
+
+        <h3>3. Intellectual Property & Credits</h3>
+        <p>This map aggregates open data and free services. The underlying map data is owned by its respective authors and contributors (OpenStreetMap, Esri, etc.). For a complete list of used datasets, libraries, and licenses, please visit our <a href="/credits.html">Credits Page</a>.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="brand-logo">
+      <div class="brand-icon-img"><a href="/"><img class="mapicon" src="/images/w-pin.svg" alt="Westville Map Project Site Logo" aria-hidden="true"/></a></div>
+      <h1 style="font-size: 1.2rem;"><a href="/">Welcome to Westville</a></h1>
+    </div>
+    <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. Not an official borough communication.</p>
+    <div class="footer-shortcuts">
+      <a href="/credits.html" class="header-btn">
+        <span class="header-btn-icon">📜</span>
+        <span class="header-btn-text">Credits</span>
+      </a>
+      <a href="/privacy-tos.html" class="header-btn" style="background-color: var(--accent-gold); color: var(--primary-blue);">
+        <span class="header-btn-icon">🛡️</span>
+        <span class="header-btn-text">Privacy & TOS</span>
+      </a>
+      <a href="/?help=true" class="header-btn" title="How to Use the Map">
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+            <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+            <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+            <path d="M12 14h.01" />
+          </svg>
+        </span>
+        <span class="header-btn-text">Help</span>
+      </a>
+    </div>
+  </footer>
+
+</body>
+</html>

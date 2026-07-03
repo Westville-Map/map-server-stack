@@ -248,11 +248,32 @@
 
     /* Footer */
     footer {
-      background-color: var(--text-dark);
+      background-color: var(--primary-blue);
       color: var(--white);
-      text-align: center;
-      padding: 2rem;
+      padding: 1.5rem 2rem;
+      border-top: 5px solid var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
       margin-top: 4rem;
+    }
+
+    .footer-copyright {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      color: var(--white);
+      margin: 0;
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    .footer-shortcuts {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     /* Directory Search & Filters */
@@ -405,17 +426,61 @@
       gap: 10px;
     }
 
-    #share-btn {
-      background-color: transparent;
-      border: 1.5px solid var(--accent-gold);
-      color: var(--white);
+    .share-wrapper {
+      position: relative;
+      display: inline-flex;
     }
 
-    #share-btn.copied {
-      background-color: #10b981 !important; /* Emerald green */
-      border-color: #059669 !important; /* Slightly darker emerald */
-      color: var(--white) !important;
-      transform: scale(1.05); /* Slight pop scale animation */
+    .share-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      background-color: var(--primary-blue);
+      border: 1.5px solid var(--accent-gold);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: none;
+      min-width: 180px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .share-dropdown.show {
+      display: block;
+    }
+
+    .share-dropdown-btn {
+      width: 100%;
+      background-color: transparent;
+      border: none;
+      color: var(--white);
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      transition: background-color 0.2s, color 0.2s;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    .share-dropdown-btn:not(:last-child) {
+      border-bottom: 1.5px solid rgba(229, 193, 88, 0.3);
+    }
+
+    .share-dropdown-btn:hover {
+      background-color: var(--accent-gold);
+      color: var(--primary-blue);
+    }
+
+    .share-dropdown-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .map-status {
@@ -457,6 +522,11 @@
     .map-tag.highlight {
       border-color: var(--accent-gold);
       background-color: rgba(217, 119, 6, 0.3);
+    }
+
+    .map-tag.gps-highlight {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.25);
     }
 
     .no-filters-tag {
@@ -551,7 +621,43 @@
 
       .header-shortcuts .header-btn {
         font-size: 0.82rem;
-        padding: 4px 8px; /* Slightly tightened padding */
+        height: 28px;
+        padding: 0 8px; /* Slightly tightened padding */
+        gap: 4px;
+      }
+
+      /* Footer Mobile Responsive */
+      footer {
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem 0.8rem;
+        gap: 12px;
+      }
+
+      footer .brand-logo {
+        padding-right: 0;
+        justify-content: center;
+      }
+
+      footer .footer-copyright {
+        font-size: 0.8rem;
+        text-align: center;
+        width: 100%;
+        margin: 0;
+      }
+
+      .footer-shortcuts {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .footer-shortcuts .header-btn {
+        font-size: 0.82rem;
+        height: 28px;
+        padding: 0 8px;
         gap: 4px;
       }
 
@@ -568,7 +674,8 @@
 
       .map-header-actions .header-btn {
         font-size: 0.76rem;
-        padding: 4px 5px;
+        height: 28px;
+        padding: 0 5px;
         gap: 4px;
         flex: 1; /* Distribute space evenly on small screens */
         justify-content: center;
@@ -700,18 +807,31 @@
     .header-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       background-color: transparent;
       border: 1.5px solid var(--accent-gold);
       border-radius: 20px;
       color: var(--white);
-      padding: 6px 14px;
+      height: 34px; /* Explicit height */
+      padding: 0 14px; /* Left/right padding only */
       font-size: 0.9rem;
       font-weight: 600;
       text-decoration: none;
       transition: background-color 0.2s, color 0.2s, transform 0.1s;
       cursor: pointer;
       white-space: nowrap;
+      box-sizing: border-box; /* Crucial for explicit height */
+      line-height: 1; /* Normalize text height */
+    }
+
+    button.header-btn {
+      font-family: inherit;
+      line-height: inherit;
+      margin: 0;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
     }
 
     .header-btn:hover {
@@ -1435,17 +1555,17 @@
     <div class="header-shortcuts">
       <a href="https://map.westville.app/?hide=establishments&filter=parking" class="header-btn scroll-trigger" target="mapFrame">
         <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-          <img style="width:20px; height:20x;" src="/images/parking.svg"/>
+          <img style="width:20px; height:20px;" src="/images/parking.svg"/>
         </span>
         <span class="header-btn-text">Public Parking</span>
       </a>
       <a href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="header-btn scroll-trigger" target="mapFrame">
         <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-          <img style="width:20px; height:20x;" src="/images/store.svg"/>
+          <img style="width:20px; height:20px;" src="/images/store.svg"/>
         </span>
         <span class="header-btn-text">Local Establishments</span>
       </a>
-      <button id="help-btn" class="header-btn" title="How to Use the Map">
+      <button id="help-btn" class="header-btn help-btn" title="How to Use the Map">
         <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
             <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
@@ -1471,10 +1591,23 @@
             </div>
           </div>
           <div class="map-header-actions">
-            <button id="share-btn" class="header-btn" title="Copy link to current view">
-              <span class="header-btn-icon">🔗</span>
-              <span class="header-btn-text">Share</span>
-            </button>
+            <div class="share-wrapper" id="share-wrapper">
+              <button id="share-btn" class="header-btn" title="Share map view or location">
+                <span class="header-btn-icon">🔗</span>
+                <span class="header-btn-text">Share</span>
+                <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
+              </button>
+              <div id="share-dropdown" class="share-dropdown">
+                <button id="share-view-btn" class="share-dropdown-btn">
+                  <span class="share-dropdown-btn-icon">🔗</span>
+                  <span class="share-dropdown-btn-text">Share current view</span>
+                </button>
+                <button id="share-location-btn" class="share-dropdown-btn">
+                  <span class="share-dropdown-btn-icon">📍</span>
+                  <span class="share-dropdown-btn-text">Share my location</span>
+                </button>
+              </div>
+            </div>
             <button id="print-btn" class="header-btn" title="Print map or directory cards">
               <span class="header-btn-icon">🖨️</span>
               <span class="header-btn-text">Print</span>
@@ -1489,6 +1622,7 @@
           name="mapFrame"
           id="mapFrame"
           src="https://map.westville.app" 
+          allow="geolocation"
           title="Interactive map of Westville facilities, parks, and parking areas">
         </iframe>
       </div>
@@ -1571,7 +1705,31 @@
   </main>
 
   <footer>
-    <p>&copy; 2026 Welcome to Westville Map Project. Not an official borough communication.</p>
+    <div class="brand-logo">
+      <div class="brand-icon-img"><a href="/"><img class="mapicon" src="/images/w-pin.svg" alt="Westville Map Project Site Logo" aria-hidden="true"/></a></div>
+      <h1 style="font-size: 1.2rem; color: var(--white);"><a href="/" class="header_link" style="color: var(--white); text-decoration: none;">Welcome to Westville</a></h1>
+    </div>
+    <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. Not an official borough communication.</p>
+    <div class="footer-shortcuts">
+      <a href="/credits.html" class="header-btn">
+        <span class="header-btn-icon">📜</span>
+        <span class="header-btn-text">Credits</span>
+      </a>
+      <a href="/privacy-tos.html" class="header-btn">
+        <span class="header-btn-icon">🛡️</span>
+        <span class="header-btn-text">Privacy & TOS</span>
+      </a>
+      <button id="footer-help-btn" class="header-btn help-btn" title="How to Use the Map">
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+            <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+            <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+            <path d="M12 14h.01" />
+          </svg>
+        </span>
+        <span class="header-btn-text">Help</span>
+      </button>
+    </div>
   </footer>
 
   <!-- Help Pop-over (Overlay Model) -->
@@ -1590,6 +1748,13 @@
             <div>
               <strong>Interactive Map &amp; Layers:</strong>
               <span>Toggle standard street view, recreation parks, public parking, local establishments, or high-resolution satellite imagery using the layer controls inside the map frame.</span>
+            </div>
+          </li>
+          <li>
+            <span class="help-popover-icon">🎯</span>
+            <div>
+              <strong>My Location (GPS):</strong>
+              <span>Tap the My Location button (crosshair icon below zoom controls) to center and track your real-time position on the map. It works on both mobile and desktop, and only requests location permission when clicked.</span>
             </div>
           </li>
           <li>
@@ -1624,7 +1789,7 @@
             <span class="help-popover-icon">🔗</span>
             <div>
               <strong>Instant Share:</strong>
-              <span>The URL updates dynamically as you search, toggle layers, or select cards. Tap "Share View" in the map header to copy a link that restores your exact view, layers, and selections.</span>
+              <span>The URL updates dynamically as you search, toggle layers, or select cards. Tap "Share" in the map header to copy a link that restores your exact view, layers, and selections. You can also click the dropdown arrow on the "Share" button and click "Share my location" to generate and copy a specialized link containing your current coordinates (this clears any active card highlight to protect privacy).</span>
             </div>
           </li>
           <li>
@@ -1730,36 +1895,101 @@ initializeMapUrls();
 
 // --- Share Button Logic ---
 const shareBtn = document.getElementById('share-btn');
-if (shareBtn) {
-  shareBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      shareBtn.classList.add('copied');
-      const icon = shareBtn.querySelector('.header-btn-icon');
-      const text = shareBtn.querySelector('.header-btn-text');
-      const oldIcon = icon ? icon.innerText : '🔗';
-      const oldText = text ? text.innerText : 'Share View';
-      
-      if (icon) icon.innerText = '✅';
-      if (text) text.innerText = 'Copied!';
-      
+const shareDropdown = document.getElementById('share-dropdown');
+const shareViewBtn = document.getElementById('share-view-btn');
+const shareLocationBtn = document.getElementById('share-location-btn');
+
+if (shareBtn && shareDropdown) {
+  shareBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    shareDropdown.classList.toggle('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!shareDropdown.contains(e.target) && !shareBtn.contains(e.target)) {
+      shareDropdown.classList.remove('show');
+    }
+  });
+}
+
+if (shareViewBtn) {
+  shareViewBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const textEl = shareViewBtn.querySelector('.share-dropdown-btn-text');
+    const oldText = textEl ? textEl.innerText : 'Share current view';
+    if (textEl) textEl.innerText = 'Copied!';
+    shareViewBtn.disabled = true;
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('gps');
+
+    navigator.clipboard.writeText(currentUrl.toString()).then(() => {
       setTimeout(() => {
-        shareBtn.classList.remove('copied');
-        if (icon) icon.innerText = oldIcon;
-        if (text) text.innerText = oldText;
-      }, 2000);
+        if (textEl) textEl.innerText = oldText;
+        shareViewBtn.disabled = false;
+        if (shareDropdown) shareDropdown.classList.remove('show');
+      }, 1500);
     }).catch(err => {
       console.error('Failed to copy text: ', err);
+      if (textEl) textEl.innerText = oldText;
+      shareViewBtn.disabled = false;
     });
   });
 }
 
+if (shareLocationBtn) {
+  shareLocationBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (navigator.geolocation) {
+      const textEl = shareLocationBtn.querySelector('.share-dropdown-btn-text');
+      const oldText = textEl ? textEl.innerText : 'Share my location';
+      if (textEl) textEl.innerText = 'Locating...';
+      shareLocationBtn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (textEl) textEl.innerText = 'Shared!';
+          const lat = position.coords.latitude.toFixed(6);
+          const lng = position.coords.longitude.toFixed(6);
+          
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.delete('feature');
+          currentUrl.searchParams.delete('search');
+          currentUrl.searchParams.set('gps', `${lat},${lng}`);
+          
+          navigator.clipboard.writeText(currentUrl.toString()).then(() => {
+            setTimeout(() => {
+              if (textEl) textEl.innerText = oldText;
+              shareLocationBtn.disabled = false;
+              if (shareDropdown) shareDropdown.classList.remove('show');
+            }, 1500);
+          }).catch(err => {
+            console.error('Failed to copy GPS URL:', err);
+            if (textEl) textEl.innerText = oldText;
+            shareLocationBtn.disabled = false;
+          });
+        },
+        (error) => {
+          if (textEl) textEl.innerText = oldText;
+          shareLocationBtn.disabled = false;
+          console.warn('Geolocation failed or denied:', error);
+          alert('Could not determine location. Please ensure location services are enabled.');
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser.');
+    }
+  });
+}
+
 // --- Help Pop-over Dialog Logic ---
-const helpBtn = document.getElementById('help-btn');
+const helpButtons = document.querySelectorAll('.help-btn');
 const helpPopover = document.getElementById('help-popover');
 const helpCloseBtn = document.getElementById('help-popover-close-btn');
 const helpOkBtn = document.getElementById('help-popover-ok-btn');
 
-if (helpBtn && helpPopover) {
+if (helpPopover) {
   const openPopover = () => {
     helpPopover.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent scrolling when open
@@ -1769,10 +1999,15 @@ if (helpBtn && helpPopover) {
   const closePopover = () => {
     helpPopover.classList.remove('active');
     document.body.style.overflow = ''; // Restore scrolling
-    helpBtn.focus();
+    if (helpButtons.length > 0) helpButtons[0].focus();
   };
 
-  helpBtn.addEventListener('click', openPopover);
+  helpButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openPopover();
+    });
+  });
 
   if (helpCloseBtn) {
     helpCloseBtn.addEventListener('click', closePopover);
@@ -1795,6 +2030,16 @@ if (helpBtn && helpPopover) {
       closePopover();
     }
   });
+
+  // Check URL parameters for automatic trigger (e.g. from static subpages)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('help') === 'true') {
+    openPopover();
+    // Clean up URL parameter to avoid re-triggering on manual refresh
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('help');
+    window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+  }
 }
 
 // --- Map Header Synchronization ---
@@ -1814,9 +2059,15 @@ function updateMapHeaderFromUrl(urlString) {
     filterContainer.innerHTML = '';
     const tags = [];
 
-    // 1. Highlighted feature
+    // 1. GPS shared location
+    const gps = searchParams.get('gps');
+    if (gps) {
+      tags.push(`<span class="map-tag highlight gps-highlight">🎯 Shared location</span>`);
+    }
+
+    // 2. Highlighted feature
     const feature = searchParams.get('feature');
-    if (feature) {
+    if (feature && !gps) {
       tags.push(`<span class="map-tag highlight">📍 Highlighted: ${feature}</span>`);
     }
 

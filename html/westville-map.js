@@ -220,6 +220,15 @@ try {
  
   if(!isMobileDevice() && window.self === window.top) map.addControl(new maplibregl.FullscreenControl(), 'top-left');
   map.addControl(nav, 'top-left');
+
+  let geolocate = new maplibregl.GeolocateControl({
+      positionOptions: {
+          enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserLocation: true
+  });
+  map.addControl(geolocate, 'top-left');
   
   map.on('load', async () => {
       const existingImages = {};
@@ -248,7 +257,7 @@ try {
           type: 'raster',
           tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
           tileSize: 256,
-          attribution: '&copy; ArcGIS'
+          attribution: 'Esri, Maxar, Earthstar Geographics, USDA FSA, USGS, Aerogrid, IGN, IGP, and the GIS User Community'
       });
       
       map.addSource('establishments', {
@@ -1175,8 +1184,31 @@ try {
       }
       const initFeature = initUrl.get('feature');
       const initSearchStr = initUrl.get('search');
-
-      if (initFeature) {
+      const gpsParam = initUrl.get('gps');
+      if (gpsParam) {
+          const coords = gpsParam.split(',').map(Number);
+          if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+              const lat = coords[0];
+              const lng = coords[1];
+              
+              const popup = new maplibregl.Popup({ offset: 25 })
+                  .setHTML(`<div class="wv-map-popup">
+                      <h3 class="wv-opensans" style="margin: 0 0 5px 0; font-size: 16px; color: #e8e8e8; font-weight: bold;">Shared location</h3>
+                      <p class="wv-opensans" style="margin: 0; font-size: 14px; color: #e8e8e8;">Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+                      <hr style="margin: 8px 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
+                      <p class="wv-opensans" style="margin: 0;"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to Shared Location" style="color: #e5c158; font-weight: bold; text-decoration: underline;">Directions</a></p>
+                  </div>`);
+              
+              const marker = new maplibregl.Marker({ color: '#ef4444' })
+                  .setLngLat([lng, lat])
+                  .setPopup(popup)
+                  .addTo(map);
+              
+              activePopup = popup;
+              marker.togglePopup();
+              map.flyTo({ center: [lng, lat], zoom: 16 });
+          }
+      } else if (initFeature) {
           const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
           if (match) {
               selectFeature(match);
