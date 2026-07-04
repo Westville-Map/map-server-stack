@@ -578,10 +578,22 @@ try {
           map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
           map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
 
-          if (feature.geometry.type === 'Point') {
-              map.getSource('highlight-point-source').setData(feature);
+           if (feature.geometry.type === 'Point') {
+               map.getSource('highlight-point-source').setData(feature);
+               // Auto-pan point so popup fits beautifully above feature
+               const verticalOffset = isMobileDevice() ? 90 : 130;
+               const offsetCenter = getOffsetCenter(coordinates, verticalOffset);
+               map.flyTo({ center: offsetCenter });
           } else {
               map.getSource('highlight-poly-source').setData(feature);
+              // Auto-pan bounding box with asymmetric padding (leaves space at top)
+              const bounds = getFeaturesBounds([feature]);
+              if (bounds) {
+                  map.fitBounds(bounds, {
+                      padding: { top: 180, bottom: 60, left: 60, right: 60 },
+                      maxZoom: map.getZoom() > 16 ? map.getZoom() : 16
+                  });
+              }
           }
 
           showPopup(feature, coordinates);
@@ -948,6 +960,60 @@ try {
           return [[minLng, minLat], [maxLng, maxLat]];
       }
 
+      // Helper to compute a geographic coordinate offset by pixels in screen space
+      function getOffsetCenter(coordinates, yOffsetPixels, targetZoom) {
+          const zoom = targetZoom !== undefined ? targetZoom : (map ? map.getZoom() : 14.25);
+          const lat = coordinates[1];
+          const cosLat = Math.cos(lat * Math.PI / 180);
+          const latOffset = (yOffsetPixels * cosLat * 1.40625) / Math.pow(2, zoom);
+          return [coordinates[0], lat + latOffset];
+      }
+
+      // Helper to dynamically pan the map if a popup goes partially off-screen
+      function ensurePopupInView(popup) {
+          const popupEl = popup.getElement();
+          if (!popupEl) return;
+
+          const rect = popupEl.getBoundingClientRect();
+          const mapRect = map.getContainer().getBoundingClientRect();
+
+          let dx = 0;
+          let dy = 0;
+
+           // Detect top/bottom overflow with 20px padding
+           if (rect.top < mapRect.top) {
+               dy = mapRect.top - rect.top + 20;
+               // Cap dy to prevent pushing the marker tip off-screen at the bottom
+               const markerPixel = map.project(popup.getLngLat());
+               const maxDy = mapRect.bottom - 40 - markerPixel.y;
+               if (dy > maxDy) {
+                   dy = Math.max(0, maxDy);
+               }
+           } else if (rect.bottom > mapRect.bottom) {
+               dy = mapRect.bottom - rect.bottom - 20;
+               // Cap dy to prevent pushing the marker tip off-screen at the top
+               const markerPixel = map.project(popup.getLngLat());
+               const minDy = mapRect.top + 40 - markerPixel.y;
+               if (dy < minDy) {
+                   dy = Math.min(0, minDy);
+               }
+           }
+
+          // Detect left/right overflow with 20px padding
+          if (rect.left < mapRect.left) {
+              dx = mapRect.left - rect.left + 20;
+          } else if (rect.right > mapRect.right) {
+              dx = mapRect.right - rect.right - 20;
+          }
+
+          if (dx !== 0 || dy !== 0) {
+              const mapCenterPixel = map.project(map.getCenter());
+              const newCenterPixel = [mapCenterPixel.x - dx, mapCenterPixel.y - dy];
+              const newCenterCoords = map.unproject(newCenterPixel);
+              map.easeTo({ center: newCenterCoords, duration: 300 });
+          }
+      }
+
       function selectFeature(f) {
           selectedFeatureName = f.properties.name;
           searchInput.value = f.properties.name;
@@ -958,14 +1024,22 @@ try {
           map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
 
           if (f.geometry.type === 'Point') {
-              map.getSource('highlight-point-source').setData(f);
-              map.flyTo({ center: f.geometry.coordinates, zoom: 18 });
-              showPopup(f, f.geometry.coordinates);
+               map.getSource('highlight-point-source').setData(f);
+               // Shift center upward in screen space to fit popup above feature (responsive zoom/offset)
+               const targetZoom = isMobileDevice() ? 17 : 18;
+               const verticalOffset = isMobileDevice() ? 90 : 130;
+               const offsetCenter = getOffsetCenter(f.geometry.coordinates, verticalOffset, targetZoom);
+               map.flyTo({ center: offsetCenter, zoom: targetZoom });
+               showPopup(f, f.geometry.coordinates);
           } else {
               map.getSource('highlight-poly-source').setData(f);
               const bounds = getFeaturesBounds([f]);
               if (bounds) {
-                  map.fitBounds(bounds, { padding: 60, maxZoom: 18 });
+                  // Asymmetric bounds padding leaves ample space on top for popups
+                  map.fitBounds(bounds, {
+                      padding: { top: 180, bottom: 60, left: 60, right: 60 },
+                      maxZoom: 18
+                  });
                   const center = [(bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2];
                   showPopup(f, center);
               }
@@ -979,29 +1053,59 @@ try {
           if (activePopup) activePopup.remove();
           console.log(coordinates);
           const props = feature.properties;
-          const linkedName = props.url != null ? `<a target="_blank" href="${props.url}">${props.name}</a>` : `${props.name}`;
-          const phone = props.phone != null ? `<p>${props.phone}</p>`: '';
-          const address =  props.address != null ? `<p>${props.address}, Westville, NJ 08093</p>`: '';
+          const linkedName = props.url != null ? `
+              <a class="wv-popup-title-link" target="_blank" href="${props.url}">
+                  <span>${props.name}</span>
+                  <svg class="wv-title-link-icon" viewBox="0 0 24 24"><path d="M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3H14Z"/></svg>
+              </a>` : `${props.name}`;
+          
+          // Accessible phone & address markup with SVG icons
+          const phone = props.phone != null ? `
+              <p class="wv-opensans wv-popup-detail">
+                  <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  <a href="tel:${props.phone.replace(/\D/g, '')}" title="Call ${props.name}">${props.phone}</a>
+              </p>` : '';
+              
+          const address = props.address != null ? `
+              <p class="wv-opensans wv-popup-detail">
+                  <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  <span>${props.address}, Westville, NJ 08093</span>
+              </p>` : '';
+              
           let lat, lng;
           if (!Array.isArray(coordinates)){
             lng = coordinates['lng'];
             lat = coordinates['lat'];
           } else {
-            lng = coordinates[1];
-            lat = coordinates[0];
+            lng = coordinates[0];
+            lat = coordinates[1];
           }
           activePopup = new maplibregl.Popup()
               .setLngLat(coordinates)
               .setHTML(`<div class="wv-map-popup">
                   <h3 class="wv-opensans">${linkedName}</h3>
-                  <p class="wv-opensans"><strong>Tags:</strong> ${props.tags || ''}</p>
-                  <p class="wv-opensans">${props.description || ''}</p>
+                  ${props.tags ? `
+                  <p class="wv-opensans wv-popup-detail">
+                      <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                      <span><strong>Tags:</strong> ${props.tags}</span>
+                  </p>` : ''}
+                  <p class="wv-opensans" style="margin-top: 8px;">${props.description || ''}</p>
                   <hr>
                   ${phone}
                   ${address}
-                  <p class="wv-opensans"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to ${props.name}">Directions</a></p>
+                  <a class="wv-directions-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to ${props.name}">
+                      <svg class="wv-btn-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                      <span>Directions</span>
+                  </a>
               </div>`)
               .addTo(map);
+
+          activePopup.on('open', () => {
+              // Run immediately for instant loads or static openings
+              requestAnimationFrame(() => ensurePopupInView(activePopup));
+              // Run again when any active camera flight completes to ensure perfect alignment
+              map.once('moveend', () => ensurePopupInView(activePopup));
+          });
 
           activePopup.on('close', () => {
               if (selectedFeatureName === props.name) {
@@ -1182,51 +1286,59 @@ try {
           
           populateFilterDropdown();
       }
-      const initFeature = initUrl.get('feature');
-      const initSearchStr = initUrl.get('search');
-      const gpsParam = initUrl.get('gps');
-      if (gpsParam) {
-          const coords = gpsParam.split(',').map(Number);
-          if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-              const lat = coords[0];
-              const lng = coords[1];
-              
-              const popup = new maplibregl.Popup({ offset: 25 })
-                  .setHTML(`<div class="wv-map-popup">
-                      <h3 class="wv-opensans" style="margin: 0 0 5px 0; font-size: 16px; color: #e8e8e8; font-weight: bold;">Shared location</h3>
-                      <p class="wv-opensans" style="margin: 0; font-size: 14px; color: #e8e8e8;">Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-                      <hr style="margin: 8px 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
-                      <p class="wv-opensans" style="margin: 0;"><a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to Shared Location" style="color: #e5c158; font-weight: bold; text-decoration: underline;">Directions</a></p>
-                  </div>`);
-              
-              const marker = new maplibregl.Marker({ color: '#ef4444' })
-                  .setLngLat([lng, lat])
-                  .setPopup(popup)
-                  .addTo(map);
-              
-              activePopup = popup;
-              marker.togglePopup();
-              map.flyTo({ center: [lng, lat], zoom: 16 });
+      // Defer deep-link zooms and default camera bounds until map layout is fully stable
+      map.once('idle', () => {
+          const initFeature = initUrl.get('feature');
+          const initSearchStr = initUrl.get('search');
+          const gpsParam = initUrl.get('gps');
+          if (gpsParam) {
+              const coords = gpsParam.split(',').map(Number);
+              if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                  const lat = coords[0];
+                  const lng = coords[1];
+                  
+                  const popup = new maplibregl.Popup({ offset: 25 })
+                      .setHTML(`<div class="wv-map-popup">
+                          <h3 class="wv-opensans" style="font-weight: bold;">Shared location</h3>
+                          <p class="wv-opensans wv-popup-detail" style="margin: 0;">
+                              <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                              <span>Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
+                          </p>
+                          <hr>
+                          <a class="wv-directions-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to Shared Location">
+                              <svg class="wv-btn-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                              <span>Directions</span>
+                          </a>
+                      </div>`);
+                  
+                  const marker = new maplibregl.Marker({ color: '#ef4444' })
+                      .setLngLat([lng, lat])
+                      .setPopup(popup)
+                      .addTo(map);
+                  
+                  activePopup = popup;
+                  marker.togglePopup();
+                  map.flyTo({ center: [lng, lat], zoom: 16 });
+              }
+          } else if (initFeature) {
+              const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
+              if (match) {
+                  selectFeature(match);
+              }
+          } else if (initSearchStr || initUrl.get('filter')) {
+              if (initSearchStr) searchInput.value = initSearchStr;
+              performSearch();
+          } else {
+              map.fitBounds([
+                  [-75.145165, 39.856238],
+                  [-75.112685, 39.887555]
+              ], {
+                  padding: 10,
+                  duration: 1000
+              });
           }
-      } else if (initFeature) {
-          const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
-          if (match) {
-              selectFeature(match);
-          }
-      } else if (initSearchStr || initUrl.get('filter')) {
-          if (initSearchStr) searchInput.value = initSearchStr;
-          performSearch();
-      } else {
-        map.fitBounds([
-          [-75.145165, 39.856238],
-          [-75.112685, 39.887555]
-        ], {
-        padding: 10,      // Padding in pixels on all sides
-        //maxZoom: 15,      // Prevents extreme zooming on single-point features
-        duration: 1000    // Animation duration in milliseconds
-    });
-      }
-      updateUrlParams();
+          updateUrlParams();
+      });
   });
 } catch (error) {
   console.error('Error loading map:', error);

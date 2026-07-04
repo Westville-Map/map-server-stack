@@ -29,14 +29,70 @@ body { margin: 0; padding: 0; font-family: "Open Sans", sans-serif; }
 
 
 .maplibregl-map{font: 12px / 20px "Open Sans", sans-serif;}
-.maplibregl-popup-content { padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); background-color: var(--popup-background-color); }
+.maplibregl-popup-content {
+  padding: 20px 24px 20px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
+  background-color: var(--popup-background-color);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
 .maplibregl-popup-anchor-top-right .maplibregl-popup-tip , .maplibregl-popup-anchor-top-left .maplibregl-popup-tip, .maplibregl-popup-anchor-top .maplibregl-popup-tip{ border-bottom-color: var(--popup-background-color) !important;  }
 .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip , .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip , .maplibregl-popup-anchor-bottom .maplibregl-popup-tip{ border-top-color: var(--popup-background-color) !important;  }
 .maplibregl-popup-anchor-left .maplibregl-popup-tip{ border-right-color: var(--popup-background-color) !important;  }
 .maplibregl-popup-anchor-right .maplibregl-popup-tip{ border-left-color: var(--popup-background-color) !important;  }
 
-.maplibregl-popup-content h3 { margin: 0 0 5px 0; font-size: 16px; color: #e8e8e8;}
-.maplibregl-popup-content p { margin: 0; font-size: 14px; color: #e8e8e8; }
+.maplibregl-popup-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+  padding-right: 28px; /* Avoid overlapping close button */
+}
+.maplibregl-popup-content p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+/* Custom Close Button */
+.maplibregl-popup-close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: var(--white) !important;
+  font-size: 20px !important;
+  font-family: inherit !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  line-height: 1 !important;
+  transition: all 0.2s ease-in-out;
+  padding: 0 0 2px 0 !important; /* Perfect vertical alignment for x */
+}
+
+.maplibregl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: var(--white) !important;
+  transform: scale(1.05);
+}
+
+.maplibregl-popup-close-button:focus-visible {
+  outline: 3px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
 
 .wv-opensans{font-family: "Open Sans", sans-serif }
 .layer-control-actions, .layer-control-width-control{display: none;}
@@ -120,19 +176,112 @@ body { margin: 0; padding: 0; font-family: "Open Sans", sans-serif; }
 }
 
 .wv-map-popup hr {
-  border: none;               /* Clears default browser styling */
-  height: 1px;                /* Controls line thickness */
-  /* background-color: rgba(from var(--accent-gold) r g b / 0.75);  */ /* Controls line color */
+  border: none;
+  height: 1px;
   background-image: linear-gradient(to right, rgba(from var(--accent-gold) r g b / 0), rgba(from var(--accent-gold) r g b / 0.75), rgba(from var(--accent-gold) r g b / 0));
-  width: 80%;                 /* Controls horizontal width */
-  margin: 2px auto;          /* Centers the line with top/bottom spacing */
+  width: 100%;
+  margin: 12px auto;
 }
 
-.wv-map-popup a{
-  color: white;
+.wv-map-popup a:not(.wv-directions-btn) {
+  color: var(--white);
   text-decoration-line: underline;
-  text-decoration-thickness: 1px; /* Sets thickness to 3 pixels */
-  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  font-weight: 600;
+  transition: color 0.15s ease-in-out;
+}
+
+.wv-map-popup a:not(.wv-directions-btn):hover {
+  color: var(--accent-gold);
+}
+
+/* Popup Header Title Link Style */
+.wv-popup-title-link {
+  text-decoration: none !important;
+  display: inline;
+  color: var(--white);
+  font-weight: 700;
+  transition: color 0.15s ease-in-out;
+}
+
+.wv-popup-title-link:hover {
+  color: var(--accent-gold) !important;
+}
+
+.wv-popup-title-link .wv-title-link-icon {
+  fill: currentColor;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-left: 6px;
+  flex-shrink: 0;
+  transition: fill 0.15s ease-in-out;
+}
+
+/* Directions Button Style */
+.wv-directions-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-gold);
+  color: var(--text-dark) !important;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 20px;
+  text-decoration: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 12px;
+}
+
+.wv-directions-btn:hover {
+  background-color: #fce280;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.wv-directions-btn:active {
+  transform: translateY(0);
+}
+
+.wv-directions-btn:focus-visible {
+  outline: 3px solid var(--white) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+/* Detail fields layout with icons */
+.wv-popup-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.wv-popup-detail svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  opacity: 0.85;
+  color: var(--white);
+}
+
+.wv-popup-detail a {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease-in-out;
+}
+
+.wv-popup-detail a:hover {
+  color: var(--accent-gold) !important;
+  text-decoration: underline !important;
 }
 
 /* Custom Multi-Select Dropdown on Map */
