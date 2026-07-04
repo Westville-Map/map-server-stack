@@ -180,20 +180,70 @@ if (helpPopover) {
 }
 
 // --- Map Header Synchronization ---
+function getLayerVisibilityFromUrl(urlString, friendlyName) {
+  try {
+    const url = new URL(urlString);
+    const searchParams = url.searchParams;
+    const show = searchParams.get('show');
+    const hide = searchParams.get('hide');
+
+    // Default: all thematic layers, map, and satellite are visible by default
+    let visible = true;
+
+    if (show) {
+      const showParams = show.toLowerCase().split(',');
+      if (showParams.includes('all')) {
+        visible = true;
+      } else {
+        const thematicLayers = ['parking', 'establishments', 'recreation'];
+        if (thematicLayers.includes(friendlyName)) {
+          visible = showParams.includes(friendlyName);
+        } else if (friendlyName === 'satellite') {
+          visible = showParams.includes('satellite');
+        } else if (friendlyName === 'map') {
+          if (showParams.includes('map')) {
+            visible = true;
+          } else if (showParams.includes('satellite')) {
+            visible = false;
+          }
+        }
+      }
+    }
+
+    if (hide) {
+      const hideParams = hide.toLowerCase().split(',');
+      if (hideParams.includes('all')) {
+        visible = false;
+      } else if (hideParams.includes(friendlyName)) {
+        visible = false;
+      }
+    }
+
+    if (show) {
+      const showParams = show.toLowerCase().split(',');
+      const hideParams = hide ? hide.toLowerCase().split(',') : [];
+      if (!hideParams.includes('all') && showParams.includes(friendlyName)) {
+        visible = true;
+      }
+    }
+
+    return visible;
+  } catch (e) {
+    return true;
+  }
+}
+
 function updateMapHeaderFromUrl(urlString) {
   try {
     const url = new URL(urlString);
     const searchParams = url.searchParams;
-    const filterContainer = document.getElementById('map-active-filters');
+    const transientContainer = document.getElementById('map-transient-tags');
     const fullMapLink = document.getElementById('full-map-link');
-
-    if (!filterContainer) return;
 
     if (fullMapLink) {
       fullMapLink.href = urlString;
     }
 
-    filterContainer.innerHTML = '';
     const tags = [];
 
     // 1. GPS shared location
@@ -208,7 +258,7 @@ function updateMapHeaderFromUrl(urlString) {
       tags.push(`<span class="map-tag highlight">📍 Highlighted: ${feature}</span>`);
     }
 
-    // 2. Active filters
+    // 3. Active filters
     const filter = searchParams.get('filter');
     if (filter) {
       const filters = filter.split(',');
@@ -220,37 +270,34 @@ function updateMapHeaderFromUrl(urlString) {
       });
     }
 
-    // 3. Search query
+    // 4. Search query
     const searchStr = searchParams.get('search');
     if (searchStr && !feature) {
       tags.push(`<span class="map-tag">🔍 Search: "${searchStr}"</span>`);
     }
 
-    // 4. Layers
-    const show = searchParams.get('show');
-    const hide = searchParams.get('hide');
+    if (transientContainer) {
+      transientContainer.innerHTML = tags.join('');
+    }
 
-    if (show) {
-      const shows = show.split(',');
-      shows.forEach(s => {
-        const clean = s.trim().toLowerCase();
-        if (clean === 'satellite') {
-          tags.push(`<span class="map-tag">📡 Satellite View</span>`);
-        } else if (clean === 'establishments') {
-          tags.push(`<span class="map-tag">🏢 Establishments</span>`);
-        } else if (clean === 'recreation') {
-          tags.push(`<span class="map-tag">🌳 Recreation</span>`);
-        } else if (clean === 'parking') {
-          tags.push(`<span class="map-tag">🅿️ Parking</span>`);
+    // Sync checkboxes to URL state
+    const layers = ['parking', 'establishments', 'recreation', 'satellite', 'map'];
+    layers.forEach(layer => {
+      const checkbox = document.getElementById(`layer-${layer}`);
+      if (checkbox) {
+        const visible = getLayerVisibilityFromUrl(urlString, layer);
+        checkbox.checked = visible;
+        
+        const label = checkbox.closest('.interactive-tag');
+        if (label) {
+          if (visible) {
+            label.classList.add('checked');
+          } else {
+            label.classList.remove('checked');
+          }
         }
-      });
-    }
-
-    if (tags.length === 0) {
-      filterContainer.innerHTML = '<span class="no-filters-tag">Map</span>';
-    } else {
-      filterContainer.innerHTML = tags.join('');
-    }
+      }
+    });
   } catch (e) {
     console.error('Error updating map header:', e);
   }
@@ -1796,5 +1843,35 @@ if (shortcutsTrigger && shortcutsGrid) {
   });
 }
 
+function initLayerCheckboxes() {
+  const layers = ['parking', 'establishments', 'recreation', 'satellite', 'map'];
+  layers.forEach(layer => {
+    const checkbox = document.getElementById(`layer-${layer}`);
+    if (checkbox) {
+      checkbox.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        
+        // Immediate visual update
+        const label = checkbox.closest('.interactive-tag');
+        if (label) {
+          if (checked) label.classList.add('checked');
+          else label.classList.remove('checked');
+        }
+        
+        // Post message to map iframe to toggle layer
+        const iframe = document.getElementById('mapFrame');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'parent-toggle-layer',
+            layer: layer,
+            visible: checked
+          }, '*');
+        }
+      });
+    }
+  });
+}
+
 // Start fetching data
+initLayerCheckboxes();
 initDirectory();

@@ -1232,8 +1232,34 @@ try {
   console.error('Error loading map:', error);
 }
 
-// Handle parent window requests to capture the map canvas for printing or PDF exports
+// Handle parent window requests
 window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'parent-toggle-layer') {
+        const friendlyName = event.data.layer;
+        const visible = event.data.visible;
+        const layerId = LAYER_ID_MAP[friendlyName];
+        if (layerId) {
+            const title = (layerId === 'Background') ? 'Background' : layerStates[layerId].name;
+            const labelSpan = document.querySelector(`span.layer-control-name[title="${title}"]`);
+            if (labelSpan) {
+                const container = labelSpan.closest('label') || labelSpan.parentElement;
+                if (container) {
+                    const checkbox = container.querySelector('input[type="checkbox"]');
+                    if (checkbox && checkbox.checked !== visible) {
+                        checkbox.click();
+                    }
+                }
+            } else {
+                // Fallback if layer control is not yet rendered
+                layerStates[layerId].visible = visible;
+                if (map) {
+                    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+                }
+                updateUrlParams();
+            }
+        }
+    }
+
     if (event.data && event.data.type === 'request-map-capture') {
         try {
             if (!map) {
