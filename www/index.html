@@ -43,15 +43,15 @@
                 </label>
                 <label class="map-tag interactive-tag" for="layer-recreation">
                   <input type="checkbox" id="layer-recreation" data-layer="recreation" class="tag-checkbox" checked>
-                  <span>🌳 Recreation</span>
+                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/tree.svg"> Recreation</span>
                 </label>
                 <label class="map-tag interactive-tag" for="layer-satellite">
                   <input type="checkbox" id="layer-satellite" data-layer="satellite" class="tag-checkbox" checked>
-                  <span>📡 Satellite</span>
+                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/satellite.svg"> Satellite</span>
                 </label>
                 <label class="map-tag interactive-tag" for="layer-map">
                   <input type="checkbox" id="layer-map" data-layer="map" class="tag-checkbox" checked>
-                  <span>🗺️ Map</span>
+                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/map-folded.svg"> Map</span>
                 </label>
               </div>
             </div>
@@ -59,26 +59,36 @@
 
 
             <a id="full-map-link" href="https://map.westville.app" class="header-btn" target="_blank">
-              <span class="header-btn-icon">🗺️</span>
+              <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+                <img style="width:18px; height:18px;" src="/images/map-folded.svg">
+              </span>
               <span class="header-btn-text">Full Map</span>
             </a>
             <button id="print-btn" class="header-btn" title="Print map or directory cards">
-              <span class="header-btn-icon">🖨️</span>
+              <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+                <img style="width:18px; height:18px;" src="/images/printer.svg">
+              </span>
               <span class="header-btn-text">Print</span>
             </button>
             <div class="share-wrapper" id="share-wrapper">
               <button id="share-btn" class="header-btn" title="Share map view or location">
-                <span class="header-btn-icon">🔗</span>
+                <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+                  <img style="width:18px; height:18px;" src="/images/share.svg">
+                </span>
                 <span class="header-btn-text">Share</span>
                 <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
               </button>
               <div id="share-dropdown" class="share-dropdown">
                 <button id="share-view-btn" class="share-dropdown-btn">
-                  <span class="share-dropdown-btn-icon">🔗</span>
+                  <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/share.svg">
+                  </span>
                   <span class="share-dropdown-btn-text">Share current view</span>
                 </button>
                 <button id="share-location-btn" class="share-dropdown-btn">
-                  <span class="share-dropdown-btn-icon">📍</span>
+                  <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/map-pin.svg">
+                  </span>
                   <span class="share-dropdown-btn-text">Share my location</span>
                 </button>
               </div>
@@ -186,56 +196,72 @@
         <p>Welcome to the Westville Map Portal! This interactive companion helps you explore public amenities, local establishments, parking zones, and park activities in the township. Here is a guide to the key features:</p>
         <ul class="help-popover-list">
           <li>
-            <span class="help-popover-icon">🗺️</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/map-folded.svg" alt="Map icon">
+            </span>
             <div>
               <strong>Interactive Map &amp; Layers:</strong>
               <span>Toggle standard street view, recreation parks, public parking, local establishments, or high-resolution satellite imagery using the layer controls inside the map frame.</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">🎯</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/my-location.svg" alt="My Location icon">
+            </span>
             <div>
               <strong>My Location (GPS):</strong>
               <span>Tap the My Location button (crosshair icon below zoom controls) to center and track your real-time position on the map. It works on both mobile and desktop, and only requests location permission when clicked.</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">📍</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/map-pin.svg" alt="Map Pin icon">
+            </span>
             <div>
               <strong>Interactive Establishment Cards:</strong>
               <span>Clicking any card in the directory will center, highlight, and zoom the map onto that establishment. Cards feature category-colored left borders (e.g., gold for auto-related tags) to help you visually identify establishments at a glance.</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">🧭</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/compass.svg" alt="Compass icon">
+            </span>
             <div>
               <strong>Directions &amp; Website Links:</strong>
               <span>Inside each establishment card, tap the <strong>Call</strong> button to place a call to the establishment, tap the <strong>Directions</strong> button to get precise navigation routes on Google Maps, or tap <strong>Website</strong> to visit their online site directly.</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">🔍</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/search.svg" alt="Search icon">
+            </span>
             <div>
               <strong>Advanced Multi-Filter Search:</strong>
               <span>Type terms into the search bar or use the "All Categories &amp; Tags" multi-select dropdown. Filters instantly narrow down both the public directory cards and map markers in real-time.</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">⚡</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/lightning.svg" alt="Lightning bolt icon">
+            </span>
             <div>
               <strong>Quick View Shortcuts:</strong>
               <span>Use the collapsible <strong>Quick Views &amp; Shortcuts</strong> container to load pre-configured views (e.g. Free Public Parking, Local Establishments, Satellite Layer) in one click. On mobile devices, this container collapses to save screen space.</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">🔗</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/share.svg" alt="Share icon">
+            </span>
             <div>
               <strong>Instant Share:</strong>
               <span>The URL updates dynamically as you search, toggle layers, or select cards. Tap "Share" in the map header to copy a link that restores your exact view, layers, and selections. You can also click the dropdown arrow on the "Share" button and click "Share my location" to generate and copy a specialized link containing your current coordinates (this clears any active card highlight to protect privacy).</span>
             </div>
           </li>
           <li>
-            <span class="help-popover-icon">🖨️</span>
+            <span class="help-popover-icon">
+              <img style="width:20px; height:20px;" src="/images/printer.svg" alt="Printer icon">
+            </span>
             <div>
               <strong>Custom Printing &amp; PDFs:</strong>
               <span>Engage the printer icon next to the "Full Page Map" button to configure customized landscape or portrait print setups or generate multi-page PDFs. Printing directory cards is disabled by default to save ink but can be toggled on if desired.</span>
@@ -254,7 +280,10 @@
   <div id="print-modal" class="modal-overlay" role="dialog" aria-labelledby="print-modal-title" aria-modal="true" style="display: none;">
     <div class="modal-content glass-card animate-zoom">
       <div class="modal-header">
-        <h3 id="print-modal-title">🖨️ Print & Export Options</h3>
+        <h3 id="print-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <img style="width:24px; height:24px;" src="/images/printer.svg" alt="Printer icon">
+          Print & Export Options
+        </h3>
         <button id="print-modal-close-btn" class="close-btn" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
@@ -281,16 +310,25 @@
         </div>
 
         <div id="print-loading-msg" class="print-loading-status" style="display: none;">
-          <span class="spinner">⏳</span> <span id="print-loading-text">Capturing current map state...</span>
+          <span class="spinner">
+            <img style="width:16px; height:16px; vertical-align: middle;" src="/images/hourglass.svg" alt="Hourglass spinner">
+          </span>
+          <span id="print-loading-text">Capturing current map state...</span>
         </div>
       </div>
       <div class="modal-footer">
         <div class="action-buttons-group">
           <button id="print-pdf-btn" class="btn-main">
-            <span class="btn-icon">💾</span> Save PDF
+            <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
+              <img style="width:16px; height:16px;" src="/images/floppy-disk.svg" alt="Save icon">
+            </span>
+            Save PDF
           </button>
           <button id="print-execute-btn" class="btn-main font-bold">
-            <span class="btn-icon">🖨️</span> Print
+            <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
+              <img style="width:16px; height:16px;" src="/images/printer.svg" alt="Printer icon">
+            </span>
+            Print
           </button>
         </div>
         <button id="print-cancel-btn" class="btn-secondary">Cancel</button>

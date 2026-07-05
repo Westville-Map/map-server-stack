@@ -119,11 +119,15 @@ class SiteFooter extends HTMLElement {
         <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. Not an official borough communication.</p>
         <div class="footer-shortcuts">
           <a href="/credits.html" class="header-btn" ${creditsStyle}>
-            <span class="header-btn-icon">📜</span>
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <img style="width:18px; height:18px;" src="/images/credits-scroll.svg" alt="Credits scroll">
+            </span>
             <span class="header-btn-text">Credits</span>
           </a>
           <a href="/privacy-tos.html" class="header-btn" ${privacyStyle}>
-            <span class="header-btn-icon">🛡️</span>
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <img style="width:18px; height:18px;" src="/images/shield-privacy.svg" alt="Privacy shield">
+            </span>
             <span class="header-btn-text">Privacy & TOS</span>
           </a>
           ${helpHTML}

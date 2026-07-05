@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+  <defs>
+    <linearGradient id="lens-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eaeded" />
+      <stop offset="100%" stop-color="#7f8c8d" />
+    </linearGradient>
+    <linearGradient id="lens-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ebf5fb" opacity="0.8" />
+      <stop offset="100%" stop-color="#5dade2" opacity="0.3" />
+    </linearGradient>
+    <linearGradient id="handle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34495e" />
+      <stop offset="100%" stop-color="#1a252f" />
+    </linearGradient>
+  </defs>
+  <!-- Handle -->
+  <line x1="14" y1="14" x2="21.5" y2="21.5" stroke="url(#handle-grad)" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="14" y1="14" x2="16.5" y2="16.5" stroke="#bdc3c7" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Lens frame outer -->
+  <circle cx="9.5" cy="9.5" r="6.5" fill="none" stroke="url(#lens-rim)" stroke-width="1.75" />
+  <!-- Glass fill -->
+  <circle cx="9.5" cy="9.5" r="5.5" fill="url(#lens-glass)" />
+  <!-- Highlight shine -->
+  <path d="M 6.5 6.5 Q 8 5, 10 5" fill="none" stroke="#fff" stroke-width="0.75" stroke-linecap="round" opacity="0.8" />
+</svg>

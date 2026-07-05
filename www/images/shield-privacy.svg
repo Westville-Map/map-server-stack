@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+  <defs>
+    <linearGradient id="shield-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eaeded" />
+      <stop offset="100%" stop-color="#7f8c8d" />
+    </linearGradient>
+    <linearGradient id="shield-body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2e4053" />
+      <stop offset="100%" stop-color="#1b2631" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Shield Crest (Silver metal) -->
+  <path d="M12 2 C12 2, 20 3.5, 20 11 C20 16.5, 12 21.5, 12 21.5 C12 21.5, 4 16.5, 4 11 C4 3.5, 12 2, 12 2 Z" fill="url(#shield-metal)" stroke="#566573" stroke-width="0.5" />
+  <!-- Inner Shield Body (Royal Slate Blue) -->
+  <path d="M12 3.5 C12 3.5, 18.5 4.8, 18.5 11 C18.5 15.5, 12 19.8, 12 19.8 C12 19.8, 5.5 15.5, 5.5 11 C5.5 4.8, 12 3.5, 12 3.5 Z" fill="url(#shield-body)" />
+  <!-- Security Checkmark (Cyan / Green glow) -->
+  <path d="M 8.5 11.5 L 11 14 L 15.5 9.5" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

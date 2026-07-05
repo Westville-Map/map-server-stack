@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+  <defs>
+    <linearGradient id="map-bg-1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#faebd7" />
+      <stop offset="100%" stop-color="#ebd2be" />
+    </linearGradient>
+    <linearGradient id="map-bg-2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fcf3cf" />
+      <stop offset="100%" stop-color="#f7dc6f" />
+    </linearGradient>
+    <linearGradient id="river" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5dade2" />
+      <stop offset="100%" stop-color="#2980b9" />
+    </linearGradient>
+    <linearGradient id="pin-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ec7063" />
+      <stop offset="100%" stop-color="#cb4335" />
+    </linearGradient>
+  </defs>
+  <g stroke="#2c3e50" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Left panel -->
+    <path d="M 2 5 L 9 3 L 9 19 L 2 21 Z" fill="url(#map-bg-1)" />
+    <!-- Middle panel (slightly shaded to give folded feel) -->
+    <path d="M 9 3 L 16 6 L 16 22 L 9 19 Z" fill="url(#map-bg-2)" />
+    <!-- Right panel -->
+    <path d="M 16 6 L 22 4 L 22 20 L 16 22 Z" fill="url(#map-bg-1)" />
+  </g>
+  <!-- River running across map -->
+  <path d="M 2 12 Q 9 10, 12 14 T 22 13" fill="none" stroke="url(#river)" stroke-width="2" stroke-linecap="round" opacity="0.8" />
+  <!-- Green Parks -->
+  <path d="M 4 7 Q 6 6, 7 8 T 6 10 Z" fill="#52be80" opacity="0.8" />
+  <path d="M 17 10 Q 19 9, 20 11 T 19 13 Z" fill="#52be80" opacity="0.8" />
+  <!-- Roads -->
+  <line x1="2" y1="16" x2="9" y2="15" stroke="#7f8c8d" stroke-width="0.75" opacity="0.6" />
+  <line x1="9" y1="15" x2="16" y2="18" stroke="#7f8c8d" stroke-width="0.75" opacity="0.6" />
+  <line x1="16" y1="18" x2="22" y2="16" stroke="#7f8c8d" stroke-width="0.75" opacity="0.6" />
+  <line x1="12" y1="3" x2="12" y2="22" stroke="#7f8c8d" stroke-width="0.75" opacity="0.4" stroke-dasharray="1 2" />
+  <!-- Red Map Pin marker -->
+  <g transform="translate(10.5, 6)">
+    <path d="M4 0 C6.5 0, 8 1.5, 8 3.5 C8 6.5, 4 10, 4 10 C4 10, 0 6.5, 0 3.5 C0 1.5, 1.5 0, 4 0 Z" fill="url(#pin-grad)" stroke="#78281f" stroke-width="0.5" />
+    <circle cx="4" cy="3.5" r="1.25" fill="#fff" />
+  </g>
+</svg>

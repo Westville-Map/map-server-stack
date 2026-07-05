@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+  <defs>
+    <linearGradient id="disk-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3f51b5" />
+      <stop offset="100%" stop-color="#1a237e" />
+    </linearGradient>
+    <linearGradient id="slider" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b0bec5" />
+      <stop offset="100%" stop-color="#78909c" />
+    </linearGradient>
+  </defs>
+  <!-- Disk Main Shape -->
+  <path d="M 3 3 L 17 3 L 21 7 L 21 21 L 3 21 Z" fill="url(#disk-body)" stroke="#1a237e" stroke-width="0.75" stroke-linejoin="round" />
+  <!-- Metal Shutter/Slider (Top) -->
+  <rect x="7" y="3" width="7" height="6.5" fill="url(#slider)" stroke="#455a64" stroke-width="0.5" />
+  <rect x="9" y="4.5" width="2" height="3.5" rx="0.25" fill="#111" />
+  <!-- Write Label (Bottom) -->
+  <rect x="5" y="11" width="14" height="10" rx="0.5" fill="#ffffff" stroke="#b0bec5" stroke-width="0.5" />
+  <!-- Label lines -->
+  <line x1="7" y1="13.5" x2="17" y2="13.5" stroke="#90caf9" stroke-width="0.75" />
+  <line x1="7" y1="16.5" x2="17" y2="16.5" stroke="#90caf9" stroke-width="0.75" />
+  <line x1="7" y1="19.5" x2="15" y2="19.5" stroke="#90caf9" stroke-width="0.75" />
+</svg>

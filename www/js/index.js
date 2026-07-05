@@ -249,13 +249,13 @@ function updateMapHeaderFromUrl(urlString) {
     // 1. GPS shared location
     const gps = searchParams.get('gps');
     if (gps) {
-      tags.push(`<span class="map-tag highlight gps-highlight">🎯 Shared location</span>`);
+      tags.push(`<span class="map-tag highlight gps-highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/my-location.svg" alt=""> Shared location</span>`);
     }
 
     // 2. Highlighted feature
     const feature = searchParams.get('feature');
     if (feature && !gps) {
-      tags.push(`<span class="map-tag highlight">📍 Highlighted: ${feature}</span>`);
+      tags.push(`<span class="map-tag highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/map-pin.svg" alt=""> Highlighted: ${feature}</span>`);
     }
 
     // 3. Active filters
@@ -265,7 +265,7 @@ function updateMapHeaderFromUrl(urlString) {
       filters.forEach(f => {
         if (f.trim()) {
           const label = f.trim().charAt(0).toUpperCase() + f.trim().slice(1);
-          tags.push(`<span class="map-tag">🔍 Filter: ${label}</span>`);
+          tags.push(`<span class="map-tag" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/search.svg" alt=""> Filter: ${label}</span>`);
         }
       });
     }
@@ -273,7 +273,7 @@ function updateMapHeaderFromUrl(urlString) {
     // 4. Search query
     const searchStr = searchParams.get('search');
     if (searchStr && !feature) {
-      tags.push(`<span class="map-tag">🔍 Search: "${searchStr}"</span>`);
+      tags.push(`<span class="map-tag" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/search.svg" alt=""> Search: "${searchStr}"</span>`);
     }
 
     if (transientContainer) {
