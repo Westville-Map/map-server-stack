@@ -1773,75 +1773,7 @@ if (printPdfBtn) {
   });
 }
 
-// Initialize collapsible Quick Views & Shortcuts on mobile
-const shortcutsTrigger = document.getElementById('shortcuts-trigger');
-const shortcutsGrid = document.getElementById('shortcuts-grid-container');
 
-if (shortcutsTrigger && shortcutsGrid) {
-  const shortcutsWrapper = shortcutsTrigger.closest('.shortcuts-wrapper-card');
-
-  // Check if we are on mobile on load (768px is the media breakpoint)
-  const checkCollapsibleInit = () => {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      shortcutsGrid.classList.add('collapsed');
-      shortcutsTrigger.classList.add('collapsed');
-      if (shortcutsWrapper) shortcutsWrapper.classList.add('collapsed');
-      shortcutsTrigger.classList.remove('active');
-      shortcutsTrigger.setAttribute('aria-expanded', 'false');
-      shortcutsTrigger.setAttribute('role', 'button');
-      shortcutsTrigger.setAttribute('tabindex', '0');
-    } else {
-      shortcutsGrid.classList.remove('collapsed');
-      shortcutsTrigger.classList.remove('collapsed');
-      if (shortcutsWrapper) shortcutsWrapper.classList.remove('collapsed');
-      shortcutsTrigger.classList.add('active');
-      shortcutsTrigger.setAttribute('aria-expanded', 'true');
-      shortcutsTrigger.removeAttribute('role');
-      shortcutsTrigger.removeAttribute('tabindex');
-    }
-  };
-
-  // Initial check
-  checkCollapsibleInit();
-
-  // Re-verify on resize so it naturally matches standard screen transitions
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 768) {
-      shortcutsGrid.classList.remove('collapsed');
-      shortcutsTrigger.classList.remove('collapsed');
-      if (shortcutsWrapper) shortcutsWrapper.classList.remove('collapsed');
-      shortcutsTrigger.classList.add('active');
-      shortcutsTrigger.setAttribute('aria-expanded', 'true');
-      shortcutsTrigger.removeAttribute('role');
-      shortcutsTrigger.removeAttribute('tabindex');
-    } else {
-      // Initialize as mobile-collapsible on downsize if not already set
-      if (!shortcutsTrigger.hasAttribute('role')) {
-        checkCollapsibleInit();
-      }
-    }
-  });
-
-  // Toggle on click/tap
-  shortcutsTrigger.addEventListener('click', () => {
-    if (window.innerWidth <= 768) {
-      const isCollapsed = shortcutsGrid.classList.toggle('collapsed');
-      shortcutsTrigger.classList.toggle('collapsed', isCollapsed);
-      shortcutsTrigger.classList.toggle('active', !isCollapsed);
-      if (shortcutsWrapper) shortcutsWrapper.classList.toggle('collapsed', isCollapsed);
-      shortcutsTrigger.setAttribute('aria-expanded', !isCollapsed ? 'true' : 'false');
-    }
-  });
-
-  // Keyboard navigation support for accessibility
-  shortcutsTrigger.addEventListener('keydown', (e) => {
-    if (window.innerWidth <= 768 && (e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault();
-      shortcutsTrigger.click();
-    }
-  });
-}
 
 function initLayerCheckboxes() {
   const layers = ['parking', 'establishments', 'recreation', 'satellite', 'map'];

@@ -10,24 +10,49 @@ class SiteHeader extends HTMLElement {
           <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
             <img style="width:20px; height:20px;" src="/images/parking.svg"/>
           </span>
-          <span class="header-btn-text">Public Parking</span>
+          <span class="header-btn-text">Parking</span>
         </a>
         <a href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="header-btn scroll-trigger" target="mapFrame">
           <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
             <img style="width:20px; height:20px;" src="/images/store.svg"/>
           </span>
-          <span class="header-btn-text">Local Establishments</span>
+          <span class="header-btn-text">Establishments</span>
         </a>
-        <button id="help-btn" class="header-btn help-btn" title="How to Use the Map">
+        <a href="https://map.westville.app/?show=recreation&hide=establishments" class="header-btn scroll-trigger" target="mapFrame">
           <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
-              <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
-              <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
-              <path d="M12 14h.01" />
-            </svg>
+            <img style="width:20px; height:20px;" src="/images/tree.svg"/>
           </span>
-          <span class="header-btn-text">Help</span>
-        </button>
+          <span class="header-btn-text">Recreation</span>
+        </a>
+        <div class="help-split-btn">
+          <button id="help-btn" class="help-split-left-btn help-btn" title="How to Use the Map">
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+                <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+                <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+                <path d="M12 14h.01" />
+              </svg>
+            </span>
+            <span class="header-btn-text">Help</span>
+          </button>
+          <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false">
+            <span style="font-size: 0.75rem;">▼</span>
+          </button>
+          <div id="help-dropdown" class="help-dropdown-menu">
+            <a href="/credits.html" class="help-dropdown-item">
+              <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                <img style="width:14px; height:14px;" src="/images/credits-scroll.svg">
+              </span>
+              <span class="help-dropdown-item-text">Credits</span>
+            </a>
+            <a href="/privacy-tos.html" class="help-dropdown-item">
+              <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                <img style="width:14px; height:14px;" src="/images/shield-privacy.svg">
+              </span>
+              <span class="help-dropdown-item-text">Privacy & TOS</span>
+            </a>
+          </div>
+        </div>
       `;
     } else {
       shortcutsHTML = `
@@ -43,16 +68,41 @@ class SiteHeader extends HTMLElement {
           </span>
           <span class="header-btn-text">Local Establishments</span>
         </a>
-        <a href="/?help=true" id="header-help-btn" class="header-btn" title="How to Use the Map">
+        <a href="/?show=recreation&hide=establishments" class="header-btn">
           <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
-              <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
-              <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
-              <path d="M12 14h.01" />
-            </svg>
+            <img style="width:20px; height:20px;" src="/images/tree.svg"/>
           </span>
-          <span class="header-btn-text">Help</span>
+          <span class="header-btn-text">Recreation</span>
         </a>
+        <div class="help-split-btn">
+          <a href="/?help=true" id="header-help-btn" class="help-split-left-btn" title="How to Use the Map">
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+                <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+                <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+                <path d="M12 14h.01" />
+              </svg>
+            </span>
+            <span class="header-btn-text">Help</span>
+          </a>
+          <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false">
+            <span style="font-size: 0.75rem;">▼</span>
+          </button>
+          <div id="help-dropdown" class="help-dropdown-menu">
+            <a href="/credits.html" class="help-dropdown-item">
+              <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                <img style="width:14px; height:14px;" src="/images/credits-scroll.svg">
+              </span>
+              <span class="help-dropdown-item-text">Credits</span>
+            </a>
+            <a href="/privacy-tos.html" class="help-dropdown-item">
+              <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                <img style="width:14px; height:14px;" src="/images/shield-privacy.svg">
+              </span>
+              <span class="help-dropdown-item-text">Privacy & TOS</span>
+            </a>
+          </div>
+        </div>
       `;
     }
 
@@ -69,6 +119,26 @@ class SiteHeader extends HTMLElement {
         </div>
       </header>
     `;
+
+    // Dropdown toggle logic
+    const toggleBtn = this.querySelector('#help-dropdown-toggle');
+    const dropdownMenu = this.querySelector('#help-dropdown');
+    
+    if (toggleBtn && dropdownMenu) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isShown = dropdownMenu.classList.toggle('show');
+        toggleBtn.setAttribute('aria-expanded', isShown);
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!this.contains(e.target)) {
+          dropdownMenu.classList.remove('show');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   }
 }
 

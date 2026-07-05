@@ -44,7 +44,7 @@ header h1 {
 .brand-logo {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 5px;
 }
 
 .brand-logo a {
@@ -115,6 +115,127 @@ button.header-btn {
   color: var(--primary-blue);
   transform: translateY(-1px);
 }
+
+/* Help split button styles */
+.help-split-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--accent-gold);
+  border-radius: 20px;
+  height: 34px;
+  box-sizing: border-box;
+  background-color: transparent;
+  transition: transform 0.1s;
+}
+
+.help-split-btn:hover {
+  transform: translateY(-1px);
+}
+
+.help-split-left-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: transparent;
+  border: none;
+  border-radius: 18px 0 0 18px;
+  color: var(--white);
+  height: 100%;
+  padding: 0 10px 0 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.help-split-left-btn:hover {
+  background-color: var(--accent-gold);
+  color: var(--primary-blue);
+}
+
+.help-split-btn::after {
+  content: "";
+  display: block;
+  width: 0px;
+  height: 60%;
+  background-color: rgba(229, 193, 88, 0.4);
+}
+
+.help-split-right-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 0 18px 18px 0;
+  color: var(--white);
+  height: 100%;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  box-sizing: border-box;
+}
+
+.help-split-right-btn:hover {
+  background-color: var(--accent-gold);
+  color: var(--primary-blue);
+}
+
+/* Dropdown menu */
+.help-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background-color: var(--primary-blue);
+  border: 1.5px solid var(--accent-gold);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  display: none;
+  min-width: 180px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.help-dropdown-menu.show {
+  display: block;
+}
+
+/* Dropdown items */
+.help-dropdown-item {
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  color: var(--white);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.help-dropdown-item:not(:last-child) {
+  border-bottom: 1.5px solid rgba(229, 193, 88, 0.3);
+}
+
+.help-dropdown-item:hover {
+  background-color: var(--accent-gold);
+  color: var(--primary-blue);
+}
+
 
 /* Footer styling matching header */
 footer {
@@ -344,14 +465,21 @@ main {
     height: 28px;
   }
 
-  #help-btn, #header-help-btn {
+  .help-split-btn {
     position: absolute;
     right: 8px;
     top: 6px;
     margin: 0;
-    font-size: 0.82rem;
     height: 28px;
-    padding: 0 8px;
+  }
+
+  .help-split-left-btn {
+    font-size: 0.82rem;
+    padding: 0 6px 0 10px;
+  }
+
+  .help-split-right-btn {
+    padding: 0 6px;
   }
 
   .header-shortcuts {
@@ -360,7 +488,7 @@ main {
     gap: 8px;
   }
 
-  .header-shortcuts .header-btn:not(#help-btn):not(#header-help-btn) {
+  .header-shortcuts .header-btn {
     font-size: 0.82rem;
     height: 28px;
     padding: 0 8px;
