@@ -784,9 +784,42 @@
 }
 
 .help-popover-footer {
-  padding: 1rem 2rem 1.2rem 2rem;
+  padding: 1.2rem 2rem;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.help-popover-footer-links {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.help-footer-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.help-footer-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: var(--primary-blue);
 }
 
 .help-popover-close {
@@ -835,36 +868,45 @@
 
 .help-popover-list li {
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
   text-align: left;
 }
 
+.help-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .help-popover-icon {
-  font-size: 1.25rem;
   background: #f0f4f8;
-  padding: 6px;
-  border-radius: 8px;
+  padding: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   box-sizing: border-box;
   flex-shrink: 0;
 }
 
 .help-popover-list li strong {
-  display: block;
   color: var(--text-dark);
-  font-size: 0.95rem;
-  margin-bottom: 2px;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0;
 }
 
-.help-popover-list li span {
-  color: #666;
-  font-size: 0.88rem;
-  line-height: 1.45;
+.help-item-desc {
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  padding-left: 0;
+  text-align: left;
 }
 
 .help-popover-action-btn {
@@ -1215,8 +1257,24 @@
     margin: 0;
   }
   .help-popover-card {
-    padding: 1.5rem 1.2rem;
-    max-height: 90vh;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    transform: none !important;
+  }
+  .help-popover-header {
+    padding: 1rem;
+  }
+  .help-popover-body {
+    padding: 1rem;
+    max-height: calc(100vh - 180px);
+  }
+  .help-popover-footer {
+    padding: 1rem;
   }
 }
 

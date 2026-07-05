@@ -123,14 +123,13 @@ if (shareLocationBtn) {
 // --- Help Pop-over Dialog Logic ---
 const helpButtons = document.querySelectorAll('.help-btn');
 const helpPopover = document.getElementById('help-popover');
-const helpCloseBtn = document.getElementById('help-popover-close-btn');
 const helpOkBtn = document.getElementById('help-popover-ok-btn');
 
 if (helpPopover) {
   const openPopover = () => {
     helpPopover.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent scrolling when open
-    if (helpCloseBtn) helpCloseBtn.focus();
+    if (helpOkBtn) helpOkBtn.focus();
   };
 
   const closePopover = () => {
@@ -145,10 +144,6 @@ if (helpPopover) {
       openPopover();
     });
   });
-
-  if (helpCloseBtn) {
-    helpCloseBtn.addEventListener('click', closePopover);
-  }
 
   if (helpOkBtn) {
     helpOkBtn.addEventListener('click', closePopover);
@@ -357,10 +352,18 @@ document.querySelectorAll('.scroll-trigger').forEach(link => {
         console.error('Error updating parent URL on shortcut click:', err);
       }
 
-      iframe.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
+      const mapContainer = document.querySelector('.map-container');
+      if (mapContainer) {
+        mapContainer.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      } else {
+        iframe.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
     }
   });
 });
@@ -842,7 +845,18 @@ function renderDirectory() {
           console.error('Error updating parent URL on card click:', err);
         }
 
-        iframe.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+          mapContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        } else {
+          iframe.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
       }
     });
 
