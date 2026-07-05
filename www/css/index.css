@@ -10,7 +10,7 @@
 .hero h2 {
   font-size: 2.5rem;
   color: var(--primary-blue);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .hero p {
@@ -410,28 +410,83 @@
 }
 
 .map-tag.interactive-tag {
+  border-radius: 20px; /* Pill shape matching other header and footer buttons */
+  padding: 6px 14px; /* Matches header button padding */
+  height: 34px; /* Explicit height matching other header buttons */
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Spacing between status light icon and label text/emoji */
   cursor: pointer;
   user-select: none;
   transition: all 0.2s ease;
-  opacity: 0.65;
+  opacity: 0.35; /* Further dimmed inactive state */
+  filter: saturate(0.15) grayscale(85%); /* Desaturate inactive state */
 }
 
 .map-tag.interactive-tag:hover {
   background-color: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.4);
-  opacity: 0.9;
+  opacity: 0.8;
+  filter: saturate(0.6) grayscale(30%); /* Partially saturated on hover */
 }
 
+/* Keyboard focus-visible accessibility outline */
+.map-tag.interactive-tag:has(.tag-checkbox:focus-visible) {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* Base style for checked tags (any checked tag gets opacity 1 and full saturation) */
 .map-tag.interactive-tag.checked,
 .map-tag.interactive-tag:has(.tag-checkbox:checked) {
   opacity: 1;
+  filter: none; /* Fully saturated and illuminated */
 }
 
+/* Scale indicator pin up to 100% and rotate back upright when active/checked */
+.map-tag.interactive-tag.checked::before,
+.map-tag.interactive-tag:has(.tag-checkbox:checked)::before {
+  transform: rotate(0deg) scale(1) !important; /* Animated upright full-size state */
+}
+
+/* Custom rotated map pin status indicator icon inside pill */
+.map-tag.interactive-tag::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-color: rgba(255, 255, 255, 0.35); /* dim when unchecked */
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: all 0.2s ease;
+  transform: rotate(30deg) scale(0.8); /* Turn clockwise about 30 degrees and shrink by 20% in off state */
+  transform-origin: center;
+}
+
+/* Hover effect on status light icon */
+.map-tag.interactive-tag:hover::before {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Category specific colors and glowing status indicator lights when checked */
 .map-tag.interactive-tag:has(#layer-parking:checked),
 .map-tag.interactive-tag.checked:has(#layer-parking) {
-  background-color: rgba(59, 130, 246, 0.25);
-  border-color: #3b82f6;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+  background-color: rgba(0, 188, 255, 0.2); /* Saturated electric blue background */
+  border-color: #00bcff; /* Super vibrant electric blue border */
+  box-shadow: 0 0 10px rgba(0, 188, 255, 0.4);
+}
+.map-tag.interactive-tag:has(#layer-parking:checked)::before,
+.map-tag.interactive-tag.checked:has(#layer-parking)::before {
+  background-color: #ffffff; /* Pure white-hot center for maximum contrast */
+  filter: drop-shadow(0 0 3.5px #0055ff) drop-shadow(0 0 1.5px #00bcff); /* Dual intense blue glow */
 }
 
 .map-tag.interactive-tag:has(#layer-establishments:checked),
@@ -440,6 +495,11 @@
   border-color: #f59e0b;
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
+.map-tag.interactive-tag:has(#layer-establishments:checked)::before,
+.map-tag.interactive-tag.checked:has(#layer-establishments)::before {
+  background-color: #f59e0b;
+  filter: drop-shadow(0 0 3px #f59e0b);
+}
 
 .map-tag.interactive-tag:has(#layer-recreation:checked),
 .map-tag.interactive-tag.checked:has(#layer-recreation) {
@@ -447,12 +507,22 @@
   border-color: #10b981;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
 }
+.map-tag.interactive-tag:has(#layer-recreation:checked)::before,
+.map-tag.interactive-tag.checked:has(#layer-recreation)::before {
+  background-color: #34d399; /* Brighter mint green for high contrast */
+  filter: drop-shadow(0 0 3px #10b981) drop-shadow(0 0 1px #34d399); /* Dual-layer neon glow */
+}
 
 .map-tag.interactive-tag:has(#layer-satellite:checked),
 .map-tag.interactive-tag.checked:has(#layer-satellite) {
-  background-color: rgba(139, 92, 246, 0.25);
-  border-color: #8b5cf6;
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
+  background-color: rgba(168, 85, 247, 0.2); /* Saturated vibrant purple background */
+  border-color: #a855f7; /* Super vibrant purple border */
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+.map-tag.interactive-tag:has(#layer-satellite:checked)::before,
+.map-tag.interactive-tag.checked:has(#layer-satellite)::before {
+  background-color: #ffffff; /* Pure white-hot center for maximum contrast */
+  filter: drop-shadow(0 0 3.5px #7c3aed) drop-shadow(0 0 1.5px #a855f7); /* Dual intense purple glow */
 }
 
 .map-tag.interactive-tag:has(#layer-map:checked),
@@ -461,13 +531,19 @@
   border-color: #9ca3af;
   box-shadow: 0 0 8px rgba(107, 114, 128, 0.3);
 }
+.map-tag.interactive-tag:has(#layer-map:checked)::before,
+.map-tag.interactive-tag.checked:has(#layer-map)::before {
+  background-color: #e2e8f0;
+  filter: drop-shadow(0 0 3px #e2e8f0);
+}
 
+/* Hide the native checkbox while preserving accessibility (keyboard focus, screen readers) */
 .tag-checkbox {
-  margin: 0;
-  cursor: pointer;
-  accent-color: #3b82f6;
-  width: 14px;
-  height: 14px;
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 }
 
 .no-filters-tag {
@@ -1147,7 +1223,7 @@
 /* Responsive - Large Desktop Overrides */
 @media (min-width: 1024px) {
   .hero {
-    padding: 1rem 1rem;
+    padding: 0rem 1rem;
   }
 
   .hero h2 {
