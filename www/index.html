@@ -115,9 +115,19 @@
       <div class="directory-controls">
         <input type="search" id="dir-search" class="directory-search" placeholder="Search facilities, parks, or parking..." aria-label="Search Westville directory" />
         
+        <div class="custom-multiselect" id="dir-category-container">
+          <div class="multiselect-trigger" id="dir-category-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter directory by categories">
+            <span class="trigger-text">All Categories</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="multiselect-dropdown" id="dir-category-dropdown">
+            <!-- Populated Dynamically via JS -->
+          </div>
+        </div>
+
         <div class="custom-multiselect" id="dir-filter-container">
-          <div class="multiselect-trigger" id="dir-filter-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter directory by categories and tags">
-            <span class="trigger-text">All Categories & Tags</span>
+          <div class="multiselect-trigger" id="dir-filter-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter directory by tags">
+            <span class="trigger-text">All Tags</span>
             <span class="trigger-arrow">▼</span>
           </div>
           <div class="multiselect-dropdown" id="dir-filter-dropdown">
@@ -128,6 +138,8 @@
         <select id="dir-sort" class="directory-filter" aria-label="Sort directory results">
           <option value="name_asc">Name (A-Z)</option>
           <option value="name_desc">Name (Z-A)</option>
+          <option value="category_asc">Category (A-Z)</option>
+          <option value="category_desc">Category (Z-A)</option>
           <option value="tags_asc">Tag (A-Z)</option>
           <option value="tags_desc">Tag (Z-A)</option>
         </select>

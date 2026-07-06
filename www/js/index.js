@@ -377,14 +377,35 @@ const dirFilterTrigger = document.getElementById('dir-filter-trigger');
 const dirFilterDropdown = document.getElementById('dir-filter-dropdown');
 const dirFilterContainer = document.getElementById('dir-filter-container');
 
+const dirCategoryTrigger = document.getElementById('dir-category-trigger');
+const dirCategoryDropdown = document.getElementById('dir-category-dropdown');
+const dirCategoryContainer = document.getElementById('dir-category-container');
+
 let allDirFeatures = [];
-let selectedFilters = new Set(['all']); // Default to all
+let selectedFilters = new Set(['all']); // Default to all tags/categories
+let selectedCategories = new Set(['all']); // Default to all color categories
 
 // Toggle Multiselect dropdown
 function toggleDirDropdown(e) {
   if (e) e.stopPropagation();
   const isActive = dirFilterContainer.classList.toggle('active');
   dirFilterTrigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+  // Close other dropdown if open
+  if (dirCategoryContainer) {
+    dirCategoryContainer.classList.remove('active');
+    dirCategoryTrigger.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function toggleDirCategoryDropdown(e) {
+  if (e) e.stopPropagation();
+  const isActive = dirCategoryContainer.classList.toggle('active');
+  dirCategoryTrigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+  // Close other dropdown if open
+  if (dirFilterContainer) {
+    dirFilterContainer.classList.remove('active');
+    dirFilterTrigger.setAttribute('aria-expanded', 'false');
+  }
 }
 
 if (dirFilterTrigger) {
@@ -400,10 +421,27 @@ if (dirFilterTrigger) {
   });
 }
 
+if (dirCategoryTrigger) {
+  dirCategoryTrigger.addEventListener('click', (e) => {
+    toggleDirCategoryDropdown(e);
+  });
+
+  dirCategoryTrigger.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleDirCategoryDropdown(e);
+    }
+  });
+}
+
 document.addEventListener('click', () => {
   if (dirFilterContainer && dirFilterTrigger) {
     dirFilterContainer.classList.remove('active');
     dirFilterTrigger.setAttribute('aria-expanded', 'false');
+  }
+  if (dirCategoryContainer && dirCategoryTrigger) {
+    dirCategoryContainer.classList.remove('active');
+    dirCategoryTrigger.setAttribute('aria-expanded', 'false');
   }
 });
 
@@ -413,72 +451,96 @@ if (dirFilterDropdown) {
   });
 }
 
-// Dynamic tag-to-color mapping for orientation
-const tagColors = {
-  // Food & Dining (Red/Rose tones)
-  'restaurant': '#e11d48',
-  'dining': '#e11d48',
-  'food': '#e11d48',
-  'diner': '#be123c',
-  'take out': '#f43f5e',
-  'takeout': '#f43f5e',
-  'bbq': '#b91c1c',
-  'bakery': '#db2777',
-  'dessert': '#db2777',
-  'sweets': '#f472b6',
-  'cafe': '#be123c',
-  'coffee': '#9a3412',
-  
-  // Nightlife & Drinks (Amber/Gold tones)
-  'brewery': '#d97706',
-  'bar': '#d97706',
-  'pub': '#b45309',
-  'nightlife': '#d97706',
-  'craft beer': '#b45309',
-  
-  // Wellness (Teal)
-  'wellness': '#0d9488',
-  'fitness': '#0d9488',
-  'yoga': '#0d9488',
-  'health': '#0d9488',
-  
-  // Parks & Recreation (Green)
-  'park': '#16a34a',
-  'recreation': '#16a34a',
-  'public': '#16a34a',
-  'walking path': '#15803d',
-  'walkingpath': '#15803d',
-  
-  // Public/Gov Resources (Blue)
-  'borough offices': '#2563eb',
-  'public resource': '#1d4ed8',
-  'government': '#1d4ed8',
-  'library': '#2563eb',
-  'education': '#1e3a8a',
-  'community': '#2563eb',
-  'safety': '#dc2626',
-  'police station': '#dc2626',
-  'fire station': '#dc2626',
-  
-  // Retail & Services (Emerald / Gray)
-  'convenience store': '#059669',
-  'retail': '#059669',
-  'groceries': '#059669',
-  'laundry': '#4b5563',
-  'service': '#4b5563',
-  'laundromat': '#4b5563',
-  
-  // Autos (Gold/Yellow tones)
-  'auto repair': '#ffd700',
-  'dealership': '#ffd700',
-  'mechanic': '#ffd700',
-  'mechanic service': '#ffd700',
-  'auto service': '#ffd700',
-  
-  // Parking (Cobalt Blue)
-  'parking': '#2563eb',
-  'free': '#2563eb'
+if (dirCategoryDropdown) {
+  dirCategoryDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+}
+
+// Centralized Color Groupings metadata structure (Dual-Token System for Accessibility)
+const categoryColors = {
+  'safety': {
+    title: 'Safety & Emergency',
+    colorName: 'Red',
+    fill: '#dc2626',
+    text: '#c53030',
+    tags: ['safety', 'police station', 'fire station', 'police']
+  },
+  'nightlife': {
+    title: 'Nightlife, Bars & Breweries',
+    colorName: 'Amber',
+    fill: '#d97706',
+    text: '#b45309',
+    tags: ['brewery', 'bar', 'pub', 'nightlife', 'craft beer', 'liquor store', 'wine', 'beer', 'spirits']
+  },
+  'food': {
+    title: 'Food, Dining & Cafes',
+    colorName: 'Rose',
+    fill: '#db2777', // Distinct Rose/Magenta color
+    text: '#be123c',
+    tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza']
+  },
+  'wellness': {
+    title: 'Wellness, Health & Salons',
+    colorName: 'Teal',
+    fill: '#0d9488',
+    text: '#0f766e',
+    tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor']
+  },
+  'shop': {
+    title: 'Shop & Retail',
+    colorName: 'Emerald',
+    fill: '#059669',
+    text: '#047857',
+    tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco']
+  },
+  'services': {
+    title: 'Services & Professional',
+    colorName: 'Slate Gray',
+    fill: '#4b5563',
+    text: '#475569',
+    tags: ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank']
+  },
+  'public': {
+    title: 'Public & Government Resources',
+    colorName: 'Royal Blue',
+    fill: '#2563eb',
+    text: '#1d4ed8',
+    tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public']
+  },
+  'autos': {
+    title: 'Automotive',
+    colorName: 'Gold',
+    fill: '#ffd700',
+    text: '#854d0e',
+    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning']
+  },
+  'recreation': {
+    title: 'Parks & Recreation',
+    colorName: 'Forest Green',
+    fill: '#16a34a',
+    text: '#15803d',
+    tags: ['park', 'recreation', 'walking path', 'walkingpath']
+  },
+  'parking': {
+    title: 'Parking',
+    colorName: 'Cobalt Blue',
+    fill: '#2563eb',
+    text: '#1e40af',
+    tags: ['parking', 'free']
+  }
 };
+
+// Dynamic tag-to-color mapping built from the centralized category structures
+const tagColors = {};
+const tagToCategory = {};
+Object.keys(categoryColors).forEach(catKey => {
+  const cat = categoryColors[catKey];
+  cat.tags.forEach(tag => {
+    tagColors[tag] = cat.fill;
+    tagToCategory[tag] = catKey;
+  });
+});
 
 // WCAG 2.1 Compliant Relative Luminance & Contrast Ratio calculation helper
 function getContrastColor(hexcolor) {
@@ -510,16 +572,37 @@ function updateFilterTriggerText() {
   if (!triggerText) return;
   
   if (selectedFilters.has('all') || selectedFilters.size === 0) {
-    triggerText.innerText = 'All Categories & Tags';
+    triggerText.innerText = 'All Tags';
   } else {
     const labels = [];
     selectedFilters.forEach(val => {
       if (val === 'all') return;
-      if (val.startsWith('cat:')) {
-        const catName = val.slice(4);
-        labels.push(catName.charAt(0).toUpperCase() + catName.slice(1));
-      } else if (val.startsWith('tag:')) {
+      if (val.startsWith('tag:')) {
         labels.push(val.slice(4));
+      }
+    });
+    if (labels.length === 1) {
+      triggerText.innerText = labels[0];
+    } else {
+      triggerText.innerText = `Filtered (${labels.length})`;
+    }
+  }
+}
+
+function updateCategoryFilterTriggerText() {
+  if (!dirCategoryTrigger) return;
+  const triggerText = dirCategoryTrigger.querySelector('.trigger-text');
+  if (!triggerText) return;
+  
+  if (selectedCategories.has('all') || selectedCategories.size === 0) {
+    triggerText.innerText = 'All Categories';
+  } else {
+    const labels = [];
+    selectedCategories.forEach(val => {
+      if (val === 'all') return;
+      const cat = categoryColors[val];
+      if (cat) {
+        labels.push(cat.title);
       }
     });
     if (labels.length === 1) {
@@ -544,9 +627,43 @@ async function initDirectory() {
 
     const collections = Object.fromEntries(data.map(obj => Object.entries(obj)[0]));
 
-    if (collections.parking) collections.parking.features.forEach(f => allDirFeatures.push({ ...f, _source: 'parking' }));
-    if (collections.establishments) collections.establishments.features.forEach(f => allDirFeatures.push({ ...f, _source: 'establishment' }));
-    if (collections.recreation) collections.recreation.features.forEach(f => allDirFeatures.push({ ...f, _source: 'recreation' }));
+    if (collections.parking) {
+      collections.parking.features.forEach(f => {
+        if (!f.properties) f.properties = {};
+        f.properties.primary_tag = 'parking';
+        allDirFeatures.push({ ...f, _source: 'parking' });
+      });
+    }
+    if (collections.establishments) {
+      collections.establishments.features.forEach(f => {
+        if (!f.properties) f.properties = {};
+        let primaryTag = '';
+        if (f.properties.tags) {
+          primaryTag = f.properties.tags.split(',')[0].trim().toLowerCase();
+        } else if (f.properties.class) {
+          primaryTag = f.properties.class.toLowerCase();
+        } else {
+          primaryTag = 'establishments';
+        }
+        f.properties.primary_tag = primaryTag;
+        allDirFeatures.push({ ...f, _source: 'establishment' });
+      });
+    }
+    if (collections.recreation) {
+      collections.recreation.features.forEach(f => {
+        if (!f.properties) f.properties = {};
+        let primaryTag = '';
+        if (f.properties.tags) {
+          primaryTag = f.properties.tags.split(',')[0].trim().toLowerCase();
+        } else if (f.properties.class) {
+          primaryTag = f.properties.class.toLowerCase();
+        } else {
+          primaryTag = 'recreation';
+        }
+        f.properties.primary_tag = primaryTag;
+        allDirFeatures.push({ ...f, _source: 'recreation' });
+      });
+    }
 
     // Extract unique individual tags and dynamically populate filter dropdown checkboxes
     const uniqueTags = new Set();
@@ -588,22 +705,8 @@ async function initDirectory() {
     let dropdownHtml = `
       <div class="multiselect-option" data-value="all">
         <input type="checkbox" id="dir-cb-all" ${selectedFilters.has('all') ? 'checked' : ''} />
-        <label class="multiselect-option-label" for="dir-cb-all">All Categories & Tags</label>
+        <label class="multiselect-option-label" for="dir-cb-all">All Tags</label>
       </div>
-      <div class="multiselect-group-title">Categories</div>
-      <div class="multiselect-option" data-value="cat:parking">
-        <input type="checkbox" id="dir-cb-cat-parking" ${selectedFilters.has('cat:parking') ? 'checked' : ''} />
-        <label class="multiselect-option-label" for="dir-cb-cat-parking">Parking</label>
-      </div>
-      <div class="multiselect-option" data-value="cat:establishment">
-        <input type="checkbox" id="dir-cb-cat-est" ${selectedFilters.has('cat:establishment') ? 'checked' : ''} />
-        <label class="multiselect-option-label" for="dir-cb-cat-est">Establishments</label>
-      </div>
-      <div class="multiselect-option" data-value="cat:recreation">
-        <input type="checkbox" id="dir-cb-cat-rec" ${selectedFilters.has('cat:recreation') ? 'checked' : ''} />
-        <label class="multiselect-option-label" for="dir-cb-cat-rec">Recreation</label>
-      </div>
-      <div class="multiselect-group-title">Filter by Tag</div>
     `;
 
     sortedTags.forEach((tag, idx) => {
@@ -664,7 +767,79 @@ async function initDirectory() {
       cb.addEventListener('change', handleToggle);
     });
 
+    if (dirCategoryDropdown) {
+      // Populate Category Dropdown checkboxes
+      let categoryDropdownHtml = `
+        <div class="multiselect-option" data-value="all">
+          <input type="checkbox" id="dir-cat-cb-all" ${selectedCategories.has('all') ? 'checked' : ''} />
+          <label class="multiselect-option-label" for="dir-cat-cb-all">All Categories</label>
+        </div>
+      `;
+
+      Object.keys(categoryColors).forEach((catKey, idx) => {
+        const cat = categoryColors[catKey];
+        const isChecked = selectedCategories.has(catKey);
+        categoryDropdownHtml += `
+          <div class="multiselect-option" data-value="${catKey}" style="color: ${cat.text}; font-weight: 600;">
+            <input type="checkbox" id="dir-cat-cb-${idx}" ${isChecked ? 'checked' : ''} />
+            <label class="multiselect-option-label" for="dir-cat-cb-${idx}" style="color: inherit; cursor: pointer;">
+              ${cat.title} (${cat.colorName})
+            </label>
+          </div>
+        `;
+      });
+
+      dirCategoryDropdown.innerHTML = categoryDropdownHtml;
+
+      // Attach listeners to category dropdown checkboxes
+      dirCategoryDropdown.querySelectorAll('.multiselect-option').forEach(option => {
+        const cb = option.querySelector('input[type="checkbox"]');
+        
+        const handleToggle = () => {
+          const val = option.getAttribute('data-value');
+          if (val === 'all') {
+            if (cb.checked) {
+              selectedCategories.clear();
+              selectedCategories.add('all');
+              dirCategoryDropdown.querySelectorAll('input[type="checkbox"]').forEach(otherCb => {
+                if (otherCb !== cb) otherCb.checked = false;
+              });
+            } else {
+              selectedCategories.delete('all');
+            }
+          } else {
+            if (cb.checked) {
+              selectedCategories.delete('all');
+              const allCb = document.getElementById('dir-cat-cb-all');
+              if (allCb) allCb.checked = false;
+              selectedCategories.add(val);
+            } else {
+              selectedCategories.delete(val);
+            }
+          }
+
+          if (selectedCategories.size === 0) {
+            selectedCategories.add('all');
+            const allCb = document.getElementById('dir-cat-cb-all');
+            if (allCb) allCb.checked = true;
+          }
+
+          updateCategoryFilterTriggerText();
+          renderDirectory();
+        };
+
+        option.addEventListener('click', (e) => {
+          if (e.target !== cb && e.target.tagName !== 'LABEL') {
+            cb.checked = !cb.checked;
+            handleToggle();
+          }
+        });
+        cb.addEventListener('change', handleToggle);
+      });
+    }
+
     updateFilterTriggerText();
+    updateCategoryFilterTriggerText();
     renderDirectory();
   } catch (err) {
     console.error("Failed to load directory data:", err);
@@ -678,28 +853,45 @@ function renderDirectory() {
   const sortVal = dirSort.value;
 
   const results = allDirFeatures.filter(f => {
-    // Custom Multi-select OR logic
+    // Custom Multi-select Tags filter
     if (!selectedFilters.has('all') && selectedFilters.size > 0) {
-      const categories = [];
       const tags = [];
       selectedFilters.forEach(val => {
-        if (val.startsWith('cat:')) categories.push(val.slice(4));
-        else if (val.startsWith('tag:')) tags.push(val.slice(4).toLowerCase());
+        if (val.startsWith('tag:')) tags.push(val.slice(4).toLowerCase());
       });
 
-      const categoryMatch = categories.includes(f._source);
       const featureTags = (f.properties.tags || '').toLowerCase().split(',').map(t => t.trim());
       const tagMatch = featureTags.some(t => tags.includes(t));
 
-      // Match category OR tag
-      if (!categoryMatch && !tagMatch) return false;
+      if (!tagMatch) return false;
+    }
+
+    // Filter by Color Categories (selectedCategories)
+    if (!selectedCategories.has('all') && selectedCategories.size > 0) {
+      const primTag = f.properties.primary_tag;
+      const featCatKey = tagToCategory[primTag] || null;
+      if (!featCatKey || !selectedCategories.has(featCatKey)) {
+        return false;
+      }
     }
 
     if (term.length > 0) {
       const nameMatch = (f.properties.name || '').toLowerCase().includes(term);
       const descMatch = (f.properties.description || '').toLowerCase().includes(term);
       const tagsMatch = (f.properties.tags || '').toLowerCase().includes(term);
-      return nameMatch || descMatch || tagsMatch;
+      
+      // Category title & color name matching
+      let categoryMatch = false;
+      const primTag = f.properties.primary_tag;
+      const catKey = tagToCategory[primTag];
+      if (catKey && categoryColors[catKey]) {
+        const cat = categoryColors[catKey];
+        const titleMatch = (cat.title || '').toLowerCase().includes(term);
+        const colorMatch = (cat.colorName || '').toLowerCase().includes(term);
+        categoryMatch = titleMatch || colorMatch;
+      }
+
+      return nameMatch || descMatch || tagsMatch || categoryMatch;
     }
     return true;
   });
@@ -710,6 +902,19 @@ function renderDirectory() {
       return (a.properties.name || '').localeCompare(b.properties.name || '');
     } else if (sortVal === 'name_desc') {
       return (b.properties.name || '').localeCompare(a.properties.name || '');
+    } else if (sortVal === 'category_asc' || sortVal === 'category_desc') {
+      const catAKey = tagToCategory[a.properties.primary_tag] || '';
+      const catBKey = tagToCategory[b.properties.primary_tag] || '';
+      
+      const catATitle = catAKey ? (categoryColors[catAKey]?.title || 'Uncategorized') : 'Uncategorized';
+      const catBTitle = catBKey ? (categoryColors[catBKey]?.title || 'Uncategorized') : 'Uncategorized';
+      
+      const comp = catATitle.localeCompare(catBTitle);
+      if (comp !== 0) {
+        return sortVal === 'category_asc' ? comp : -comp;
+      }
+      // Sub-sort alphabetically by name
+      return (a.properties.name || '').localeCompare(b.properties.name || '');
     } else if (sortVal === 'tags_asc') {
       return (a.properties.tags || '').localeCompare(b.properties.tags || '');
     } else if (sortVal === 'tags_desc') {
@@ -735,31 +940,10 @@ function renderDirectory() {
     const ariaLabel = `${f.properties.name || 'Unnamed'}. Tags: ${tagsString}. Press Enter or Space to show on map.`;
     card.setAttribute('aria-label', ariaLabel);
     
-    // Determine the most used tag color for the card's left border
-    const cardTags = (f.properties.tags || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-    if (cardTags.length > 0) {
-      const colorCounts = {};
-      cardTags.forEach(tag => {
-        const color = tagColors[tag];
-        if (color) {
-          colorCounts[color] = (colorCounts[color] || 0) + 1;
-        }
-      });
-      
-      let maxCount = 0;
-      let prominentColor = '';
-      cardTags.forEach(tag => {
-        const color = tagColors[tag];
-        if (color && colorCounts[color] > maxCount) {
-          maxCount = colorCounts[color];
-          prominentColor = color;
-        }
-      });
-      
-      if (prominentColor) {
-        card.style.borderLeftColor = prominentColor;
-      }
-    }
+    // Determine each card's left-border color using its primary_tag mapping
+    const primaryTag = f.properties.primary_tag;
+    const borderCol = tagColors[primaryTag] || '#888888';
+    card.style.borderLeftColor = borderCol;
     
     const tagBadges = (f.properties.tags || f._source)
       .split(',')
@@ -1203,11 +1387,8 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
       const web = f.properties.url ? `<p class="print-card-meta"><strong>Website:</strong> ${f.properties.url}</p>` : '';
       
       let borderColor = '#1a4d7c';
-      if (typeof tagColors !== 'undefined') {
-        const firstTag = tagsList[0] ? tagsList[0].toLowerCase() : '';
-        if (tagColors[firstTag]) {
-          borderColor = tagColors[firstTag];
-        }
+      if (f.properties && f.properties.primary_tag) {
+        borderColor = tagColors[f.properties.primary_tag] || '#1a4d7c';
       }
       
       return `

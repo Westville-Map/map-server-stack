@@ -19,6 +19,22 @@ async function fetchGeoJsonFiles(files) {
     const data = await Promise.all(responses.map(async (res, index) => {
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const featureJson = await res.json();
+      if (featureJson && featureJson.features) {
+        featureJson.features.forEach(f => {
+          if (!f.properties) f.properties = {};
+          let primaryTag = '';
+          if (f.properties.tags) {
+            primaryTag = f.properties.tags.split(',')[0].trim().toLowerCase();
+          } else if (f.properties.class) {
+            primaryTag = f.properties.class.toLowerCase();
+          } else if (files[index] === 'parking') {
+            primaryTag = 'parking';
+          } else {
+            primaryTag = files[index];
+          }
+          f.properties.primary_tag = primaryTag;
+        });
+      }
       return {[files[index]]: featureJson};
     }));
 
@@ -453,67 +469,19 @@ try {
           paint: {
               'circle-radius': 8,
               'circle-color': [
-                  'case',
-                  // Safety - Red
-                  ['any',
-                      ['in', 'Safety', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Police Station', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Fire Station', ['coalesce', ['get', 'tags'], '']]
-                  ], '#dc2626',
-                  // Nightlife & Drinks - Amber
-                  ['any',
-                      ['in', 'Brewery', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Bar', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Craft Beer', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Nightlife', ['coalesce', ['get', 'tags'], '']]
-                  ], '#d97706',
-                  // Food & Dining - Rose
-                  ['any',
-                      ['in', 'Restaurant', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Dining', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Food', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Cafe', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Banquet Hall', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Event Space', ['coalesce', ['get', 'tags'], '']],                      
-                      ['in', 'Diner', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Bakery', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Sweets', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Take Out', ['coalesce', ['get', 'tags'], '']]
-                  ], '#e11d48',
-                  // Wellness & Fitness - Teal
-                  ['any',
-                      ['in', 'Wellness', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Fitness', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Yoga', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Tai Chi', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Health', ['coalesce', ['get', 'tags'], '']]
-                  ], '#0d9488',
-                  // Shop & Retail & Services - Emerald
-                  ['any',
-                      ['in', 'Shop', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Retail', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Groceries', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Convenience Store', ['coalesce', ['get', 'tags'], '']]
-                  ], '#059669',
-                  // Public/Gov Resources - Royal Blue
-                  ['any',
-                      ['in', 'Borough Offices', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Public Resource', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Government', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Library', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Community', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Post Office', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Education', ['coalesce', ['get', 'tags'], '']]
-                  ], '#2563eb',
-                  // Autos  - Gold
-                  ['any',
-                      ['in', 'Auto repair', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Auto Repair', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Dealership', ['coalesce', ['get', 'tags'], '']],
-                      ['in', 'Mechanic', ['coalesce', ['get', 'tags'], '']]
-                  ], '#ffd700',
-                  // Default Gray
-                  '#888888'
+                  'match',
+                  ['coalesce', ['get', 'primary_tag'], ''],
+                  ['safety', 'police station', 'fire station', 'police'], '#dc2626',
+                  ['brewery', 'bar', 'pub', 'nightlife', 'craft beer', 'liquor store', 'wine', 'beer', 'spirits'], '#d97706',
+                  ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza'], '#db2777',
+                  ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor'], '#0d9488',
+                  ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco'], '#059669',
+                  ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank'], '#4b5563',
+                  ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public'], '#2563eb',
+                  ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning'], '#ffd700',
+                  ['park', 'recreation', 'walking path', 'walkingpath'], '#16a34a',
+                  ['parking', 'free'], '#2563eb',
+                  '#888888' // Default Gray
               ],
               'circle-stroke-width': 1,
               'circle-stroke-color': '#ffffff'
