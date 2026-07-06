@@ -423,6 +423,7 @@
   transition: all 0.2s ease;
   opacity: 0.35; /* Further dimmed inactive state */
   filter: saturate(0.15) grayscale(85%); /* Desaturate inactive state */
+  box-shadow: none; /* Removed distracting box-shadow */
 }
 
 .map-tag.interactive-tag:hover {
@@ -481,7 +482,6 @@
 .map-tag.interactive-tag.checked:has(#layer-parking) {
   background-color: rgba(0, 188, 255, 0.2); /* Saturated electric blue background */
   border-color: #00bcff; /* Super vibrant electric blue border */
-  box-shadow: 0 0 10px rgba(0, 188, 255, 0.4);
 }
 .map-tag.interactive-tag:has(#layer-parking:checked)::before,
 .map-tag.interactive-tag.checked:has(#layer-parking)::before {
@@ -493,7 +493,6 @@
 .map-tag.interactive-tag.checked:has(#layer-establishments) {
   background-color: rgba(245, 158, 11, 0.25);
   border-color: #f59e0b;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
 .map-tag.interactive-tag:has(#layer-establishments:checked)::before,
 .map-tag.interactive-tag.checked:has(#layer-establishments)::before {
@@ -505,7 +504,6 @@
 .map-tag.interactive-tag.checked:has(#layer-recreation) {
   background-color: rgba(16, 185, 129, 0.25);
   border-color: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
 }
 .map-tag.interactive-tag:has(#layer-recreation:checked)::before,
 .map-tag.interactive-tag.checked:has(#layer-recreation)::before {
@@ -517,7 +515,6 @@
 .map-tag.interactive-tag.checked:has(#layer-satellite) {
   background-color: rgba(168, 85, 247, 0.2); /* Saturated vibrant purple background */
   border-color: #a855f7; /* Super vibrant purple border */
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
 }
 .map-tag.interactive-tag:has(#layer-satellite:checked)::before,
 .map-tag.interactive-tag.checked:has(#layer-satellite)::before {
@@ -529,7 +526,6 @@
 .map-tag.interactive-tag.checked:has(#layer-map) {
   background-color: rgba(107, 114, 128, 0.25);
   border-color: #9ca3af;
-  box-shadow: 0 0 8px rgba(107, 114, 128, 0.3);
 }
 .map-tag.interactive-tag:has(#layer-map:checked)::before,
 .map-tag.interactive-tag.checked:has(#layer-map)::before {

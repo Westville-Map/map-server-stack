@@ -384,11 +384,9 @@ try {
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-
-                13, 0.4,
-                14,  0.5,  // At zoom level 5 or below, scale factor is 0.5
-                15, 0.6,  // At zoom level 10, scale factor is 1.0
-                18, 1   // At zoom level 15 or above, scale factor is 2.0
+                13,  0.1125, // Cut in half (from 0.225)
+                15,  0.2625, // Cut in half (from 0.525)
+                18,  0.375  // Cut in half (from 0.75)
               ],
 
               'icon-allow-overlap': false,
@@ -411,14 +409,13 @@ try {
           layout: {
               'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none',
               'icon-image': 'images/park.svg',
-              //'icon-size': 0.09, // Scale as needed
               'icon-size': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                12,  0.1,  // At zoom level 5 or below, scale factor is 0.5
-                15, 0.5,  // At zoom level 10, scale factor is 1.0
-                18, 1   // At zoom level 15 or above, scale factor is 2.0
+                12,  0.0225,  // Increased by 25% (from 0.018)
+                15,  0.0525,  // Increased by 25% (from 0.042)
+                18,  0.075   // Increased by 25% (from 0.06)
               ],
               'icon-allow-overlap': true,
               'icon-overlap': 'always',
