@@ -189,7 +189,7 @@ try {
 
   map.on('zoom', () => {
       const currentZoom = map.getZoom();
-      console.log(`The map zoom is changing: ${currentZoom}`);
+      //console.log(`The map zoom is changing: ${currentZoom}`);
   });
 
   // Bind to setLayoutProperty in order to toggle fill and symbols simultaneously in layer control widget
@@ -235,7 +235,7 @@ try {
       map.on('styleimagemissing', async (e) => {
           if (existingImages[e.id]) return;
           existingImages[e.id] = true;
-          console.log(e.id);
+          //console.log(e.id);
           const response = await fetch(e.id);
           const svgText = await response.text();
           const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
@@ -1051,7 +1051,7 @@ try {
       let activePopup = null;
       function showPopup(feature, coordinates) {
           if (activePopup) activePopup.remove();
-          console.log(coordinates);
+          //console.log(coordinates);
           const props = feature.properties;
           const linkedName = props.url != null ? `
               <a class="wv-popup-title-link" target="_blank" href="${props.url}">

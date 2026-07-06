@@ -1,6 +1,7 @@
 {
   "name": "Westville to Westville",
-  "short_name": "Welcome",
+  "short_name": "Westville",
+  "start_url": "/index.html",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +16,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#e8e8e8",
-  "background_color": "#e8e8e8",
+  "theme_color": "#31436b",
+  "background_color": "#31436b",
   "display": "standalone"
 }
