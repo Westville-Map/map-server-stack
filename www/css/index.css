@@ -385,6 +385,17 @@
   align-items: center;
 }
 
+.map-layer-toggles h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 4px 0 0;
+  padding: 0;
+  white-space: nowrap;
+}
+
 .map-tag {
   background-color: rgba(255, 255, 255, 0.15);
   color: var(--white);
@@ -413,6 +424,7 @@
   border-radius: 20px; /* Pill shape matching other header and footer buttons */
   padding: 6px 14px; /* Matches header button padding */
   height: 34px; /* Explicit height matching other header buttons */
+  font-size: 0.82rem;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -839,7 +851,7 @@
 .help-popover-card h3 {
   color: var(--primary-blue);
   margin-top: 0;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0;
   font-size: 1.5rem;
   font-weight: 700;
   text-align: left;
@@ -1178,6 +1190,81 @@
     flex: 1;
     justify-content: center;
     min-width: 0;
+  }
+
+  /* Mobile Active Filters and Layer Toggles */
+  .map-active-filters {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .map-transient-tags {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .map-transient-tags:not(:empty) {
+    margin-bottom: 2px;
+    width: 100%;
+  }
+
+  .map-layer-toggles {
+    width: 100%;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.15);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-sizing: border-box;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .map-layer-toggles:hover {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .map-layer-toggles h3 {
+    width: 100%;
+    text-align: center;
+    padding: 2px 0;
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .map-layer-toggles h3::after {
+    content: '▼';
+    font-size: 0.65rem;
+    display: inline-block;
+    transition: transform 0.2s ease;
+    color: var(--accent-gold);
+  }
+
+  .map-layer-toggles.active {
+    border-color: var(--accent-gold);
+    background: rgba(0, 0, 0, 0.3);
+    gap: 12px;
+  }
+
+  .map-layer-toggles.active h3::after {
+    transform: rotate(180deg);
+  }
+
+  /* Collapsed state hidden tags */
+  .map-layer-toggles:not(.active) .map-tag.interactive-tag {
+    display: none;
+  }
+
+  /* Expanded state shown tags */
+  .map-layer-toggles.active .map-tag.interactive-tag {
+    display: inline-flex;
   }
 
   /* Collapsible Quick Views & Shortcuts container rules */

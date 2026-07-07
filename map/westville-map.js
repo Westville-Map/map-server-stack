@@ -176,6 +176,11 @@ showParams.forEach(friendlyName => {
   }
 });
 
+// 5. Enforce at least one background layer is visible initially
+if (!layerStates['Background'].visible && !layerStates['satellite-layer'].visible) {
+  layerStates['Background'].visible = true;
+}
+
 
 const bounds = [-75.1390197418999, 39.85893228827481, -75.11407050609648, 39.87873000870905];
 
@@ -476,7 +481,7 @@ try {
                   ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza'], '#db2777',
                   ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor'], '#0d9488',
                   ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco'], '#059669',
-                  ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank'], '#4b5563',
+                  ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank'], '#81007F',
                   ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public'], '#2563eb',
                   ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning'], '#ffd700',
                   ['park', 'recreation', 'walking path', 'walkingpath'], '#16a34a',
@@ -1205,8 +1210,23 @@ try {
       
       // Listen for layer control checkbox changes to sync URL and set interaction state
       waitForElement('.layer-control-panel').then(panel => {
-          panel.addEventListener('change', () => {
+          panel.addEventListener('change', (e) => {
               hasInteracted = true;
+
+              // Enforce that at least one of Map (Background) and Satellite is checked
+              const mapCheckbox = document.querySelector('span.layer-control-name[title="Background"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+              const satelliteCheckbox = document.querySelector('span.layer-control-name[title="Satellite"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+              
+              if (mapCheckbox && satelliteCheckbox) {
+                  if (!mapCheckbox.checked && !satelliteCheckbox.checked) {
+                      if (e.target === mapCheckbox) {
+                          satelliteCheckbox.click();
+                      } else if (e.target === satelliteCheckbox) {
+                          mapCheckbox.click();
+                      }
+                  }
+              }
+
               updateUrlParams();
           });
       });

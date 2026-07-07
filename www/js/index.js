@@ -496,9 +496,9 @@ const categoryColors = {
   },
   'services': {
     title: 'Services & Professional',
-    colorName: 'Slate Gray',
-    fill: '#4b5563',
-    text: '#475569',
+    colorName: 'Purple',
+    fill: '#81007F',
+    text: '#81007F',
     tags: ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank']
   },
   'public': {
@@ -999,8 +999,21 @@ function renderDirectory() {
         ${dirButton}
       </div>` : '';
     
+    const catKey = tagToCategory[f.properties.primary_tag];
+    const catTitle = catKey ? (categoryColors[catKey]?.title || 'Uncategorized') : 'Uncategorized';
+    const catTextColor = catKey ? categoryColors[catKey].text : '#666666';
+
+    let sortIndicatorHtml = '';
+    if (sortVal === 'tags_asc' || sortVal === 'tags_desc') {
+      const firstTag = f.properties.primary_tag || 'None';
+      sortIndicatorHtml = `<div class="card-sort-indicator" style="color: ${catTextColor}; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Category: ${catTitle} &bull; Tag: ${firstTag}</div>`;
+    } else {
+      sortIndicatorHtml = `<div class="card-sort-indicator" style="color: ${catTextColor}; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Category: ${catTitle}</div>`;
+    }
+
     card.innerHTML = `
       <div class="facility-header">
+        ${sortIndicatorHtml}
         <h4>${f.properties.name || 'Unnamed'}</h4>
         <div class="facility-badges">${tagBadges}</div>
       </div>
@@ -1977,6 +1990,30 @@ function initLayerCheckboxes() {
     if (checkbox) {
       checkbox.addEventListener('change', (e) => {
         const checked = e.target.checked;
+
+        // Prevent disabling both background layers (map and satellite)
+        if (!checked && (layer === 'map' || layer === 'satellite')) {
+          const otherLayer = layer === 'map' ? 'satellite' : 'map';
+          const otherCheckbox = document.getElementById(`layer-${otherLayer}`);
+          if (otherCheckbox && !otherCheckbox.checked) {
+            // Re-enable other background layer
+            otherCheckbox.checked = true;
+            const otherLabel = otherCheckbox.closest('.interactive-tag');
+            if (otherLabel) {
+              otherLabel.classList.add('checked');
+            }
+
+            // Post message to map iframe to toggle other layer on
+            const iframe = document.getElementById('mapFrame');
+            if (iframe && iframe.contentWindow) {
+              iframe.contentWindow.postMessage({
+                type: 'parent-toggle-layer',
+                layer: otherLayer,
+                visible: true
+              }, '*');
+            }
+          }
+        }
         
         // Immediate visual update
         const label = checkbox.closest('.interactive-tag');
@@ -1999,6 +2036,30 @@ function initLayerCheckboxes() {
   });
 }
 
+function initMobileLayerDropdown() {
+  const container = document.querySelector('.map-layer-toggles');
+  if (!container) return;
+  
+  const header = container.querySelector('h3');
+  if (!header) return;
+  
+  header.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      e.stopPropagation();
+      container.classList.toggle('active');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      if (container.classList.contains('active') && !container.contains(e.target)) {
+        container.classList.remove('active');
+      }
+    }
+  });
+}
+
 // Start fetching data
 initLayerCheckboxes();
+initMobileLayerDropdown();
 initDirectory();
