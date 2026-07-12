@@ -388,6 +388,8 @@ document.querySelectorAll('.scroll-trigger').forEach(link => {
 
 // --- Directory Logic ---
 
+let mapSyncTimeout = null;
+
 const dirSearch = document.getElementById('dir-search');
 const dirSort = document.getElementById('dir-sort');
 const dirGrid = document.getElementById('directory-grid');
@@ -947,11 +949,26 @@ function renderDirectory() {
     const isUnfiltered = term.length === 0 &&
       (!selectedFilters || selectedFilters.has('all') || selectedFilters.size === 0) &&
       (!selectedCategories || selectedCategories.has('all') || selectedCategories.size === 0);
-    iframe.contentWindow.postMessage({
-      type: 'directory-results-update',
-      features: results,
-      isUnfiltered: isUnfiltered
-    }, '*');
+
+    if (mapSyncTimeout) {
+      clearTimeout(mapSyncTimeout);
+    }
+
+    const sendUpdate = () => {
+      iframe.contentWindow.postMessage({
+        type: 'directory-results-update',
+        features: results,
+        isUnfiltered: isUnfiltered
+      }, '*');
+    };
+
+    if (term.length > 0) {
+      // Debounce typing searches by 250ms to protect map tile servers from flooding
+      mapSyncTimeout = setTimeout(sendUpdate, 250);
+    } else {
+      // Update immediately on clearing search or toggling category/tag filters
+      sendUpdate();
+    }
   }
 
   dirGrid.innerHTML = '';
