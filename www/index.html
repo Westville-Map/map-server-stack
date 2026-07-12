@@ -46,14 +46,20 @@
                   <input type="checkbox" id="layer-recreation" data-layer="recreation" class="tag-checkbox" checked>
                   <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/tree.svg"> Recreation</span>
                 </label>
-                <label class="map-tag interactive-tag" for="layer-satellite">
-                  <input type="checkbox" id="layer-satellite" data-layer="satellite" class="tag-checkbox" checked>
-                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/satellite.svg"> Satellite</span>
-                </label>
                 <label class="map-tag interactive-tag" for="layer-map">
                   <input type="checkbox" id="layer-map" data-layer="map" class="tag-checkbox" checked>
                   <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/map-folded.svg"> Map</span>
                 </label>
+                <div class="satellite-merged-group">
+                  <label class="map-tag interactive-tag" for="layer-satellite">
+                    <input type="checkbox" id="layer-satellite" data-layer="satellite" class="tag-checkbox" checked>
+                    <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/satellite.svg"> Satellite</span>
+                  </label>
+                  <label class="map-tag interactive-tag labels-sub-tag" for="layer-labels" id="layer-labels-container" style="display: none;">
+                    <input type="checkbox" id="layer-labels" data-layer="labels" class="tag-checkbox" checked>
+                    <span>Labels</span>
+                  </label>
+                </div>
               </div>
             </div>
           <div class="map-header-actions">

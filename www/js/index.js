@@ -941,6 +941,19 @@ function renderDirectory() {
     return 0;
   });
 
+  // Update the map to reflect currently shown set of results (without scrolling)
+  const iframe = document.getElementById('mapFrame');
+  if (iframe && iframe.contentWindow) {
+    const isUnfiltered = term.length === 0 &&
+      (!selectedFilters || selectedFilters.has('all') || selectedFilters.size === 0) &&
+      (!selectedCategories || selectedCategories.has('all') || selectedCategories.size === 0);
+    iframe.contentWindow.postMessage({
+      type: 'directory-results-update',
+      features: results,
+      isUnfiltered: isUnfiltered
+    }, '*');
+  }
+
   dirGrid.innerHTML = '';
 
   if (results.length === 0) {

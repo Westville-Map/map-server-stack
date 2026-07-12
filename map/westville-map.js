@@ -1495,6 +1495,72 @@ try {
           }
           updateUrlParams();
       });
+
+      // Sync map state with parent directory searching/filtering
+      window.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'directory-results-update') {
+              const results = event.data.features || [];
+              const isUnfiltered = event.data.isUnfiltered;
+
+              const ptSource = map.getSource('highlight-point-source');
+              const polySource = map.getSource('highlight-poly-source');
+
+              // Clear map's own search and filter inputs to avoid UI confusion
+              if (searchInput) searchInput.value = '';
+              if (searchResults) {
+                  searchResults.innerHTML = '';
+                  searchResults.classList.remove('active');
+              }
+              selectedFeatureName = null;
+              if (selectedFilters) {
+                  selectedFilters.clear();
+                  selectedFilters.add('all');
+                  updateFilterTriggerText();
+                  const allCb = document.getElementById('wv-cb-all');
+                  if (allCb) {
+                      allCb.checked = true;
+                  }
+                  document.querySelectorAll('#wv-search-filter-dropdown input[type="checkbox"]').forEach(cb => {
+                      if (cb !== allCb) cb.checked = false;
+                  });
+              }
+
+              if (isUnfiltered) {
+                  if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
+                  if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+                  if (activePopup) activePopup.remove();
+                  map.fitBounds([
+                      [-75.145165, 39.856238],
+                      [-75.112685, 39.887555]
+                  ], {
+                      padding: 10,
+                      duration: 1000
+                  });
+              } else {
+                  const pointFeatures = results.filter(f => f.geometry && f.geometry.type === 'Point');
+                  const polyFeatures = results.filter(f => f.geometry && f.geometry.type !== 'Point');
+
+                  if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: pointFeatures });
+                  if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+
+                  if (activePopup) activePopup.remove();
+
+                  if (results.length > 0) {
+                      const bounds = getFeaturesBounds(results);
+                      if (bounds) {
+                          if (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1]) {
+                              map.flyTo({ center: bounds[0], zoom: 18 });
+                          } else {
+                              map.fitBounds(bounds, { padding: 60, maxZoom: 18 });
+                          }
+                      }
+                  } else {
+                      if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
+                      if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+                  }
+              }
+          }
+      });
   });
 } catch (error) {
   console.error('Error loading map:', error);

@@ -545,6 +545,46 @@
   filter: drop-shadow(0 0 3px #e2e8f0);
 }
 
+/* Merged Satellite + Labels container */
+.satellite-merged-group {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+/* Split-pill segmented styling when labels sub-tag is active/visible */
+.satellite-merged-group.has-labels .map-tag[for="layer-satellite"],
+.satellite-merged-group:has(.labels-sub-tag:not([style*="display: none"])) .map-tag[for="layer-satellite"] {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-right: none !important;
+}
+
+.satellite-merged-group.has-labels .labels-sub-tag,
+.satellite-merged-group:has(.labels-sub-tag:not([style*="display: none"])) .labels-sub-tag {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.map-tag.interactive-tag:has(#layer-labels:checked),
+.map-tag.interactive-tag.checked:has(#layer-labels) {
+  background-color: rgba(236, 72, 153, 0.2); /* Saturated vibrant pink/rose background */
+  border-color: #ec4899; /* Super vibrant pink/rose border */
+}
+.map-tag.interactive-tag:has(#layer-labels:checked)::before,
+.map-tag.interactive-tag.checked:has(#layer-labels)::before {
+  background-color: #ffffff; /* Pure white-hot center for maximum contrast */
+  filter: drop-shadow(0 0 3.5px #db2777) drop-shadow(0 0 1.5px #ec4899); /* Dual intense pink/rose glow */
+}
+
+/* Custom eyeball status indicator icon for labels toggle */
+.map-tag.interactive-tag:has(#layer-labels)::before,
+.map-tag.interactive-tag.labels-sub-tag::before {
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/%3E%3C/svg%3E") !important;
+}
+
 /* Hide the native checkbox while preserving accessibility (keyboard focus, screen readers) */
 .tag-checkbox {
   position: absolute;
