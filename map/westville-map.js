@@ -107,7 +107,8 @@ const LAYER_ID_MAP = {
   'establishments': 'custom-markers',
   'recreation': 'park-layer-fill',
   'satellite': 'satellite-layer',
-  'map': 'Background'
+  'map': 'Background',
+  'labels': 'map-labels'
 };
 
 const layerStates = {
@@ -115,7 +116,8 @@ const layerStates = {
   'custom-markers': { visible: true, opacity: 1, name: 'Establishments' },
   'park-layer-fill': { visible: true, opacity: 0.3, name: 'Recreation' },
   'satellite-layer': { visible: true, opacity: 0.3, name: 'Satellite' },
-  'Background': { visible: true, opacity: 1, name: 'Map' }
+  'Background': { visible: true, opacity: 1, name: 'Map' },
+  'map-labels': { visible: true, opacity: 1, name: 'Labels' }
 };
 
 // Apply URL overrides
@@ -150,6 +152,8 @@ if (params.get('show')) {
     } else if (showParams.includes('satellite') && !showParams.includes('map')) {
       layerStates['Background'].visible = false;
     }
+
+
   }
 }
 
@@ -188,13 +192,46 @@ try {
   const styleResponse = await fetch('welcome_to_westville.json');
   const style = await styleResponse.json();
 
+  const labelLayers = [
+      'waterway_line_label', 'water_name_point_label', 'water_name_line_label',
+      'highway-name-path', 'highway-name-minor', 'highway-name-major',
+      'highway-shield-non-us', 'highway-shield-us-interstate', 'road_shield_us',
+      'airport', 'label_other', 'label_village', 'label_town',
+      'label_state', 'label_city', 'label_city_capital',
+      'label_country_3', 'label_country_2', 'label_country_1'
+  ];
+
+  // If booting directly into Satellite-only view, apply high-contrast white labels with black halos
+  const initialZoom = isMobileDevice() ? 12 : 14.25;
+  const initialMapVisible = layerStates['Background'].visible;
+  const initialSatelliteVisible = layerStates['satellite-layer'].visible;
+  const initialUseSatelliteContrastLabels = initialSatelliteVisible && !initialMapVisible && initialZoom < 18.5;
+
+  if (initialUseSatelliteContrastLabels && style.layers) {
+      const labelContrastConfigs = {
+          'highway-name-major': { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 2.0 },
+          'highway-name-minor': { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 2.0 },
+          'highway-name-path': { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 1.5 }
+      };
+      style.layers.forEach(layer => {
+          if (labelContrastConfigs[layer.id]) {
+              if (!layer.paint) layer.paint = {};
+              Object.assign(layer.paint, labelContrastConfigs[layer.id]);
+          }
+      });
+  }
+
   // If the 'Background' (basemap) is supposed to be hidden initially,
-  // we apply 'visibility: none' to all layers in the base style JSON 
+  // we apply 'visibility: none' to all layers in the base style JSON (except labels if they are enabled)
   // BEFORE initializing the map. This prevents any flickering!
   if (!layerStates['Background'].visible && style.layers) {
       style.layers.forEach(layer => {
           if (!layer.layout) layer.layout = {};
-          layer.layout.visibility = 'none';
+          if (labelLayers.includes(layer.id)) {
+              layer.layout.visibility = layerStates['map-labels'].visible ? 'visible' : 'none';
+          } else {
+              layer.layout.visibility = 'none';
+          }
       });
   }
 
@@ -208,15 +245,62 @@ try {
       preserveDrawingBuffer: true
   });
 
+  let lastZoomIsGreaterOrEqual = null;
   map.on('zoom', () => {
       const currentZoom = map.getZoom();
-      //console.log(`The map zoom is changing: ${currentZoom}`);
+      const isGreaterOrEqual = (currentZoom >= 18.5);
+      if (lastZoomIsGreaterOrEqual === null || isGreaterOrEqual !== lastZoomIsGreaterOrEqual) {
+          lastZoomIsGreaterOrEqual = isGreaterOrEqual;
+          syncMapStyleState();
+      }
   });
 
   // Bind to setLayoutProperty in order to toggle fill and symbols simultaneously in layer control widget
   const originalSetLayoutProperty = map.setLayoutProperty.bind(map);
   // Override the method to watch for changes
   map.setLayoutProperty = function (layerId, name, value) {
+      const labelLayers = [
+          'waterway_line_label', 'water_name_point_label', 'water_name_line_label',
+          'highway-name-path', 'highway-name-minor', 'highway-name-major',
+          'highway-shield-non-us', 'highway-shield-us-interstate', 'road_shield_us',
+          'airport', 'label_other', 'label_village', 'label_town',
+          'label_state', 'label_city', 'label_city_capital',
+          'label_country_3', 'label_country_2', 'label_country_1'
+      ];
+
+      // Dynamically read standard Map (Background), Satellite, and Labels checked state from the DOM if available
+      const mapCheckbox = document.querySelector('span.layer-control-name[title="Background"], span.layer-control-name[title="Map"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+      const satelliteCheckbox = document.querySelector('span.layer-control-name[title="Satellite"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+      const labelsCheckbox = document.querySelector('span.layer-control-name[title="Labels"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+      
+      const mapVisible = mapCheckbox ? mapCheckbox.checked : layerStates['Background'].visible;
+      const satelliteVisible = satelliteCheckbox ? satelliteCheckbox.checked : layerStates['satellite-layer'].visible;
+      const labelsVisible = labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible;
+
+      const currentZoom = map ? map.getZoom() : 14.25;
+      const shouldBasemapBeVisible = mapVisible || (satelliteVisible && currentZoom >= 18.5);
+
+      if (layerId === 'map-labels') {
+          if (name === 'visibility') {
+              const targetValue = (shouldBasemapBeVisible || value === 'visible') ? 'visible' : 'none';
+              labelLayers.forEach(lId => {
+                  if (map.getLayer(lId)) {
+                      originalSetLayoutProperty(lId, 'visibility', targetValue);
+                  }
+              });
+              layerStates['map-labels'].visible = (value === 'visible');
+          }
+          return; // Intercept completely
+      }
+
+      if (labelLayers.includes(layerId) && name === 'visibility') {
+          // Force individual style label layers to obey the map-labels checkbox state,
+          // but ensure they are always visible if the standard map is active.
+          const targetValue = (shouldBasemapBeVisible || labelsVisible) ? 'visible' : 'none';
+          originalSetLayoutProperty(layerId, name, targetValue);
+          return;
+      }
+
       // Call the original function first so the master layer updates
       originalSetLayoutProperty(layerId, name, value);
   
@@ -236,9 +320,95 @@ try {
           originalSetLayoutProperty('park-layer-symbols', 'visibility', value);
           originalSetLayoutProperty('walkingpath-layer-symbol', 'visibility', value);
       }
+
+      if (name === 'visibility') {
+          syncMapStyleState();
+      }
   };
 
- 
+  function syncMapStyleState() {
+      if (!map) return;
+      const currentZoom = map.getZoom();
+
+      // Dynamically read checked states from the DOM if available, falling back to layerStates
+      const mapCheckbox = document.querySelector('span.layer-control-name[title="Background"], span.layer-control-name[title="Map"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+      const satelliteCheckbox = document.querySelector('span.layer-control-name[title="Satellite"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+      const labelsCheckbox = document.querySelector('span.layer-control-name[title="Labels"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+
+      const mapVisible = mapCheckbox ? mapCheckbox.checked : layerStates['Background'].visible;
+      const satelliteVisible = satelliteCheckbox ? satelliteCheckbox.checked : layerStates['satellite-layer'].visible;
+      const labelsVisible = labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible;
+
+      // 1. Determine if the basemap style layers (non-labels) should be visible
+      const shouldBasemapBeVisible = mapVisible || (satelliteVisible && currentZoom >= 18.5);
+
+      const layers = (style && style.layers) ? style.layers : (map.getStyle() ? map.getStyle().layers : []);
+      if (layers && layers.length > 0) {
+          layers.forEach(layer => {
+              if (labelLayers.includes(layer.id)) {
+                  // For label layers, visibility is controlled by labelsVisible in satellite-only mode,
+                  // and always visible if standard map is shown.
+                  const targetVisibility = (shouldBasemapBeVisible || labelsVisible) ? 'visible' : 'none';
+                  if (map.getLayer(layer.id)) {
+                      const currentVis = map.getLayoutProperty(layer.id, 'visibility');
+                      if (currentVis !== targetVisibility) {
+                          originalSetLayoutProperty(layer.id, 'visibility', targetVisibility);
+                      }
+                  }
+              } else {
+                  // For other base style layers, visibility is controlled by shouldBasemapBeVisible
+                  const customLayers = [
+                      'satellite-layer', 'custom-parking-fill', 'parking-layer-symbols',
+                      'park-layer-fill', 'custom-park-outline', 'walkingpath-outline', 'walkingpath-layer-symbol',
+                      'park-layer-symbols', 'custom-markers', 'custom-labels', 'highlight-point-layer', 'highlight-poly-layer'
+                  ];
+                  if (!customLayers.includes(layer.id)) {
+                      const targetVisibility = shouldBasemapBeVisible ? 'visible' : 'none';
+                      if (map.getLayer(layer.id)) {
+                          const currentVis = map.getLayoutProperty(layer.id, 'visibility');
+                          if (currentVis !== targetVisibility) {
+                              originalSetLayoutProperty(layer.id, 'visibility', targetVisibility);
+                          }
+                      }
+                  }
+              }
+          });
+      }
+
+      // 2. Apply contrast paint overrides for labels in satellite mode
+      const shouldUseSatelliteContrastLabels = satelliteVisible && !mapVisible && currentZoom < 18.5;
+
+      const labelContrastConfigs = {
+          'highway-name-major': {
+              satellite: { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 2.0 },
+              standard: { 'text-color': '#666666', 'text-halo-color': 'rgba(255,255,255,0)', 'text-halo-width': 1.0 }
+          },
+          'highway-name-minor': {
+              satellite: { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 2.0 },
+              standard: { 'text-color': '#666666', 'text-halo-color': 'rgba(255,255,255,0)', 'text-halo-width': 1.0 }
+          },
+          'highway-name-path': {
+              satellite: { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 1.5 },
+              standard: { 'text-color': 'hsl(30,23%,62%)', 'text-halo-color': '#f8f4f0', 'text-halo-width': 0.5 }
+          }
+      };
+
+      Object.keys(labelContrastConfigs).forEach(layerId => {
+          if (map.getLayer(layerId)) {
+              const config = shouldUseSatelliteContrastLabels ? labelContrastConfigs[layerId].satellite : labelContrastConfigs[layerId].standard;
+              Object.keys(config).forEach(prop => {
+                  const currentVal = map.getPaintProperty(layerId, prop);
+                  if (currentVal !== config[prop]) {
+                      map.setPaintProperty(layerId, prop, config[prop]);
+                  }
+              });
+          }
+      });
+
+      // Synchronize lastZoomIsGreaterOrEqual to current zoom state
+      lastZoomIsGreaterOrEqual = (currentZoom >= 18.5);
+  }
+
   if(!isMobileDevice() && window.self === window.top) map.addControl(new maplibregl.FullscreenControl(), 'top-left');
   map.addControl(nav, 'top-left');
 
@@ -296,7 +466,7 @@ try {
           data: collections.recreation
       });
 
-      // add Satellite Map below parking fill layer
+      // add Satellite Map below waterway line label layer (to allow labels to render on top of it)
       map.addLayer({
           id: 'satellite-layer',
           type: 'raster',
@@ -308,7 +478,7 @@ try {
           paint: {
               'raster-opacity': layerStates['Background'].visible ? 0.3 : 1.0
           }
-      }); 
+      }, 'waterway_line_label'); 
       
       map.addLayer({
           id: 'custom-parking-fill',
@@ -698,7 +868,7 @@ try {
           showStyleEditor: false,
           showOpacitySlider: true,
           layerStates: layerStates,
-          layers: ['satellite-layer', 'custom-parking-fill', 'custom-markers', 'park-layer-fill'],
+          layers: ['satellite-layer', 'custom-parking-fill', 'custom-markers', 'park-layer-fill', 'map-labels'],
           basemapStyleUrl: '/welcome_to_westville.json',
           panelWidth: 320,
           panelMinWidth: 320,
@@ -1193,6 +1363,7 @@ try {
                   }, '*');
               }
           }
+          syncMapStyleState();
       }
 
       // Update background text and enforce initial checkbox state
@@ -1337,7 +1508,10 @@ window.addEventListener('message', (event) => {
         const layerId = LAYER_ID_MAP[friendlyName];
         if (layerId) {
             const title = (layerId === 'Background') ? 'Background' : layerStates[layerId].name;
-            const labelSpan = document.querySelector(`span.layer-control-name[title="${title}"]`);
+            let labelSpan = document.querySelector(`span.layer-control-name[title="${title}"]`);
+            if (!labelSpan && layerId === 'Background') {
+                labelSpan = document.querySelector(`span.layer-control-name[title="Map"]`);
+            }
             if (labelSpan) {
                 const container = labelSpan.closest('label') || labelSpan.parentElement;
                 if (container) {
