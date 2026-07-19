@@ -1,128 +1,7 @@
 // Westville Business Directory Script
 
-// Centralized Color Groupings metadata structure (Dual-Token System for Accessibility)
-const categoryColors = {
-  'safety': {
-    title: 'Safety & Emergency',
-    colorName: 'Red',
-    fill: '#dc2626',
-    text: '#c53030',
-    tags: ['safety', 'police station', 'fire station', 'police']
-  },
-  'nightlife': {
-    title: 'Nightlife, Bars & Breweries',
-    colorName: 'Amber',
-    fill: '#d97706',
-    text: '#b45309',
-    tags: ['brewery', 'bar', 'pub', 'nightlife', 'craft beer', 'liquor store', 'wine', 'beer', 'spirits']
-  },
-  'food': {
-    title: 'Food, Dining & Cafes',
-    colorName: 'Rose',
-    fill: '#db2777',
-    text: '#be123c',
-    tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza']
-  },
-  'wellness': {
-    title: 'Wellness, Health & Salons',
-    colorName: 'Teal',
-    fill: '#0d9488',
-    text: '#0f766e',
-    tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor']
-  },
-  'shop': {
-    title: 'Shop & Retail',
-    colorName: 'Emerald',
-    fill: '#059669',
-    text: '#047857',
-    tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco']
-  },
-  'services': {
-    title: 'Services & Professional',
-    colorName: 'Purple',
-    fill: '#81007F',
-    text: '#81007F',
-    tags: ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank']
-  },
-  'public': {
-    title: 'Public & Government Resources',
-    colorName: 'Royal Blue',
-    fill: '#2563eb',
-    text: '#1d4ed8',
-    tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public']
-  },
-  'autos': {
-    title: 'Automotive',
-    colorName: 'Gold',
-    fill: '#ffd700',
-    text: '#854d0e',
-    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning']
-  },
-  'recreation': {
-    title: 'Parks & Recreation',
-    colorName: 'Forest Green',
-    fill: '#16a34a',
-    text: '#15803d',
-    tags: ['park', 'recreation', 'walking path', 'walkingpath']
-  },
-  'parking': {
-    title: 'Parking',
-    colorName: 'Cobalt Blue',
-    fill: '#2563eb',
-    text: '#1e40af',
-    tags: ['parking', 'free']
-  },
-  'home-business': {
-    title: 'Home-Based Businesses',
-    colorName: 'Warm Terracotta',
-    fill: '#C2593F',
-    text: '#A0432C',
-    tags: ['home-business', 'web design', 'software', 'bookkeeping', 'finance', 'crafts', 'candles', 'tutoring', 'education', 'gardening', 'landscaping', 'music', 'piano', 'voice lessons', 'pet sitting', 'dog walking']
-  },
-  'industrial': {
-    title: 'Industrial & Manufacturing',
-    colorName: 'Steel Grey',
-    fill: '#5E6D75',
-    text: '#455056',
-    tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes']
-  }
-};
+// Color groupings and contrast utilities are now loaded globally from components.js
 
-const tagColors = {};
-const tagToCategory = {};
-Object.keys(categoryColors).forEach(catKey => {
-  const cat = categoryColors[catKey];
-  cat.tags.forEach(tag => {
-    tagColors[tag] = cat.fill;
-    tagToCategory[tag] = catKey;
-  });
-});
-
-// WCAG 2.1 Compliant Relative Luminance & Contrast Ratio calculation helper
-function getContrastColor(hexcolor) {
-  if (!hexcolor) return '#ffffff';
-  let hex = hexcolor.replace('#', '').trim();
-  if (hex.length === 3) {
-    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-  }
-  if (hex.length !== 6) return '#ffffff';
-  
-  const rgb = [
-    parseInt(hex.substring(0, 2), 16) / 255,
-    parseInt(hex.substring(2, 4), 16) / 255,
-    parseInt(hex.substring(4, 6), 16) / 255
-  ];
-  
-  const a = rgb.map(v => {
-    if (v <= 0.03928) {
-      return v / 12.92;
-    }
-    return Math.pow((v + 0.055) / 1.055, 2.4);
-  });
-  
-  const luminance = 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
-  return luminance > 0.179 ? '#000000' : '#ffffff';
-}
 
 // Global Directory State
 let allDirFeatures = [];
@@ -172,35 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initPrintAndShare();
 });
 
-function setupDropdownTrigger(trigger, dropdown) {
-  if (!trigger || !dropdown) return;
-  const container = trigger.closest('.custom-multiselect');
-  
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const expanded = trigger.getAttribute('aria-expanded') === 'true';
-    trigger.setAttribute('aria-expanded', !expanded);
-    if (container) {
-      container.classList.toggle('active');
-    }
-  });
+// Dropdown trigger and close functions are loaded globally from components.js
 
-  trigger.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      trigger.click();
-    }
-  });
-}
-
-function closeDropdown(trigger, dropdown) {
-  if (!trigger || !dropdown) return;
-  trigger.setAttribute('aria-expanded', 'false');
-  const container = trigger.closest('.custom-multiselect');
-  if (container) {
-    container.classList.remove('active');
-  }
-}
 
 async function initDirectory() {
   try {
@@ -848,74 +700,8 @@ function getFilteredCards(includeAll = false) {
   return results;
 }
 
-// Simple text word wrapper for standard character lengths
-function wrapText(text, maxLength) {
-  if (maxLength <= 0) return [text];
-  const words = text.split(/\s+/);
-  const lines = [];
-  let currentLine = '';
-  
-  words.forEach(word => {
-    if ((currentLine + ' ' + word).length <= maxLength) {
-      currentLine = currentLine ? currentLine + ' ' + word : word;
-    } else {
-      if (word.length > maxLength) {
-        const subWords = [];
-        const parts = word.split(/([./?&#\-_=,:])/);
-        parts.forEach(part => {
-          if (!part) return;
-          if (part.length <= maxLength) {
-            subWords.push(part);
-          } else {
-            let rem = part;
-            while (rem.length > maxLength) {
-              subWords.push(rem.substring(0, maxLength));
-              rem = rem.substring(maxLength);
-            }
-            if (rem) subWords.push(rem);
-          }
-        });
+// wrapText and base64ToUint8Array are loaded globally from components.js
 
-        let isFirstSub = true;
-        subWords.forEach(sub => {
-          if (isFirstSub) {
-            if ((currentLine + ' ' + sub).length <= maxLength) {
-              currentLine = currentLine ? currentLine + ' ' + sub : sub;
-            } else {
-              if (currentLine) lines.push(currentLine);
-              currentLine = sub;
-            }
-            isFirstSub = false;
-          } else {
-            if ((currentLine + sub).length <= maxLength) {
-              currentLine = currentLine + sub;
-            } else {
-              if (currentLine) lines.push(currentLine);
-              currentLine = sub;
-            }
-          }
-        });
-      } else {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
-      }
-    }
-  });
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
-
-// Convert base64 data to ArrayBuffer
-function base64ToUint8Array(base64) {
-  const base64Data = base64.split(',')[1] || base64;
-  const binaryString = atob(base64Data);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
 
 // Compile printed header title from URL search parameters
 function getPrintHeaderTitle() {

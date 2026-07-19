@@ -2,6 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function() {
+      var supportsCustomElements = 'customElements' in window;
+      var supportsFetch = 'fetch' in window;
+      var supportsESModules = 'noModule' in document.createElement('script');
+      var supportsURL = 'URL' in window && 'URLSearchParams' in window;
+
+      var isTier1Supported = supportsCustomElements && supportsFetch && supportsESModules && supportsURL;
+
+      if (!isTier1Supported) {
+        document.write(
+          '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#F4F7F6;z-index:999999;display:flex;align-items:center;justify-content:center;font-family:\'Open Sans\',sans-serif;color:#2B659F;padding:20px;box-sizing:border-box;">' +
+            '<div style="max-width:500px;text-align:center;background:#fff;padding:40px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid #E5C158;">' +
+              '<h2 style="margin-top:0;font-size:24px;font-weight:600;">Browser Not Fully Supported</h2>' +
+              '<p style="color:#555;line-height:1.6;font-size:15px;margin:20px 0;">We apologize, but this modern community portal requires a newer web browser to function. We use modern web technologies like Web Components and ES modules to bring you a premium experience.</p>' +
+              '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>' +
+              '<div style="font-weight:bold;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;">Westville Interactive Map Project</div>' +
+            '</div>' +
+          '</div>'
+        );
+        if (window.stop) {
+          window.stop();
+        } else {
+          document.execCommand('Stop');
+        }
+      }
+    })();
+  </script>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="apple-mobile-web-app-title" content="Privacy & TOS" />
   <title>Privacy & Terms of Service - Welcome to Westville</title>
@@ -72,6 +100,33 @@
 
         <h3>3. Intellectual Property & Credits</h3>
         <p>This map aggregates open data and free services. The underlying map data is owned by its respective authors and contributors (OpenStreetMap, Esri, etc.). For a complete list of used datasets, libraries, and licenses, please visit our <a href="/credits.html">Credits Page</a>.</p>
+      </section>
+      
+      <!-- System Requirements Section -->
+      <section class="privacy-card">
+        <h2>System Requirements & Browser Support</h2>
+        <p>This community map portal is built using standard, high-performance web APIs to deliver a fast and interactive experience without a massive download footprint.</p>
+        
+        <h3>Minimum Requirements</h3>
+        <p>To access all features of this site, including the dynamic 3D interactive mapping canvas, your browser and device must support:</p>
+        <ul>
+          <li><strong>WebGL 2 Rendering</strong>: Crucial for hardware-accelerated vector mapping tiles.</li>
+          <li><strong>Custom Elements V1 (Web Components)</strong>: Used to load standard structural components like headers and footers.</li>
+          <li><strong>ES Modules & Async/Await</strong>: Needed to compile and run script logics efficiently.</li>
+        </ul>
+
+        <h3>Supported Browser Versions</h3>
+        <p>We actively support and optimize for the following browser baselines on desktop and mobile:</p>
+        <ul>
+          <li><strong>Apple Safari</strong>: Version 15 or later (macOS 10.15+, iOS 15+, iPadOS 15+)</li>
+          <li><strong>Google Chrome</strong>: Version 93 or later (Windows, Linux, macOS, Android 6.0+)</li>
+          <li><strong>Mozilla Firefox</strong>: Version 65 or later (All platforms)</li>
+          <li><strong>Microsoft Edge</strong>: Version 93 or later (All platforms)</li>
+        </ul>
+
+        <div class="note-box" style="border-left-color: var(--accent-gold);">
+          <p><strong>Graceful Degradation Note:</strong> If your web browser does not support WebGL 2 but supports modern JavaScript (Custom Elements V1), you can still fully use our <strong>Public Directory</strong> to search local establishments, find phone numbers, call businesses, and open directions. Only the interactive map rendering canvas itself will be disabled.</p>
+        </div>
       </section>
 
     </div>

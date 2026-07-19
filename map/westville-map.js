@@ -1,3 +1,12 @@
+if (!Object.fromEntries) {
+  Object.fromEntries = function (iterable) {
+    return Array.prototype.slice.call(iterable).reduce(function (obj, pair) {
+      obj[pair[0]] = pair[1];
+      return obj;
+    }, {});
+  };
+}
+
 const originalWarn = console.warn;
 console.warn = (...args) => {
     if (args[0] && typeof args[0] === 'string' && args[0].includes('Image') && args[0].includes('could not be loaded')) {
@@ -43,8 +52,10 @@ async function fetchGeoJsonFiles(files) {
     console.error("One or more requests failed:", error);
   }
 }
-const geojsonfiles = ['parking', 'establishments', 'recreation'];
-const collections = await fetchGeoJsonFiles(geojsonfiles);
+let collections;
+(async () => {
+  const geojsonfiles = ['parking', 'establishments', 'recreation'];
+  collections = await fetchGeoJsonFiles(geojsonfiles);
 
 function waitForElement(selector) {
   return new Promise(resolve => {
@@ -1586,6 +1597,9 @@ try {
   });
 } catch (error) {
   console.error('Error loading map:', error);
+  if (window.showMapError) {
+    window.showMapError(error.message || error);
+  }
 }
 
 // Handle parent window requests
@@ -1656,3 +1670,4 @@ window.addEventListener('message', (event) => {
         }
     }
 });
+})();

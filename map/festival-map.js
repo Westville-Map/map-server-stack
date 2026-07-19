@@ -15,6 +15,7 @@ const markersMap = {}; // mapping of vendor ID to MapLibre marker objects
 // Bounds for Westville, NJ
 const bounds = [-75.25794564779246, 39.75364908034561, -75.00289227019784, 39.98850386620689];
 
+(async () => {
 try {
   // 1. Fetch style config (reusing the same vector tile style from the main map!)
   const styleResponse = await fetch('welcome_to_westville.json');
@@ -144,6 +145,9 @@ try {
 
 } catch (error) {
   console.error('Error initializing fall festival map:', error);
+  if (window.showMapError) {
+    window.showMapError(error.message || error);
+  }
 }
 
 // Function to select and highlight a vendor marker
@@ -303,3 +307,4 @@ function ensurePopupInView(popup) {
     map.easeTo({ center: newCenterCoords, duration: 300 });
   }
 }
+})();

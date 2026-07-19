@@ -51,34 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initPrintAndShare();
 });
 
-function setupDropdownTrigger(trigger, dropdown) {
-  if (!trigger || !dropdown) return;
-  const container = trigger.closest('.custom-multiselect');
-  
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const expanded = trigger.getAttribute('aria-expanded') === 'true';
-    trigger.setAttribute('aria-expanded', !expanded);
-    if (container) {
-      container.classList.toggle('active');
-    }
-  });
-  trigger.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      trigger.click();
-    }
-  });
-}
+// Dropdown trigger and close functions are loaded globally from components.js
 
-function closeDropdown(trigger, dropdown) {
-  if (!trigger || !dropdown) return;
-  trigger.setAttribute('aria-expanded', 'false');
-  const container = trigger.closest('.custom-multiselect');
-  if (container) {
-    container.classList.remove('active');
-  }
-}
 
 async function initFestivalDirectory() {
   try {
@@ -525,74 +499,8 @@ function getFilteredCards(includeAll = false) {
   return results;
 }
 
-// Simple text word wrapper for standard character lengths
-function wrapText(text, maxLength) {
-  if (maxLength <= 0) return [text];
-  const words = text.split(/\s+/);
-  const lines = [];
-  let currentLine = '';
-  
-  words.forEach(word => {
-    if ((currentLine + ' ' + word).length <= maxLength) {
-      currentLine = currentLine ? currentLine + ' ' + word : word;
-    } else {
-      if (word.length > maxLength) {
-        const subWords = [];
-        const parts = word.split(/([./?&#\-_=,:])/);
-        parts.forEach(part => {
-          if (!part) return;
-          if (part.length <= maxLength) {
-            subWords.push(part);
-          } else {
-            let rem = part;
-            while (rem.length > maxLength) {
-              subWords.push(rem.substring(0, maxLength));
-              rem = rem.substring(maxLength);
-            }
-            if (rem) subWords.push(rem);
-          }
-        });
+// wrapText and base64ToUint8Array are loaded globally from components.js
 
-        let isFirstSub = true;
-        subWords.forEach(sub => {
-          if (isFirstSub) {
-            if ((currentLine + ' ' + sub).length <= maxLength) {
-              currentLine = currentLine ? currentLine + ' ' + sub : sub;
-            } else {
-              if (currentLine) lines.push(currentLine);
-              currentLine = sub;
-            }
-            isFirstSub = false;
-          } else {
-            if ((currentLine + sub).length <= maxLength) {
-              currentLine = currentLine + sub;
-            } else {
-              if (currentLine) lines.push(currentLine);
-              currentLine = sub;
-            }
-          }
-        });
-      } else {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
-      }
-    }
-  });
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
-
-// Convert data URL to array buffer for pdf-lib standard loading
-function base64ToUint8Array(base64) {
-  const base64Data = base64.split(',')[1] || base64;
-  const binaryString = atob(base64Data);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
 
 // Compile search/filters from URL search params into clean printed document header title
 function getPrintHeaderTitle() {
