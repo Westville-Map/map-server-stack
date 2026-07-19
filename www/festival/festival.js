@@ -292,6 +292,13 @@ function renderFestivalDirectory() {
       }
     });
 
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.click();
+      }
+    });
+
     dirGrid.appendChild(card);
   });
 

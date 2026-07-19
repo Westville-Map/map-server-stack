@@ -4,9 +4,9 @@ class SiteHeader extends HTMLElement {
   connectedCallback() {
     const activePage = this.getAttribute('active-page') || 'portal';
     
-    const homeActive = activePage === 'portal' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue);"' : '';
-    const directoryActive = activePage === 'directory' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue);"' : '';
-    const festivalActive = activePage === 'festival' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue);"' : '';
+    const homeActive = activePage === 'portal' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const directoryActive = activePage === 'directory' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const festivalActive = activePage === 'festival' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
 
     let festivalLinkHTML = '';
     if (SHOW_FESTIVAL) {
@@ -26,8 +26,7 @@ class SiteHeader extends HTMLElement {
       </a>
       ${festivalLinkHTML}
       <div class="help-split-btn">
-        ${activePage === 'portal' ? `
-        <button id="help-btn" class="help-split-left-btn help-btn" title="How to Use the Map">
+        <button id="header-help-btn" class="help-split-left-btn help-btn" title="How to Use the Site">
           <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
               <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
@@ -37,18 +36,6 @@ class SiteHeader extends HTMLElement {
           </span>
           <span class="header-btn-text">Help</span>
         </button>
-        ` : `
-        <a href="/?help=true" id="header-help-btn" class="help-split-left-btn" title="How to Use the Map">
-          <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
-              <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
-              <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
-              <path d="M12 14h.01" />
-            </svg>
-          </span>
-          <span class="header-btn-text">Help</span>
-        </a>
-        `}
         <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false">
           <span style="font-size: 0.75rem;">▼</span>
         </button>
@@ -83,6 +70,12 @@ class SiteHeader extends HTMLElement {
       </header>
     `;
 
+    // Auto-inject the site-help component if not present
+    if (!document.querySelector('site-help')) {
+      const siteHelpEl = document.createElement('site-help');
+      document.body.appendChild(siteHelpEl);
+    }
+
     // Dropdown toggle logic
     const toggleBtn = this.querySelector('#help-dropdown-toggle');
     const dropdownMenu = this.querySelector('#help-dropdown');
@@ -109,37 +102,21 @@ class SiteFooter extends HTMLElement {
   connectedCallback() {
     const activePage = this.getAttribute('active-page') || 'portal';
     
-    const creditsStyle = activePage === 'credits' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue);"' : '';
-    const privacyStyle = activePage === 'privacy-tos' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue);"' : '';
+    const creditsStyle = activePage === 'credits' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const privacyStyle = activePage === 'privacy-tos' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
 
-    let helpHTML = '';
-    if (activePage === 'portal') {
-      helpHTML = `
-        <button id="footer-help-btn" class="header-btn help-btn" title="How to Use the Map">
-          <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
-              <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
-              <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
-              <path d="M12 14h.01" />
-            </svg>
-          </span>
-          <span class="header-btn-text">Help</span>
-        </button>
-      `;
-    } else {
-      helpHTML = `
-        <a href="/?help=true" id="footer-help-btn" class="header-btn" title="How to Use the Map">
-          <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
-              <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
-              <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
-              <path d="M12 14h.01" />
-            </svg>
-          </span>
-          <span class="header-btn-text">Help</span>
-        </a>
-      `;
-    }
+    const helpHTML = `
+      <button id="footer-help-btn" class="header-btn help-btn" title="How to Use the Site">
+        <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+            <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+            <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+            <path d="M12 14h.01" />
+          </svg>
+        </span>
+        <span class="header-btn-text">Help</span>
+      </button>
+    `;
 
     this.innerHTML = `
       <footer>
@@ -172,6 +149,281 @@ class SiteFooter extends HTMLElement {
 
 customElements.define('site-header', SiteHeader);
 customElements.define('site-footer', SiteFooter);
+
+class SiteHelp extends HTMLElement {
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupListeners();
+    this.checkUrlParams();
+  }
+
+  render() {
+    let festivalSectionHTML = '';
+    if (SHOW_FESTIVAL) {
+      festivalSectionHTML = `
+        <li id="help-section-festival" class="help-section-item">
+          <div class="help-item-header">
+            <span class="help-popover-icon">
+              <span style="font-size:1.15rem; line-height:1;">🍁</span>
+            </span>
+            <strong>Autumn Festival Interactive Guide</strong>
+          </div>
+          <p class="help-item-desc">
+            The standalone <strong>Fall Festival</strong> page is an interactive guide for our annual community autumn celebration along Broadway. It is designed to help you quickly search, filter, and locate vendors, stages, and activities.
+          </p>
+          <p class="help-item-desc">
+            <strong>Interactive Vendor Map</strong>: Displays exact numbered booth spaces along Broadway. Clicking any numbered space circle on the map instantly highlights their details in the list below.
+          </p>
+          <p class="help-item-desc">
+            <strong>Searchable Vendor Directory</strong>: Quickly find specific food items (like cider, kettle corn, or food trucks), craft providers, kids' activities, or entertainment stages using the live search bar. Filter booths dynamically by categories (food, crafts, etc.) or sort them numerically by booth number.
+          </p>
+        </li>
+      `;
+    }
+
+    this.innerHTML = `
+      <div id="help-popover" class="help-popover-overlay" role="dialog" aria-modal="true" aria-labelledby="help-popover-title">
+        <div class="help-popover-card">
+          <div class="help-popover-header">
+            <h3 id="help-popover-title">Welcome to Westville Help</h3>
+            <button class="help-popover-close" id="help-popover-close-btn" aria-label="Close help">&times;</button>
+          </div>
+          
+          <div class="help-popover-body">
+            <p>Welcome to the Borough of Westville Interactive Portal! Use this comprehensive help panel to learn about map navigation, the directory, printing options, and event guides. Select a quick category below to scroll directly to its instructions.</p>
+            
+            <!-- Quick navigation pill shortcuts inside help -->
+            <div class="help-nav-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;">
+              <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="portal">Map</button>
+              <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="directory">Directory</button>
+              ${SHOW_FESTIVAL ? `<button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="festival">Fall Festival</button>` : ''}
+              <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="universal">Sharing & Printing</button>
+            </div>
+
+            <ul class="help-popover-list">
+              <!-- Section: Map & Portal -->
+              <li id="help-section-portal" class="help-section-item">
+                <div class="help-item-header">
+                  <span class="help-popover-icon">
+                    <img style="width:20px; height:20px;" src="/images/map-folded.svg" alt="Map icon">
+                  </span>
+                  <strong>Map &amp; Layers</strong>
+                </div>
+                <p class="help-item-desc">
+                  Explore the Borough visually on our main page. Toggle street layouts, recreation parks, public parking zones, or local business establishments. Toggle high-resolution <strong>Satellite Map</strong> views, or keep street names readable with the <strong>Satellite Labels</strong> toggle.
+                </p>
+                <p class="help-item-desc">
+                  <strong>Quick Filter Tags</strong>: Select Public Parking, Local Establishments, or Recreation Parks tags in the map header to instantly clear search terms, reset viewpoint, and highlight just that group.
+                </p>
+                <p class="help-item-desc">
+                  <strong>My Location (GPS)</strong>: Click the target crosshair button (below zoom buttons) to track your position in real-time. This runs purely in-browser and doesn't store your coordinates.
+                </p>
+                <p class="help-item-desc">
+                  <strong>Interactive Directory Cards</strong>: Click any card to re-center, zoom, and highlight that physical location on the map.
+                </p>
+              </li>
+
+              <!-- Section: Standalone Directory -->
+              <li id="help-section-directory" class="help-section-item">
+                <div class="help-item-header">
+                  <span class="help-popover-icon">
+                    <img style="width:20px; height:20px;" src="/images/search.svg" alt="Search icon">
+                  </span>
+                  <strong>Local Directory</strong>
+                </div>
+                <p class="help-item-desc">
+                  The standalone <strong><a class="help-link" href="/directory/">Directory</a></strong> page lists all commercial, industrial, recreation, and public providers in Westville.
+                </p>
+                <p class="help-item-desc">
+                  <strong>Searching &amp; Advanced Filtering</strong>: Start typing in the search box to instantly search listings. Narrow results down by selecting specific tags or categories from the custom multi-select dropdown menus.
+                </p>
+                <p class="help-item-desc">
+                  <strong>Custom Sorting &amp; Quick Reset</strong>: Sort establishments alphabetically, by category, or by tags. Click the <strong>Reset</strong> button at any time to clear search text, reset selectors, and restore default A-Z lists.
+                </p>
+                <p class="help-item-desc">
+                  <strong>Card Actions</strong>: Use the direct call links to place a call, click Website to open their portal, or tap Directions to route to them instantly on Google Maps.
+                </p>
+              </li>
+
+              <!-- Section: Fall Festival Guide (Conditional) -->
+              ${festivalSectionHTML}
+
+              <!-- Section: Universal Features (Sharing & Printing) -->
+              <li id="help-section-universal" class="help-section-item">
+                <div class="help-item-header">
+                  <span class="help-popover-icon">
+                    <img style="width:20px; height:20px;" src="/images/share.svg" alt="Share icon">
+                  </span>
+                  <strong>Sharing Views &amp; Custom Printing</strong>
+                </div>
+                <p class="help-item-desc">
+                  <strong>Copy &amp; Share Links</strong>: Tap the <strong>Share</strong> button in the header of any map page to copy a dynamic link. This link perfectly restores your zoom level, coordinates, toggled layer checkboxes, active search query, and highlighted cards so you share exactly what you are seeing.
+                </p>
+                <p class="help-item-desc">
+                  <strong>Privacy-Safe Location Sharing</strong>: Click the drop-arrow next to "Share" and click "Share my location" to generate a specialized link showing your current GPS coordinates. It disables card highlights and doesn't store any data to protect privacy. Only your current latitude and longitude coordinates are shared, no other personally-identifiable data is used, and you remain in charge of who you share the unique link with.
+                </p>
+                <p class="help-item-desc">
+                  <strong>High-Resolution Printing &amp; PDFs</strong>: Click the <strong>Print</strong> button to configure output. Customize portrait/landscape orientations, choose to hide or include map views, and select whether to print your filtered cards or compile a complete local directory PDF.
+                </p>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="help-popover-footer">
+            <div class="help-popover-footer-links">
+              <a href="/credits.html" class="help-footer-btn">
+                <img style="width:16px; height:16px;" src="/images/credits-scroll.svg" alt="">
+                <span>Credits &amp; Thanks</span>
+              </a>
+              <a href="/privacy-tos.html" class="help-footer-btn">
+                <img style="width:16px; height:16px;" src="/images/shield-privacy.svg" alt="">
+                <span>Privacy &amp; Terms</span>
+              </a>
+            </div>
+            <button id="help-popover-ok-btn" class="btn-main help-popover-action-btn">Got It!</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.overlay = this.querySelector('#help-popover');
+    this.closeBtn = this.querySelector('#help-popover-close-btn');
+    this.okBtn = this.querySelector('#help-popover-ok-btn');
+  }
+
+  setupListeners() {
+    if (this.closeBtn) this.closeBtn.addEventListener('click', () => this.close());
+    if (this.okBtn) this.okBtn.addEventListener('click', () => this.close());
+    
+    if (this.overlay) {
+      this.overlay.addEventListener('click', (e) => {
+        if (e.target === this.overlay) this.close();
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.overlay && this.overlay.classList.contains('active')) {
+        this.close();
+      }
+    });
+
+    // Complete focus trap inside the SiteHelp popover dialog (WCAG 2.4.3)
+    this.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' && this.overlay && this.overlay.classList.contains('active')) {
+        const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusables = Array.from(this.querySelectorAll(focusableSelectors)).filter(el => {
+          return el.offsetWidth > 0 && el.offsetHeight > 0 && !el.disabled;
+        });
+        
+        if (focusables.length === 0) return;
+        
+        const firstEl = focusables[0];
+        const lastEl = focusables[focusables.length - 1];
+        
+        if (e.shiftKey) {
+          if (document.activeElement === firstEl) {
+            lastEl.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastEl) {
+            firstEl.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    });
+
+    const navPills = this.querySelectorAll('.help-nav-pill');
+    navPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const target = pill.getAttribute('data-target');
+        this.scrollToSection(target);
+      });
+      // Add visual hover feedback
+      pill.addEventListener('mouseenter', () => {
+        pill.style.borderColor = 'var(--primary-blue)';
+        pill.style.background = '#f0f4f8';
+      });
+      pill.style.transition = 'all 0.2s ease';
+      pill.addEventListener('mouseleave', () => {
+        pill.style.borderColor = '#cbd5e1';
+        pill.style.background = '#f8fafc';
+      });
+    });
+
+    // Intercept clicks on help buttons globally on this page
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.help-btn');
+      if (btn) {
+        e.preventDefault();
+        const siteHeader = document.querySelector('site-header');
+        const activePage = siteHeader ? siteHeader.getAttribute('active-page') : 'portal';
+        this.open(activePage);
+      }
+    });
+  }
+
+  scrollToSection(sectionId) {
+    if (!sectionId) return;
+    const section = this.querySelector(`#help-section-${sectionId}`);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      section.classList.remove('highlight-pulse');
+      void section.offsetWidth; // Reflow
+      section.classList.add('highlight-pulse');
+    }
+  }
+
+  open(sectionId) {
+    if (!this.overlay) return;
+    this._previouslyFocusedElement = document.activeElement; // Track starting focus context
+    this.overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (this.okBtn) this.okBtn.focus();
+
+    if (sectionId) {
+      setTimeout(() => {
+        this.scrollToSection(sectionId);
+      }, 150);
+    } else {
+      const body = this.querySelector('.help-popover-body');
+      if (body) body.scrollTop = 0;
+    }
+  }
+
+  close() {
+    if (!this.overlay) return;
+    this.overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    
+    // Restore focus context gracefully
+    if (this._previouslyFocusedElement && typeof this._previouslyFocusedElement.focus === 'function') {
+      this._previouslyFocusedElement.focus();
+    } else {
+      const firstHelpBtn = document.querySelector('.help-btn');
+      if (firstHelpBtn) firstHelpBtn.focus();
+    }
+  }
+
+  checkUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('help') === 'true') {
+      const siteHeader = document.querySelector('site-header');
+      const activePage = siteHeader ? siteHeader.getAttribute('active-page') : 'portal';
+      this.open(activePage);
+      
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('help');
+      window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+    }
+  }
+}
+customElements.define('site-help', SiteHelp);
 
 class WvSort extends HTMLElement {
   constructor() {
@@ -221,9 +473,9 @@ class WvSort extends HTMLElement {
           <span class="trigger-text"></span>
           <span class="trigger-arrow">▼</span>
         </div>
-        <div class="multiselect-dropdown" style="padding: 4px 0; border-top: 1px solid #ccc;">
+        <div class="multiselect-dropdown" style="padding: 4px 0; border-top: 1px solid #ccc;" role="listbox" aria-label="${ariaLabel} options">
           ${this._options.map(opt => `
-            <div class="wv-sort-option" data-value="${opt.value}" style="padding: 10px 16px; cursor: pointer; transition: background-color 0.15s; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; color: #453b36;">
+            <div class="wv-sort-option" tabindex="0" role="option" aria-selected="false" data-value="${opt.value}" style="padding: 10px 16px; cursor: pointer; transition: background-color 0.15s; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; color: #453b36;">
               <span>${opt.label}</span>
               <span class="check-mark" style="color: var(--wv-checkmark-color, #c2410c); font-weight: bold; visibility: hidden;">✓</span>
             </div>
@@ -235,6 +487,7 @@ class WvSort extends HTMLElement {
     // Bind event listeners
     const trigger = this.querySelector('.multiselect-trigger');
     const container = this.querySelector('.custom-multiselect');
+    const optEls = Array.from(this.querySelectorAll('.wv-sort-option'));
 
     if (trigger && container) {
       trigger.addEventListener('click', (e) => {
@@ -258,12 +511,15 @@ class WvSort extends HTMLElement {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           trigger.click();
+        } else if (e.key === 'ArrowDown' && container.classList.contains('active')) {
+          e.preventDefault();
+          if (optEls.length > 0) optEls[0].focus();
         }
       });
     }
 
-    // Option clicks
-    this.querySelectorAll('.wv-sort-option').forEach(optEl => {
+    // Option events
+    optEls.forEach((optEl, idx) => {
       optEl.addEventListener('click', (e) => {
         e.stopPropagation();
         const val = optEl.getAttribute('data-value');
@@ -273,6 +529,29 @@ class WvSort extends HTMLElement {
         if (container && trigger) {
           container.classList.remove('active');
           trigger.setAttribute('aria-expanded', 'false');
+          trigger.focus();
+        }
+      });
+
+      optEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          optEl.click();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextIdx = (idx + 1) % optEls.length;
+          optEls[nextIdx].focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevIdx = (idx - 1 + optEls.length) % optEls.length;
+          optEls[prevIdx].focus();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          if (container && trigger) {
+            container.classList.remove('active');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.focus();
+          }
         }
       });
     });
@@ -304,6 +583,8 @@ class WvSort extends HTMLElement {
       const val = optEl.getAttribute('data-value');
       const isSelected = val === this._value;
       
+      optEl.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+
       const checkMark = optEl.querySelector('.check-mark');
       if (checkMark) {
         checkMark.style.visibility = isSelected ? 'visible' : 'hidden';

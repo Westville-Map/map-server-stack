@@ -424,11 +424,6 @@ function renderDirectory() {
     const card = document.createElement('div');
     card.className = 'facility-card';
     card.setAttribute('data-type', f._source);
-    card.setAttribute('tabindex', '0');
-    
-    const tagsString = (f.properties.tags || f._source || '').toLowerCase().split(',').map(t => t.trim()).join(', ');
-    const ariaLabel = `${f.properties.name || 'Unnamed'}. Tags: ${tagsString}.`;
-    card.setAttribute('aria-label', ariaLabel);
     
     // Left-border color matching category
     const primaryTag = f.properties.primary_tag;

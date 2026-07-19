@@ -1531,6 +1531,24 @@ try {
 
       // Sync map state with parent directory searching/filtering
       window.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'clear-highlight') {
+              const ptSource = map.getSource('highlight-point-source');
+              const polySource = map.getSource('highlight-poly-source');
+              if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
+              if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+              if (activePopup) activePopup.remove();
+              
+              selectedFeatureName = null;
+              if (searchInput) searchInput.value = '';
+              if (searchResults) {
+                  searchResults.innerHTML = '';
+                  searchResults.classList.remove('active');
+              }
+              hasInteracted = true;
+              updateUrlParams();
+              return;
+          }
+
           if (event.data && event.data.type === 'directory-results-update') {
               const results = event.data.features || [];
               const isUnfiltered = event.data.isUnfiltered;

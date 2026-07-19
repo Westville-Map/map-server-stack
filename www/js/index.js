@@ -120,59 +120,6 @@ if (shareLocationBtn) {
   });
 }
 
-// --- Help Pop-over Dialog Logic ---
-const helpButtons = document.querySelectorAll('.help-btn');
-const helpPopover = document.getElementById('help-popover');
-const helpOkBtn = document.getElementById('help-popover-ok-btn');
-
-if (helpPopover) {
-  const openPopover = () => {
-    helpPopover.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when open
-    if (helpOkBtn) helpOkBtn.focus();
-  };
-
-  const closePopover = () => {
-    helpPopover.classList.remove('active');
-    document.body.style.overflow = ''; // Restore scrolling
-    if (helpButtons.length > 0) helpButtons[0].focus();
-  };
-
-  helpButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      openPopover();
-    });
-  });
-
-  if (helpOkBtn) {
-    helpOkBtn.addEventListener('click', closePopover);
-  }
-
-  // Light dismiss: Close on overlay background click
-  helpPopover.addEventListener('click', (e) => {
-    if (e.target === helpPopover) {
-      closePopover();
-    }
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && helpPopover.classList.contains('active')) {
-      closePopover();
-    }
-  });
-
-  // Check URL parameters for automatic trigger (e.g. from static subpages)
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('help') === 'true') {
-    openPopover();
-    // Clean up URL parameter to avoid re-triggering on manual refresh
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete('help');
-    window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
-  }
-}
 
 // --- Map Header Synchronization ---
 function getLayerVisibilityFromUrl(urlString, friendlyName) {
@@ -286,7 +233,7 @@ function updateMapHeaderFromUrl(urlString) {
     // 2. Highlighted feature
     const feature = searchParams.get('feature');
     if (feature && !gps) {
-      tags.push(`<span class="map-tag highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/map-pin.svg" alt=""> Highlighted: ${feature}</span>`);
+      tags.push(`<span class="map-tag highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/map-pin.svg" alt=""> Highlighted: ${feature}<button type="button" class="tag-close-btn" aria-label="Clear highlight"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></span>`);
     }
 
     // 3. Active filters
@@ -401,6 +348,22 @@ window.addEventListener('message', (event) => {
     }
   }
 });
+
+// Clear highlight when clicking the close button on the map tag
+const transientContainer = document.getElementById('map-transient-tags');
+if (transientContainer) {
+  transientContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tag-close-btn');
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const iframe = document.getElementById('mapFrame');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'clear-highlight' }, '*');
+      }
+    }
+  });
+}
 
 // Initialize map frame source from parent URL parameters on page boot
 const parentUrlParams = new URLSearchParams(window.location.search);
@@ -960,11 +923,6 @@ function renderDirectory() {
     const card = document.createElement('div');
     card.className = 'facility-card';
     card.setAttribute('data-type', f._source);
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('role', 'button');
-    const tagsString = (f.properties.tags || f._source || '').toLowerCase().split(',').map(t => t.trim()).join(', ');
-    const ariaLabel = `${f.properties.name || 'Unnamed'}. Tags: ${tagsString}. Press Enter or Space to show on map.`;
-    card.setAttribute('aria-label', ariaLabel);
     
     // Determine each card's left-border color using its primary_tag mapping
     const primaryTag = f.properties.primary_tag;
@@ -1040,7 +998,7 @@ function renderDirectory() {
     card.innerHTML = `
       <div class="facility-header">
         ${sortIndicatorHtml}
-        <h4>${f.properties.name || 'Unnamed'}</h4>
+        <h4 class="facility-title-btn" tabindex="0" role="button" aria-label="${f.properties.name || 'Unnamed'}. Press Enter or Space to show on map.">${f.properties.name || 'Unnamed'}</h4>
         <div class="facility-badges">${tagBadges}</div>
       </div>
       <p>${f.properties.description || ''}</p>
@@ -1048,7 +1006,7 @@ function renderDirectory() {
       ${detailsHtml}
     `;
 
-    card.addEventListener('click', () => {
+    const triggerMapCenter = () => {
       const iframe = document.getElementById('mapFrame');
       if (iframe) {
         const nextUrl = `${MAP_DOMAIN}/?show=all&feature=${encodeURIComponent(f.properties.name)}`;
@@ -1081,14 +1039,30 @@ function renderDirectory() {
           });
         }
       }
-    });
+    };
 
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        card.click();
+    // Card click for mouse/touch convenience (ignores details or links)
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.facility-details') && !e.target.closest('.facility-link')) {
+        triggerMapCenter();
       }
     });
+
+    // Keyboard trigger on focusing the title button
+    const titleBtn = card.querySelector('.facility-title-btn');
+    if (titleBtn) {
+      titleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerMapCenter();
+      });
+      titleBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          triggerMapCenter();
+        }
+      });
+    }
 
     dirGrid.appendChild(card);
   });
