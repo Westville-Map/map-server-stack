@@ -25,7 +25,7 @@ app.use(express.json({ limit: '5mb' }));
 
 // Whitelist of allowed feature types to prevent path traversal attacks
 const ALLOWED_FEATURE_TYPES = new Set(['parks', 'roads', 'boundaries',
-'users', 'establishments']); 
+'users', 'establishments', 'home-business', 'industrial', 'fall-festival']); 
 
 const DATA_DIR = path.join(__dirname, 'data');
 

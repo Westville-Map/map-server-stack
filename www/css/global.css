@@ -33,6 +33,8 @@ header {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 15px;
+  position: relative;
+  z-index: 100;
 }
 
 header h1 {
@@ -526,4 +528,15 @@ main {
     height: 28px;
     padding: 0 8px;
   }
+}
+
+/* Custom WV Sort Webcomponent styles */
+wv-sort {
+  display: block;
+  flex: 1;
+  min-width: 250px;
+}
+
+.wv-sort-option:hover {
+  background-color: var(--wv-hover-bg, #f7f1eb) !important;
 }

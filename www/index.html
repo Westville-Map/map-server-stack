@@ -30,57 +30,39 @@
       <div class="map-container">
         <!-- Map Header Area -->
         <div class="map-header">
-            <div id="map-active-filters" class="map-active-filters">
-              <div id="map-transient-tags" class="map-transient-tags"></div>
-              <div class="map-layer-toggles">
-              <h3>Toggle Layers</h3>
-                <label class="map-tag interactive-tag" for="layer-parking">
-                  <input type="checkbox" id="layer-parking" data-layer="parking" class="tag-checkbox" checked>
-                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/parking.svg"> Parking</span>
-                </label>
-                <label class="map-tag interactive-tag" for="layer-establishments">
-                  <input type="checkbox" id="layer-establishments" data-layer="establishments" class="tag-checkbox" checked>
-                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/store.svg"> Establishments</span>
-                </label>
-                <label class="map-tag interactive-tag" for="layer-recreation">
-                  <input type="checkbox" id="layer-recreation" data-layer="recreation" class="tag-checkbox" checked>
-                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/tree.svg"> Recreation</span>
-                </label>
-                <label class="map-tag interactive-tag" for="layer-map">
-                  <input type="checkbox" id="layer-map" data-layer="map" class="tag-checkbox" checked>
-                  <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/map-folded.svg"> Map</span>
-                </label>
-                <div class="satellite-merged-group">
-                  <label class="map-tag interactive-tag" for="layer-satellite">
-                    <input type="checkbox" id="layer-satellite" data-layer="satellite" class="tag-checkbox" checked>
-                    <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/satellite.svg"> Satellite</span>
-                  </label>
-                  <label class="map-tag interactive-tag labels-sub-tag" for="layer-labels" id="layer-labels-container" style="display: none;">
-                    <input type="checkbox" id="layer-labels" data-layer="labels" class="tag-checkbox" checked>
-                    <span>Labels</span>
-                  </label>
-                </div>
-              </div>
+          <div class="map-header-left">
+            <div class="map-quick-filters">
+              <span class="quick-filters-label">Quick Views:</span>
+              <a id="quick-view-parking" href="https://map.westville.app/?hide=establishments&feature=Parking" class="map-tag interactive-tag quick-filter-tag scroll-trigger" target="mapFrame" title="Filter map for Parking">
+                <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/parking.svg" alt=""> Parking</span>
+              </a>
+              <a id="quick-view-establishments" href="https://map.westville.app/?hide=all&show=establishments,map,satellite" class="map-tag interactive-tag quick-filter-tag scroll-trigger" target="mapFrame" title="Filter map for Establishments">
+                <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/store.svg" alt=""> Establishments</span>
+              </a>
+              <a id="quick-view-recreation" href="https://map.westville.app/?show=recreation&hide=establishments" class="map-tag interactive-tag quick-filter-tag scroll-trigger" target="mapFrame" title="Filter map for Recreation">
+                <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/tree.svg" alt=""> Recreation</span>
+              </a>
             </div>
+            <div id="map-transient-tags" class="map-transient-tags"></div>
+          </div>
+
           <div class="map-header-actions">
-
-
             <a id="full-map-link" href="https://map.westville.app" class="header-btn" target="_blank">
               <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-                <img style="width:18px; height:18px;" src="/images/map-folded.svg">
+                <img style="width:18px; height:18px;" src="/images/map-folded.svg" alt="">
               </span>
               <span class="header-btn-text">Full Map</span>
             </a>
             <button id="print-btn" class="header-btn" title="Print map or directory cards">
               <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-                <img style="width:18px; height:18px;" src="/images/printer.svg">
+                <img style="width:18px; height:18px;" src="/images/printer.svg" alt="">
               </span>
               <span class="header-btn-text">Print</span>
             </button>
             <div class="share-wrapper" id="share-wrapper">
               <button id="share-btn" class="header-btn" title="Share map view or location">
                 <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-                  <img style="width:18px; height:18px;" src="/images/share.svg">
+                  <img style="width:18px; height:18px;" src="/images/share.svg" alt="">
                 </span>
                 <span class="header-btn-text">Share</span>
                 <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
@@ -88,21 +70,21 @@
               <div id="share-dropdown" class="share-dropdown">
                 <button id="share-view-btn" class="share-dropdown-btn">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
-                    <img style="width:14px; height:14px;" src="/images/share.svg">
+                    <img style="width:14px; height:14px;" src="/images/share.svg" alt="">
                   </span>
                   <span class="share-dropdown-btn-text">Share current view</span>
                 </button>
                 <button id="share-location-btn" class="share-dropdown-btn">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
-                    <img style="width:14px; height:14px;" src="/images/map-pin.svg">
+                    <img style="width:14px; height:14px;" src="/images/map-pin.svg" alt="">
                   </span>
                   <span class="share-dropdown-btn-text">Share my location</span>
                 </button>
               </div>
             </div>            
-            
           </div>
         </div>
+
         <iframe 
           name="mapFrame"
           id="mapFrame"
@@ -110,6 +92,39 @@
           allow="geolocation"
           title="Interactive map of Westville facilities, parks, and parking areas">
         </iframe>
+
+        <!-- Map Footer Area (Toggle Layers moved to the footer) -->
+        <div class="map-footer">
+          <div class="map-layer-toggles">
+            <h3>Toggle Layers</h3>
+            <label class="map-tag interactive-tag" for="layer-parking">
+              <input type="checkbox" id="layer-parking" data-layer="parking" class="tag-checkbox" checked>
+              <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/parking.svg" alt=""> Parking</span>
+            </label>
+            <label class="map-tag interactive-tag" for="layer-establishments">
+              <input type="checkbox" id="layer-establishments" data-layer="establishments" class="tag-checkbox" checked>
+              <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/store.svg" alt=""> Establishments</span>
+            </label>
+            <label class="map-tag interactive-tag" for="layer-recreation">
+              <input type="checkbox" id="layer-recreation" data-layer="recreation" class="tag-checkbox" checked>
+              <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/tree.svg" alt=""> Recreation</span>
+            </label>
+            <label class="map-tag interactive-tag" for="layer-map">
+              <input type="checkbox" id="layer-map" data-layer="map" class="tag-checkbox" checked>
+              <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/map-folded.svg" alt=""> Map</span>
+            </label>
+            <div class="satellite-merged-group">
+              <label class="map-tag interactive-tag" for="layer-satellite">
+                <input type="checkbox" id="layer-satellite" data-layer="satellite" class="tag-checkbox" checked>
+                <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/satellite.svg" alt=""> Satellite</span>
+              </label>
+              <label class="map-tag interactive-tag labels-sub-tag" for="layer-labels" id="layer-labels-container" style="display: none;">
+                <input type="checkbox" id="layer-labels" data-layer="labels" class="tag-checkbox" checked>
+                <span>Labels</span>
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -142,14 +157,22 @@
           </div>
         </div>
 
-        <select id="dir-sort" class="directory-filter" aria-label="Sort directory results">
-          <option value="name_asc">Name (A-Z)</option>
+        <wv-sort id="dir-sort" aria-label="Sort directory results">
+          <option value="name_asc" selected>Name (A-Z)</option>
           <option value="name_desc">Name (Z-A)</option>
           <option value="category_asc">Category (A-Z)</option>
           <option value="category_desc">Category (Z-A)</option>
           <option value="tags_asc">Tag (A-Z)</option>
           <option value="tags_desc">Tag (Z-A)</option>
-        </select>
+        </wv-sort>
+
+        <button id="dir-reset" class="directory-reset-btn" title="Reset all search options, filters, and map toggles to defaults">
+          <svg style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reset</span>
+        </button>
       </div>
       <div id="directory-grid" class="directory-grid">
         <!-- Cards injected via JS -->

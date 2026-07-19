@@ -1,0 +1,343 @@
+/* Fall Festival Theme Styling - Custom Autumn Color Palette */
+
+:root {
+  --autumn-orange: #E05A16;
+  --autumn-crimson: #991B1B;
+  --autumn-gold: #D97706;
+  --autumn-cream: #FCFBF7;
+  --autumn-forest: #065F46;
+  --autumn-brown: #5F3D2E;
+  --autumn-bg: #F5EFEB;
+}
+
+body.festival-theme {
+  background-color: var(--autumn-bg);
+  color: var(--autumn-brown);
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* Custom site header overrides for festival theme */
+body.festival-theme site-header header {
+  background: linear-gradient(135deg, var(--autumn-crimson) 0%, #7f1d1d 100%);
+  border-bottom: 2.5px solid var(--autumn-gold);
+}
+
+body.festival-theme site-header .header-btn {
+  border-color: var(--autumn-gold);
+}
+
+body.festival-theme site-header .header-btn:hover {
+  background-color: var(--autumn-gold);
+  color: var(--autumn-cream);
+}
+
+/* Hero Section */
+.hero-festival {
+  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #ea580c 100%);
+  color: var(--autumn-cream);
+  padding: 55px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 3.5px solid var(--autumn-gold);
+}
+
+/* Animated floating leaves with enhanced contrast and visibility */
+.floating-leaf {
+  position: absolute;
+  font-size: 2.8rem;
+  opacity: 0.45; /* Enhanced visibility */
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+  transition: opacity 0.3s;
+}
+
+.leaf-1 {
+  top: 15%;
+  left: 8%;
+  animation: leafFloat 9s infinite ease-in-out;
+}
+
+.leaf-2 {
+  bottom: 12%;
+  left: 20%;
+  font-size: 2rem;
+  animation: leafFloat 11s infinite ease-in-out -2s reverse;
+  opacity: 0.35;
+}
+
+.leaf-3 {
+  top: 25%;
+  right: 10%;
+  font-size: 2.4rem;
+  animation: leafFloat 8s infinite ease-in-out -1s;
+}
+
+.leaf-4 {
+  bottom: 15%;
+  right: 22%;
+  font-size: 2.2rem;
+  animation: leafFloat 12s infinite ease-in-out -4s reverse;
+  opacity: 0.35;
+}
+
+/* Extra leaves visible on desktop viewports (at least 6 leaves total) */
+.leaf-5 {
+  top: 55%;
+  left: 5%;
+  font-size: 2.2rem;
+  animation: leafFloat 10s infinite ease-in-out -3s;
+  display: none;
+}
+
+.leaf-6 {
+  top: 45%;
+  right: 4%;
+  font-size: 1.8rem;
+  animation: leafFloat 7s infinite ease-in-out -5s reverse;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .leaf-5, .leaf-6 {
+    display: inline-block;
+  }
+}
+
+@keyframes leafFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(15deg); }
+}
+
+.festival-badge-top {
+  display: inline-block;
+  background-color: var(--autumn-gold);
+  color: var(--autumn-cream);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 4px 14px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.hero-festival h2 {
+  font-size: 2.6rem;
+  font-weight: 800;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.festival-dates {
+  font-size: 1.15rem;
+  max-width: 750px;
+  margin: 0 auto;
+  line-height: 1.6;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+/* Map Card */
+.festival-map-card {
+  border: 2px solid var(--autumn-gold);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(95, 61, 46, 0.15);
+  background-color: var(--autumn-cream);
+  margin-top: 30px;
+  margin-bottom: 40px;
+}
+
+.festival-map-header {
+  background: var(--autumn-crimson) !important;
+  border-bottom: 2px solid var(--autumn-gold) !important;
+  color: var(--autumn-cream);
+  padding: 14px 22px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center !important;
+  flex-wrap: wrap;
+  gap: 15px !important;
+}
+
+.festival-map-header .map-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.festival-map-header .map-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.festival-map-header .header-btn {
+  border-color: var(--autumn-gold);
+  color: var(--autumn-cream);
+}
+
+.festival-map-header .header-btn:hover {
+  background-color: var(--autumn-gold);
+  color: var(--autumn-cream);
+}
+
+/* Fall festival theme share dropdown specific overrides */
+.festival-map-header .share-dropdown {
+  background: var(--autumn-cream);
+  border-color: var(--autumn-gold);
+  color: var(--autumn-brown);
+}
+
+.festival-map-header .share-dropdown-btn {
+  color: var(--autumn-brown);
+}
+
+.festival-map-header .share-dropdown-btn:hover {
+  background-color: var(--autumn-bg);
+}
+
+.map-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-header-title h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--autumn-cream) !important;
+}
+
+.festival-leaf-icon {
+  font-size: 1.3rem;
+}
+
+.map-header-desc {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+#festivalMapFrame {
+  width: 100%;
+  height: 500px;
+  border: none;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  #festivalMapFrame {
+    height: 650px;
+  }
+}
+
+/* Section Title */
+.festival-directory-row {
+  margin-bottom: 20px;
+}
+
+.festival-section-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--autumn-crimson);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.festival-directory-desc {
+  font-size: 0.95rem;
+  color: var(--autumn-brown);
+  opacity: 0.85;
+  margin: 0;
+}
+
+/* Custom Controls overrides */
+
+.festival-search {
+  border-color: #dcd6ce !important;
+}
+
+.festival-search:focus {
+  border-color: var(--autumn-orange) !important;
+  box-shadow: 0 0 0 3px rgba(224, 90, 22, 0.15) !important;
+}
+
+.festival-select {
+  border-color: #dcd6ce !important;
+}
+
+.festival-select-sort {
+  border-color: #dcd6ce !important;
+}
+
+.festival-select-sort:focus {
+  border-color: var(--autumn-orange) !important;
+}
+
+/* Festival grid and cards styling */
+.festival-grid .facility-card {
+  background-color: var(--autumn-cream);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  box-shadow: 0 4px 12px rgba(95, 61, 46, 0.05);
+  transition: all 0.25s ease-in-out;
+}
+
+.festival-grid .facility-card:hover, .festival-grid .facility-card.active {
+  border-color: var(--autumn-gold);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.12);
+  transform: translateY(-2px);
+}
+
+.festival-grid .facility-card h4 {
+  color: var(--autumn-crimson);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.festival-grid .facility-link {
+  border-color: var(--autumn-gold) !important;
+  color: var(--autumn-gold) !important;
+}
+
+.festival-grid .facility-link:hover {
+  background-color: var(--autumn-gold) !important;
+  color: var(--autumn-cream) !important;
+}
+
+.festival-grid .facility-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 8px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .hero-festival {
+    padding: 35px 15px;
+  }
+  .hero-festival h2 {
+    font-size: 2rem;
+  }
+  .festival-dates {
+    font-size: 1rem;
+  }
+  .festival-map-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .festival-map-header .map-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

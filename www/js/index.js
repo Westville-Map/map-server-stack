@@ -218,8 +218,7 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
 
     if (show) {
       const showParams = show.toLowerCase().split(',');
-      const hideParams = hide ? hide.toLowerCase().split(',') : [];
-      if (!hideParams.includes('all') && showParams.includes(friendlyName)) {
+      if (showParams.includes(friendlyName)) {
         visible = true;
       }
     }
@@ -228,6 +227,41 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
   } catch (e) {
     return true;
   }
+}
+
+function checkQuickViewActive(searchParams, viewType) {
+  const hide = searchParams.get('hide') || '';
+  const show = searchParams.get('show') || '';
+  const filter = searchParams.get('filter') || '';
+  const search = searchParams.get('search') || '';
+  const feature = searchParams.get('feature') || '';
+  const gps = searchParams.get('gps') || '';
+
+  if (viewType === 'parking' && feature.toLowerCase() === 'parking') {
+    return !search && !gps;
+  }
+
+  if (search || feature || gps) {
+    return false;
+  }
+
+  const normalizeList = (str) => {
+    return str.toLowerCase().split(',').map(s => s.trim()).filter(Boolean).sort().join(',');
+  };
+
+  const normHide = normalizeList(hide);
+  const normShow = normalizeList(show);
+  const normFilter = normalizeList(filter);
+
+  if (viewType === 'parking') {
+    return normHide === 'establishments' && normFilter === 'parking' && normShow === '';
+  } else if (viewType === 'establishments') {
+    return normHide === 'all' && normShow === 'establishments,map,satellite' && normFilter === '';
+  } else if (viewType === 'recreation') {
+    return normHide === 'establishments' && normShow === 'recreation' && normFilter === '';
+  }
+
+  return false;
 }
 
 function updateMapHeaderFromUrl(urlString) {
@@ -309,6 +343,37 @@ function updateMapHeaderFromUrl(urlString) {
       } else {
         labelsContainer.style.display = 'none';
         labelsContainer.closest('.satellite-merged-group')?.classList.remove('has-labels');
+      }
+    }
+
+    // Update active state of Quick Views
+    const parkingActive = checkQuickViewActive(searchParams, 'parking');
+    const establishmentsActive = checkQuickViewActive(searchParams, 'establishments');
+    const recreationActive = checkQuickViewActive(searchParams, 'recreation');
+
+    const quickParking = document.getElementById('quick-view-parking');
+    const quickEstablishments = document.getElementById('quick-view-establishments');
+    const quickRecreation = document.getElementById('quick-view-recreation');
+
+    if (quickParking) {
+      if (parkingActive) {
+        quickParking.classList.add('active', 'active-parking');
+      } else {
+        quickParking.classList.remove('active', 'active-parking');
+      }
+    }
+    if (quickEstablishments) {
+      if (establishmentsActive) {
+        quickEstablishments.classList.add('active', 'active-establishments');
+      } else {
+        quickEstablishments.classList.remove('active', 'active-establishments');
+      }
+    }
+    if (quickRecreation) {
+      if (recreationActive) {
+        quickRecreation.classList.add('active', 'active-recreation');
+      } else {
+        quickRecreation.classList.remove('active', 'active-recreation');
       }
     }
   } catch (e) {
@@ -548,6 +613,20 @@ const categoryColors = {
     fill: '#2563eb',
     text: '#1e40af',
     tags: ['parking', 'free']
+  },
+  'home-business': {
+    title: 'Home-Based Businesses',
+    colorName: 'Warm Terracotta',
+    fill: '#C2593F',
+    text: '#A0432C',
+    tags: ['home-business', 'web design', 'software', 'bookkeeping', 'finance', 'crafts', 'candles', 'tutoring', 'education', 'gardening', 'landscaping', 'music', 'piano', 'voice lessons', 'pet sitting', 'dog walking']
+  },
+  'industrial': {
+    title: 'Industrial & Manufacturing',
+    colorName: 'Steel Grey',
+    fill: '#5E6D75',
+    text: '#455056',
+    tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes']
   }
 };
 
@@ -700,23 +779,41 @@ async function initDirectory() {
     const initialFilters = parentUrlParams.get('filter');
     if (initialFilters) {
       selectedFilters.clear();
+      selectedCategories.clear();
+      
       const filterParts = initialFilters.split(',').map(s => s.trim().toLowerCase());
       filterParts.forEach(part => {
         // match category
         const matchingCat = ['parking', 'establishment', 'recreation'].find(c => c.toLowerCase() === part);
         if (matchingCat) {
           selectedFilters.add('cat:' + matchingCat);
-        } else {
-          // match tag
-          const matchingTag = sortedTags.find(t => t.toLowerCase() === part);
-          if (matchingTag) {
-            selectedFilters.add('tag:' + matchingTag);
-          }
+        }
+        
+        // match color category
+        const matchingColorCat = Object.keys(categoryColors).find(k => k.toLowerCase() === part);
+        if (matchingColorCat) {
+          selectedCategories.add(matchingColorCat);
+        }
+        
+        // match tag
+        const matchingTag = sortedTags.find(t => t.toLowerCase() === part);
+        if (matchingTag) {
+          selectedFilters.add('tag:' + matchingTag);
         }
       });
+      
       if (selectedFilters.size === 0) {
         selectedFilters.add('all');
       }
+      if (selectedCategories.size === 0) {
+        selectedCategories.add('all');
+      }
+    }
+
+    // Check if initial search is specified in parent URL on boot
+    const initialSearch = parentUrlParams.get('search');
+    if (initialSearch && dirSearch) {
+      dirSearch.value = initialSearch;
     }
 
     if (!dirFilterDropdown) return;
@@ -960,6 +1057,7 @@ function renderDirectory() {
         features: results,
         isUnfiltered: isUnfiltered
       }, '*');
+      updateParentUrl();
     };
 
     if (term.length > 0) {
@@ -2126,7 +2224,135 @@ function initMobileLayerDropdown() {
   });
 }
 
+function updateParentUrl() {
+  if (!dirSearch) return;
+  const newParams = new URLSearchParams(window.location.search);
+  
+  const term = dirSearch.value.trim();
+  if (term) {
+    newParams.set('search', term);
+  } else {
+    newParams.delete('search');
+  }
+
+  const filterValues = [];
+  
+  if (selectedFilters && !selectedFilters.has('all')) {
+    selectedFilters.forEach(val => {
+      if (val === 'all') return;
+      const cleanVal = val.startsWith('tag:') || val.startsWith('cat:') ? val.split(':')[1] : val;
+      if (!filterValues.some(v => v.toLowerCase() === cleanVal.toLowerCase())) {
+        filterValues.push(cleanVal);
+      }
+    });
+  }
+
+  if (selectedCategories && !selectedCategories.has('all')) {
+    selectedCategories.forEach(val => {
+      if (val === 'all') return;
+      if (!filterValues.some(v => v.toLowerCase() === val.toLowerCase())) {
+        filterValues.push(val);
+      }
+    });
+  }
+
+  if (filterValues.length > 0) {
+    newParams.set('filter', filterValues.join(','));
+  } else {
+    newParams.delete('filter');
+  }
+
+  const currentSearch = window.location.search;
+  const nextSearchString = newParams.toString() ? '?' + newParams.toString() : '';
+  
+  if (currentSearch !== nextSearchString) {
+    window.history.replaceState(null, '', window.location.pathname + nextSearchString);
+    
+    // Also, update the map header tags to match!
+    const mapUrl = MAP_DOMAIN + nextSearchString;
+    if (typeof updateMapHeaderFromUrl === 'function') {
+      updateMapHeaderFromUrl(mapUrl);
+    }
+  }
+}
+
+function initResetButton() {
+  const resetBtn = document.getElementById('dir-reset');
+  if (!resetBtn) return;
+
+  resetBtn.addEventListener('click', () => {
+    // 1. Reset directory search
+    if (dirSearch) dirSearch.value = '';
+
+    // 2. Reset directory sort
+    if (dirSort) dirSort.value = 'name_asc';
+
+    // 3. Clear/Reset selected categories
+    if (selectedCategories) {
+      selectedCategories.clear();
+      selectedCategories.add('all');
+    }
+    // Update category checkboxes UI
+    const catAllCb = document.getElementById('dir-cat-cb-all');
+    if (catAllCb) catAllCb.checked = true;
+    document.querySelectorAll('#dir-category-dropdown input[type="checkbox"]').forEach(cb => {
+      if (cb !== catAllCb) cb.checked = false;
+    });
+    if (typeof updateCategoryFilterTriggerText === 'function') {
+      updateCategoryFilterTriggerText();
+    }
+
+    // 4. Clear/Reset selected filters
+    if (selectedFilters) {
+      selectedFilters.clear();
+      selectedFilters.add('all');
+    }
+    // Update filter checkboxes UI
+    const filterAllCb = document.getElementById('dir-cb-all');
+    if (filterAllCb) filterAllCb.checked = true;
+    document.querySelectorAll('#dir-filter-dropdown input[type="checkbox"]').forEach(cb => {
+      if (cb !== filterAllCb) cb.checked = false;
+    });
+    if (typeof updateFilterTriggerText === 'function') {
+      updateFilterTriggerText();
+    }
+
+    // 5. Reset all parent layer toggles (checkboxes) to checked
+    const layerCheckboxes = document.querySelectorAll('.map-layer-toggles input[type="checkbox"]');
+    layerCheckboxes.forEach(cb => {
+      cb.checked = true;
+      const label = cb.closest('.interactive-tag');
+      if (label) {
+        label.classList.add('checked');
+      }
+    });
+
+    // Hide labels container (defaults to hidden because both map & satellite are checked)
+    const labelsContainer = document.getElementById('layer-labels-container');
+    if (labelsContainer) {
+      labelsContainer.style.display = 'none';
+      labelsContainer.closest('.satellite-merged-group')?.classList.remove('has-labels');
+    }
+
+    // 6. Reset parent URL
+    window.history.replaceState(null, '', window.location.pathname);
+
+    // 7. Reset map iframe src to clean boot state
+    const iframe = document.getElementById('mapFrame');
+    if (iframe) {
+      iframe.src = MAP_DOMAIN;
+      if (typeof updateMapHeaderFromUrl === 'function') {
+        updateMapHeaderFromUrl(MAP_DOMAIN);
+      }
+    }
+
+    // 8. Re-render directory
+    renderDirectory();
+  });
+}
+
 // Start fetching data
 initLayerCheckboxes();
 initMobileLayerDropdown();
+initResetButton();
 initDirectory();

@@ -98,9 +98,6 @@ const hideParams = params.get('hide') ? params.get('hide').toLowerCase().split('
 
 // Interaction gate for initial clean boot load (WCAG / UX quality)
 let hasInteracted = false;
-if (params.has('show') || params.has('hide') || params.has('filter') || params.has('search') || params.has('feature')) {
-    hasInteracted = true;
-}
 
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
@@ -186,7 +183,8 @@ if (!layerStates['Background'].visible && !layerStates['satellite-layer'].visibl
 }
 
 
-const bounds = [-75.1390197418999, 39.85893228827481, -75.11407050609648, 39.87873000870905];
+const bounds = [-75.25794564779246, 39.75364908034561, -75.00289227019784, 39.98850386620689];
+
 
 try {
   const styleResponse = await fetch('welcome_to_westville.json');
@@ -241,6 +239,7 @@ try {
       style: style,
       center: [-75.1316, 39.8679],
       zoom: isMobileDevice() ? 12 : 14.25,
+      maxBounds: bounds,
       attributionControl: false,
       preserveDrawingBuffer: true
   });
@@ -1477,9 +1476,31 @@ try {
                   map.flyTo({ center: [lng, lat], zoom: 16 });
               }
           } else if (initFeature) {
-              const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
-              if (match) {
-                  selectFeature(match);
+              if (initFeature.toLowerCase() === 'parking') {
+                  selectedFeatureName = 'Parking';
+                  if (searchInput) searchInput.value = 'Parking';
+                  if (searchResults) searchResults.classList.remove('active');
+
+                  map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+
+                  const parkingFeatures = collections.parking ? collections.parking.features : [];
+                  map.getSource('highlight-poly-source').setData({
+                      type: 'FeatureCollection',
+                      features: parkingFeatures
+                  });
+
+                  const bounds = getFeaturesBounds(parkingFeatures);
+                  if (bounds) {
+                      map.fitBounds(bounds, {
+                          padding: { top: 120, bottom: 60, left: 60, right: 60 },
+                          maxZoom: 16
+                      });
+                  }
+              } else {
+                  const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
+                  if (match) {
+                      selectFeature(match);
+                  }
               }
           } else if (initSearchStr || initUrl.get('filter')) {
               if (initSearchStr) searchInput.value = initSearchStr;
@@ -1493,6 +1514,7 @@ try {
                   duration: 1000
               });
           }
+          hasInteracted = false; // Prevent initial programmatic setup from broadcasting state changes
           updateUrlParams();
       });
 

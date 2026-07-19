@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Westville Fall Festival Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=fallback" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />   
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="westville-map.css">
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
+    <script type="module" src="festival-map.js"> </script>
+    <style>
+      body, html { margin:0; padding:0; height:100%; width:100%; overflow:hidden; }
+      #map { height:100%; width:100%; }
+      /* Custom Autumn Popups to override default dark blue styles */
+      .maplibregl-popup-content {
+        font-family: 'Open Sans', sans-serif;
+        background-color: #fdfaf7 !important; /* Creamy ivory background */
+        border: 2px solid #d97706 !important; /* Elegant harvest gold/amber border */
+        border-radius: 12px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 10px 25px rgba(120, 53, 4, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+        color: #2d1b10 !important; /* High-contrast dark brown/charcoal text */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      /* Custom Popup Tip (Arrow) */
+      .maplibregl-popup-anchor-top-right .maplibregl-popup-tip , .maplibregl-popup-anchor-top-left .maplibregl-popup-tip, .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #fdfaf7 !important; }
+      .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip , .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip , .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #fdfaf7 !important; }
+      .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: #fdfaf7 !important; }
+      .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: #fdfaf7 !important; }
+
+      /* Close Button Styling */
+      .maplibregl-popup-close-button {
+        color: #78350f !important; /* Deep amber/brown for readability */
+        font-size: 1.2rem !important;
+        top: 8px !important;
+        right: 8px !important;
+        font-weight: bold !important;
+        opacity: 0.8;
+        transition: opacity 0.15s, background-color 0.15s;
+        padding: 4px 8px !important;
+        border: none !important;
+        background: transparent !important;
+      }
+      .maplibregl-popup-close-button:hover {
+        opacity: 1;
+        background-color: rgba(120, 53, 4, 0.08) !important;
+        border-radius: 6px;
+      }
+      /* Custom Festival Markers to prevent MapLibre transform conflicts */
+      .festival-marker-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none; /* Let pointer events pass to inner element */
+      }
+      .festival-marker-inner {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        border-radius: 50%;
+        border: 2.5px solid #ffffff;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+        cursor: pointer;
+        transition: transform 0.15s ease, background-color 0.15s;
+        pointer-events: auto; /* Enable hover/clicks on inner circle */
+      }
+      .festival-marker-inner:hover {
+        transform: scale(1.15);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Business Directory - Westville</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=fallback" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />   
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/index.css">
+  <link rel="stylesheet" href="directory.css">
+  <script src="/js/components.js" defer></script>
+  <script src="directory.js" defer></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" crossorigin="anonymous" async></script>
+</head>
+<body>
+
+  <site-header active-page="directory"></site-header>
+
+  <main>
+    <section class="hero-directory">
+      <div class="hero-content">
+        <h2>Borough of Westville Directory</h2>
+        <p>Explore all local businesses, professional offices, public facilities, parks, recreation zones, home-based services, and industrial providers in the Borough of Westville, New Jersey.</p>
+      </div>
+    </section>
+
+    <div class="container directory-page-container">
+      <div class="directory-header-row">
+        <h3 class="directory-page-title">All Local Establishments</h3>
+        <div class="directory-header-actions">
+          <p class="directory-count" id="results-count">Showing all listings</p>
+          <button id="print-btn" class="header-btn" title="Print directory listings">
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <img style="width:18px; height:18px;" src="/images/printer.svg" alt="">
+            </span>
+            <span class="header-btn-text">Print</span>
+          </button>
+          <button id="share-btn" class="header-btn" title="Share current directory view">
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <img style="width:18px; height:18px;" src="/images/share.svg" alt="">
+            </span>
+            <span class="header-btn-text">Share</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Directory Controls (Matches Home Page design exactly for complete consistency) -->
+      <div class="directory-controls">
+        <input type="search" id="dir-search" class="directory-search" placeholder="Search businesses, services, parks..." aria-label="Search Westville directory" />
+        
+        <div class="custom-multiselect" id="dir-category-container">
+          <div class="multiselect-trigger" id="dir-category-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter directory by categories">
+            <span class="trigger-text">All Categories</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="multiselect-dropdown" id="dir-category-dropdown">
+            <!-- Populated Dynamically via JS -->
+          </div>
+        </div>
+
+        <div class="custom-multiselect" id="dir-filter-container">
+          <div class="multiselect-trigger" id="dir-filter-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter directory by tags">
+            <span class="trigger-text">All Tags</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="multiselect-dropdown" id="dir-filter-dropdown">
+            <!-- Populated Dynamically via JS -->
+          </div>
+        </div>
+
+        <wv-sort id="dir-sort" aria-label="Sort directory results">
+          <option value="name_asc" selected>Name (A-Z)</option>
+          <option value="name_desc">Name (Z-A)</option>
+          <option value="category_asc">Category (A-Z)</option>
+          <option value="category_desc">Category (Z-A)</option>
+          <option value="tags_asc">Tag (A-Z)</option>
+          <option value="tags_desc">Tag (Z-A)</option>
+        </wv-sort>
+
+        <button id="dir-reset" class="directory-reset-btn" title="Reset all search options, filters, and sorting to defaults">
+          <svg style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reset</span>
+        </button>
+      </div>
+
+      <div id="directory-grid" class="directory-grid">
+        <!-- Cards dynamically populated via JS -->
+      </div>
+    </div>
+  </main>
+
+  <site-footer active-page="directory"></site-footer>
+
+  <!-- Print Options Modal (Config Window, customized for text-only listings) -->
+  <div id="print-modal" class="modal-overlay" role="dialog" aria-labelledby="print-modal-title" aria-modal="true" style="display: none;">
+    <div class="modal-content glass-card animate-zoom">
+      <div class="modal-header">
+        <h3 id="print-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <img style="width:24px; height:24px;" src="/images/printer.svg" alt="Printer icon">
+          Print & Export Options
+        </h3>
+        <button id="print-modal-close-btn" class="close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="print-orientation"><strong>Orientation:</strong></label>
+          <select id="print-orientation" class="form-control">
+            <option value="portrait" selected>Portrait (8.5" x 11")</option>
+            <option value="landscape">Landscape (11" x 8.5")</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="print-include-cards"><strong>Include Directory Cards:</strong></label>
+          <select id="print-include-cards" class="form-control">
+            <option value="filtered" selected>Filtered / visible cards only</option>
+            <option value="all">All directory cards</option>
+          </select>
+        </div>
+
+        <div id="print-loading-msg" class="print-loading-status" style="display: none;">
+          <span class="spinner">
+            <img style="width:16px; height:16px; vertical-align: middle;" src="/images/hourglass.svg" alt="Hourglass spinner">
+          </span>
+          <span id="print-loading-text">Preparing pages for export...</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="action-buttons-group">
+          <button id="print-pdf-btn" class="btn-main">
+            <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
+              <img style="width:16px; height:16px;" src="/images/floppy-disk.svg" alt="Save icon">
+            </span>
+            Save PDF
+          </button>
+          <button id="print-execute-btn" class="btn-main font-bold">
+            <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
+              <img style="width:16px; height:16px;" src="/images/printer.svg" alt="Printer icon">
+            </span>
+            Print
+          </button>
+        </div>
+        <button id="print-cancel-btn" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden container used solely for browser native printing -->
+  <div id="print-layout-container"></div>
+
+</body>
+</html>

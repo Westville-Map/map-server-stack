@@ -1,0 +1,118 @@
+/* Business Directory Page Styling */
+
+.hero-directory {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #1e3a8a 100%);
+  color: var(--white);
+  padding: 60px 20px;
+  text-align: center;
+  border-bottom: 3px solid var(--accent-gold);
+}
+
+.hero-directory h2 {
+  font-size: 2.2rem;
+  margin: 0 0 15px 0;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.hero-directory p {
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.directory-page-container {
+  padding-top: 40px;
+  padding-bottom: 60px;
+}
+
+.directory-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.directory-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin: 0;
+}
+
+.directory-count {
+  font-size: 0.95rem;
+  color: var(--dark-grey);
+  margin: 0;
+  font-weight: 600;
+}
+
+.directory-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.directory-header-actions .header-btn {
+  color: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
+  background-color: transparent !important;
+}
+
+.directory-header-actions .header-btn:hover {
+  background-color: var(--primary-blue) !important;
+  color: var(--white) !important;
+}
+
+/* Share dropdown alignments for directory page light bg */
+.directory-header-actions .share-wrapper {
+  position: relative;
+}
+
+.directory-header-actions .share-dropdown {
+  background: var(--white) !important;
+  border: 1.5px solid var(--primary-blue) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.directory-header-actions .share-dropdown-btn {
+  color: var(--text-dark) !important;
+}
+
+.directory-header-actions .share-dropdown-btn:hover {
+  background-color: var(--bg-light) !important;
+}
+
+/* Ensure controls stack elegantly if viewport narrows */
+@media (max-width: 768px) {
+  .hero-directory {
+    padding: 40px 15px;
+  }
+  
+  .hero-directory h2 {
+    font-size: 1.8rem;
+  }
+  
+  .hero-directory p {
+    font-size: 1rem;
+  }
+  
+  .directory-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .directory-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

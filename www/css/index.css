@@ -177,6 +177,33 @@
   min-width: 150px;
 }
 
+.directory-reset-btn {
+  padding: 12px 20px;
+  background-color: var(--white);
+  color: var(--text-dark);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.directory-reset-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+
+.directory-reset-btn:active {
+  background-color: #e5e7eb;
+}
+
 /* Directory Grid & Cards */
 .directory-grid {
   display: grid;
@@ -282,6 +309,82 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 1.5px solid var(--accent-gold);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.map-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Quick Map Filters Header Left Section */
+.map-quick-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-filters-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+}
+
+.quick-filter-tag {
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.quick-filter-tag::before {
+  content: none !important;
+}
+
+.quick-filter-tag:hover {
+  background-color: var(--accent-gold) !important;
+  border-color: var(--accent-gold) !important;
+  color: var(--primary-blue) !important;
+  transform: translateY(-1px);
+}
+
+/* Quick view buttons active/illuminated states matching toggle layer colors */
+.quick-filter-tag.active {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.quick-filter-tag.active-parking {
+  background-color: rgba(0, 188, 255, 0.2) !important;
+  border-color: #00bcff !important;
+}
+
+.quick-filter-tag.active-establishments {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+  border-color: #f59e0b !important;
+}
+
+.quick-filter-tag.active-recreation {
+  background-color: rgba(16, 185, 129, 0.25) !important;
+  border-color: #10b981 !important;
+}
+
+/* Map Footer styling below iframe */
+.map-footer {
+  background: var(--primary-blue);
+  padding: 12px 20px;
+  border-top: 1.5px solid var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -413,11 +516,17 @@
 .map-tag.highlight {
   border-color: var(--accent-gold);
   background-color: rgba(217, 119, 6, 0.3);
+  border-radius: 8px; /* More rounded corners, not full pill shape */
 }
 
 .map-tag.gps-highlight {
   border-color: #ef4444;
   background-color: rgba(239, 68, 68, 0.25);
+  border-radius: 8px; /* Consistent rounded corners */
+}
+
+.map-transient-tags .map-tag {
+  border-radius: 8px; /* Ensure all tags in transient tags area are consistently rounded */
 }
 
 .map-tag.interactive-tag {
