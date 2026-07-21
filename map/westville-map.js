@@ -110,6 +110,13 @@ const hideParams = params.get('hide') ? params.get('hide').toLowerCase().split('
 // Interaction gate for initial clean boot load (WCAG / UX quality)
 let hasInteracted = false;
 
+// Tour feature state
+let activeTourName = null;
+let tourActive = false;
+let tourFeatures = [];
+let tourIndex = 0;
+let tourIntervalId = null;
+
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
   'establishments': 'custom-markers',
@@ -705,6 +712,7 @@ try {
       
       // 8. Interactivity: Popups on click
       map.on('click', (e) => {
+          stopTour();
           const features = map.queryRenderedFeatures(e.point, {
               layers: ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol']
           });
@@ -1007,7 +1015,7 @@ try {
               searchResults.classList.remove('active');
               map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
               map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
-              if (activePopup) activePopup.remove();
+              dismissActivePopup();
               updateUrlParams();
               return;
           }
@@ -1060,7 +1068,7 @@ try {
               
               map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: pointFeatures });
               map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: polyFeatures });
-              if (activePopup) activePopup.remove();
+              dismissActivePopup();
               
               const bounds = getFeaturesBounds(results);
               if (bounds) {
@@ -1164,10 +1172,16 @@ try {
           }
       }
 
-      function selectFeature(f) {
+      function selectFeature(f, isTour = false) {
+          if (!isTour) {
+              stopTour();
+          }
           selectedFeatureName = f.properties.name;
           searchInput.value = f.properties.name;
           searchResults.classList.remove('active');
+          
+          // Clear any active popup with a smooth fade-out before starting transitions
+          dismissActivePopup();
           
           // Clear previous highlights
           map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
@@ -1179,19 +1193,42 @@ try {
                const targetZoom = isMobileDevice() ? 17 : 18;
                const verticalOffset = isMobileDevice() ? 90 : 130;
                const offsetCenter = getOffsetCenter(f.geometry.coordinates, verticalOffset, targetZoom);
-               map.flyTo({ center: offsetCenter, zoom: targetZoom });
-               showPopup(f, f.geometry.coordinates);
+               
+               // Use highly polished, smooth, cinematic camera transitions for the tours
+               const flightDuration = isTour ? 3200 : 1200;
+               map.flyTo({
+                   center: offsetCenter,
+                   zoom: targetZoom,
+                   duration: flightDuration,
+                   essential: true
+               });
+               
+               // Delay popup opening until the flight completes to ensure perfect alignment and high polish
+               map.once('moveend', () => {
+                   if (selectedFeatureName === f.properties.name) {
+                       showPopup(f, f.geometry.coordinates);
+                   }
+               });
           } else {
               map.getSource('highlight-poly-source').setData(f);
               const bounds = getFeaturesBounds([f]);
               if (bounds) {
                   // Asymmetric bounds padding leaves ample space on top for popups
+                  const flightDuration = isTour ? 3200 : 1200;
                   map.fitBounds(bounds, {
                       padding: { top: 180, bottom: 60, left: 60, right: 60 },
-                      maxZoom: 18
+                      maxZoom: 18,
+                      duration: flightDuration,
+                      essential: true
                   });
+                  
                   const center = [(bounds[0][0]+bounds[1][0])/2, (bounds[0][1]+bounds[1][1])/2];
-                  showPopup(f, center);
+                  // Delay popup opening until the bounds transition completes
+                  map.once('moveend', () => {
+                      if (selectedFeatureName === f.properties.name) {
+                          showPopup(f, center);
+                      }
+                  });
               }
           }
           hasInteracted = true;
@@ -1199,6 +1236,40 @@ try {
       }
 
       let activePopup = null;
+
+      function dismissActivePopup() {
+          console.log('[Tour debug] dismissActivePopup() triggered. activePopup exists:', !!activePopup);
+          if (!activePopup) return Promise.resolve();
+          const popup = activePopup;
+          activePopup = null; // Clear instantly so other flows know it's being removed
+          
+          const popupEl = popup.getElement();
+          console.log('[Tour debug] popupEl retrieved:', !!popupEl);
+          if (popupEl) {
+              const contentEl = popupEl.querySelector('.maplibregl-popup-content');
+              const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
+              console.log('[Tour debug] contentEl found:', !!contentEl, 'tipEl found:', !!tipEl);
+              if (contentEl) {
+                  console.log('[Tour debug] Applying popupContentFadeOut animation dynamically to content and tip');
+                  const animStyle = 'popupContentFadeOut 0.5s cubic-bezier(0.16, 1, 0.3, 1) both';
+                  contentEl.style.animation = animStyle;
+                  if (tipEl) {
+                      tipEl.style.animation = animStyle;
+                  }
+                  return new Promise(resolve => {
+                      setTimeout(() => {
+                          console.log('[Tour debug] Animation duration completed. Removing popup from map');
+                          popup.remove();
+                          resolve();
+                      }, 480);
+                  });
+              }
+          }
+          console.log('[Tour debug] Fallback: removing popup immediately');
+          popup.remove();
+          return Promise.resolve();
+      }
+
       function showPopup(feature, coordinates) {
           if (activePopup) activePopup.remove();
           //console.log(coordinates);
@@ -1230,7 +1301,8 @@ try {
             lng = coordinates[0];
             lat = coordinates[1];
           }
-          activePopup = new maplibregl.Popup()
+          // Set focusAfterOpen to false so that the browser does not scroll/jump the page or iframe to focus the popup close button
+          activePopup = new maplibregl.Popup({ focusAfterOpen: false })
               .setLngLat(coordinates)
               .setHTML(`<div class="wv-map-popup">
                   <h3 class="wv-opensans">${linkedName}</h3>
@@ -1347,6 +1419,10 @@ try {
               newParams.set('search', term);
           }
           
+          if (activeTourName) {
+              newParams.set('tour', activeTourName);
+          }
+          
           if (!selectedFilters.has('all') && selectedFilters.size > 0) {
               const filterValues = [];
               selectedFilters.forEach(val => {
@@ -1422,6 +1498,53 @@ try {
           if (item) item.style.display = 'none';
       });
 
+      function shuffleArray(array) {
+          const arr = [...array];
+          for (let i = arr.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+      }
+
+      function playTourStep() {
+          console.log('[Tour debug] playTourStep called. tourActive:', tourActive, 'tourIndex:', tourIndex, 'total features:', tourFeatures.length);
+          if (!tourActive || tourFeatures.length === 0) return;
+          const f = tourFeatures[tourIndex];
+          console.log('[Tour debug] Selecting feature:', f.properties.name);
+          selectFeature(f, true); // Pass true to indicate it's a tour selection
+          
+          tourIntervalId = setTimeout(() => {
+              if (!tourActive) return;
+              
+              let nextIndex = tourIndex + 1;
+              if (nextIndex >= tourFeatures.length) {
+                  console.log('[Tour debug] Reached end of tour features list. Reshuffling for next round.');
+                  tourFeatures = shuffleArray(tourFeatures);
+                  nextIndex = 0;
+              }
+              
+              tourIndex = nextIndex;
+              dismissActivePopup().then(() => {
+                  if (tourActive) {
+                      playTourStep();
+                  }
+              });
+          }, 8000); // 8 seconds per feature
+      }
+
+      function stopTour() {
+          console.log('[Tour debug] stopTour called. tourActive was:', tourActive);
+          if (!tourActive) return;
+          tourActive = false;
+          if (tourIntervalId) {
+              clearTimeout(tourIntervalId);
+              tourIntervalId = null;
+          }
+          activeTourName = null;
+          updateUrlParams();
+      }
+
       // Initialize Search UI from URL params
       const initUrl = new URLSearchParams(window.location.search);
       const urlFilter = initUrl.get('filter');
@@ -1457,76 +1580,151 @@ try {
           const initFeature = initUrl.get('feature');
           const initSearchStr = initUrl.get('search');
           const gpsParam = initUrl.get('gps');
-          if (gpsParam) {
-              const coords = gpsParam.split(',').map(Number);
-              if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                  const lat = coords[0];
-                  const lng = coords[1];
-                  
-                  const popup = new maplibregl.Popup({ offset: 25 })
-                      .setHTML(`<div class="wv-map-popup">
-                          <h3 class="wv-opensans" style="font-weight: bold;">Shared location</h3>
-                          <p class="wv-opensans wv-popup-detail" style="margin: 0;">
-                              <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                              <span>Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
-                          </p>
-                          <hr>
-                          <a class="wv-directions-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to Shared Location">
-                              <svg class="wv-btn-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-                              <span>Directions</span>
-                          </a>
-                      </div>`);
-                  
-                  const marker = new maplibregl.Marker({ color: '#ef4444' })
-                      .setLngLat([lng, lat])
-                      .setPopup(popup)
-                      .addTo(map);
-                  
-                  activePopup = popup;
-                  marker.togglePopup();
-                  map.flyTo({ center: [lng, lat], zoom: 16 });
+          
+          // Initialize Tour feature if 'tour' URL parameter is present
+          const tourParam = initUrl.get('tour');
+          console.log('[Tour debug] map once idle called. tourParam:', tourParam, 'allFeatures length:', allFeatures.length);
+          let isTourStarted = false;
+          if (tourParam) {
+              const cleanTour = tourParam.toLowerCase().trim();
+              let matchedFeatures = [];
+              let tourType = '';
+              
+              if (cleanTour === 'businesses' || cleanTour === 'business') {
+                  matchedFeatures = allFeatures.filter(f => f._source === 'establishment' && f.properties.class !== 'Public Resource');
+                  tourType = 'businesses';
+              } else if (['parks-and-rec', 'parks', 'parking', 'recreation', 'parks_and_rec', 'parks and rec + parking'].includes(cleanTour)) {
+                  matchedFeatures = allFeatures.filter(f => f._source === 'recreation' || f._source === 'parking');
+                  tourType = 'parks';
+              } else if (['public-resources', 'public', 'public_resources', 'public resources'].includes(cleanTour)) {
+                  matchedFeatures = allFeatures.filter(f => f._source === 'establishment' && f.properties.class === 'Public Resource');
+                  tourType = 'public-resources';
+              } else if (cleanTour === 'borough') {
+                  // Combined public parks, recreation, parking, and public resources
+                  matchedFeatures = allFeatures.filter(f => 
+                      f._source === 'recreation' || 
+                      f._source === 'parking' || 
+                      (f._source === 'establishment' && f.properties.class === 'Public Resource')
+                  );
+                  tourType = 'borough';
               }
-          } else if (initFeature) {
-              if (initFeature.toLowerCase() === 'parking') {
-                  selectedFeatureName = 'Parking';
-                  if (searchInput) searchInput.value = 'Parking';
-                  if (searchResults) searchResults.classList.remove('active');
-
-                  map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-
-                  const parkingFeatures = collections.parking ? collections.parking.features : [];
-                  map.getSource('highlight-poly-source').setData({
-                      type: 'FeatureCollection',
-                      features: parkingFeatures
+              
+              console.log('[Tour debug] cleanTour:', cleanTour, 'matchedFeatures count:', matchedFeatures.length);
+              if (matchedFeatures.length > 0) {
+                  activeTourName = tourType;
+                  tourActive = true;
+                  
+                  // Randomize features list on page load
+                  let finalFeatures = [];
+                  if (initFeature) {
+                      const matchIdx = matchedFeatures.findIndex(f => (f.properties.name || '').toLowerCase() === initFeature.toLowerCase());
+                      if (matchIdx !== -1) {
+                          // Keep deep-linked feature first, randomize the rest
+                          const firstFeature = matchedFeatures[matchIdx];
+                          const otherFeatures = matchedFeatures.filter((_, idx) => idx !== matchIdx);
+                          finalFeatures = [firstFeature, ...shuffleArray(otherFeatures)];
+                      } else {
+                          finalFeatures = shuffleArray(matchedFeatures);
+                      }
+                  } else {
+                      finalFeatures = shuffleArray(matchedFeatures);
+                  }
+                  
+                  tourFeatures = finalFeatures;
+                  tourIndex = 0;
+                  isTourStarted = true;
+                  
+                  console.log('[Tour debug] Starting tour:', tourType, 'with randomized order:', tourFeatures.map(f => f.properties.name));
+                  playTourStep();
+                  
+                  // Register interaction hooks to automatically stop tour when user interacts
+                  const canvas = map.getCanvas();
+                  canvas.addEventListener('mousedown', stopTour, { passive: true });
+                  canvas.addEventListener('touchstart', stopTour, { passive: true });
+                  canvas.addEventListener('wheel', stopTour, { passive: true });
+                  
+                  if (searchInput) {
+                      searchInput.addEventListener('focus', stopTour);
+                  }
+                  
+                  waitForElement('.layer-control-panel').then(panel => {
+                      panel.addEventListener('change', stopTour);
                   });
-
-                  const bounds = getFeaturesBounds(parkingFeatures);
-                  if (bounds) {
-                      map.fitBounds(bounds, {
-                          padding: { top: 120, bottom: 60, left: 60, right: 60 },
-                          maxZoom: 16
-                      });
-                  }
-              } else {
-                  const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
-                  if (match) {
-                      selectFeature(match);
-                  }
               }
-          } else if (initSearchStr || initUrl.get('filter')) {
-              if (initSearchStr) searchInput.value = initSearchStr;
-              performSearch();
-          } else {
-              map.fitBounds([
-                  [-75.145165, 39.856238],
-                  [-75.112685, 39.887555]
-              ], {
-                  padding: 10,
-                  duration: 1000
-              });
           }
-          hasInteracted = false; // Prevent initial programmatic setup from broadcasting state changes
-          updateUrlParams();
+          
+          if (!isTourStarted) {
+              if (gpsParam) {
+                  const coords = gpsParam.split(',').map(Number);
+                  if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                      const lat = coords[0];
+                      const lng = coords[1];
+                      
+                      const popup = new maplibregl.Popup({ offset: 25, focusAfterOpen: false })
+                          .setHTML(`<div class="wv-map-popup">
+                              <h3 class="wv-opensans" style="font-weight: bold;">Shared location</h3>
+                              <p class="wv-opensans wv-popup-detail" style="margin: 0;">
+                                  <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                  <span>Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
+                              </p>
+                              <hr>
+                              <a class="wv-directions-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to Shared Location">
+                                  <svg class="wv-btn-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                                  <span>Directions</span>
+                              </a>
+                          </div>`);
+                      
+                      const marker = new maplibregl.Marker({ color: '#ef4444' })
+                          .setLngLat([lng, lat])
+                          .setPopup(popup)
+                          .addTo(map);
+                      
+                      activePopup = popup;
+                      marker.togglePopup();
+                      map.flyTo({ center: [lng, lat], zoom: 16 });
+                  }
+              } else if (initFeature) {
+                  if (initFeature.toLowerCase() === 'parking') {
+                      selectedFeatureName = 'Parking';
+                      if (searchInput) searchInput.value = 'Parking';
+                      if (searchResults) searchResults.classList.remove('active');
+
+                      map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
+
+                      const parkingFeatures = collections.parking ? collections.parking.features : [];
+                      map.getSource('highlight-poly-source').setData({
+                          type: 'FeatureCollection',
+                          features: parkingFeatures
+                      });
+
+                      const bounds = getFeaturesBounds(parkingFeatures);
+                      if (bounds) {
+                          map.fitBounds(bounds, {
+                              padding: { top: 120, bottom: 60, left: 60, right: 60 },
+                              maxZoom: 16
+                          });
+                      }
+                  } else {
+                      const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
+                      if (match) {
+                          selectFeature(match);
+                      }
+                  }
+              } else if (initSearchStr || initUrl.get('filter')) {
+                  if (initSearchStr) searchInput.value = initSearchStr;
+                  performSearch();
+              } else {
+                  map.fitBounds([
+                      [-75.145165, 39.856238],
+                      [-75.112685, 39.887555]
+                  ], {
+                      padding: 10,
+                      duration: 1000
+                  });
+              }
+              hasInteracted = false; // Prevent initial programmatic setup from broadcasting state changes
+              updateUrlParams();
+          }
       });
 
       // Sync map state with parent directory searching/filtering
@@ -1536,7 +1734,7 @@ try {
               const polySource = map.getSource('highlight-poly-source');
               if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
               if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
-              if (activePopup) activePopup.remove();
+              dismissActivePopup();
               
               selectedFeatureName = null;
               if (searchInput) searchInput.value = '';
@@ -1579,7 +1777,7 @@ try {
               if (isUnfiltered) {
                   if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
                   if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
-                  if (activePopup) activePopup.remove();
+                  dismissActivePopup();
                   map.fitBounds([
                       [-75.145165, 39.856238],
                       [-75.112685, 39.887555]
@@ -1594,7 +1792,7 @@ try {
                   if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: pointFeatures });
                   if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
 
-                  if (activePopup) activePopup.remove();
+                  dismissActivePopup();
 
                   if (results.length > 0) {
                       const bounds = getFeaturesBounds(results);

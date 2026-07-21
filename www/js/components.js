@@ -640,7 +640,7 @@ const categoryColors = {
     colorName: 'Purple',
     fill: '#81007F',
     text: '#81007F',
-    tags: ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank']
+    tags: ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank', 'home insurance']
   },
   'public': {
     title: 'Public & Government Resources',
@@ -654,7 +654,7 @@ const categoryColors = {
     colorName: 'Gold',
     fill: '#ffd700',
     text: '#854d0e',
-    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning']
+    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning', 'car insurance']
   },
   'recreation': {
     title: 'Parks & Recreation',
