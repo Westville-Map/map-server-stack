@@ -30,22 +30,53 @@ function initializeMapUrls() {
 // Execute link rewriting immediately on load
 initializeMapUrls();
 
-// --- Share Button Logic ---
+// --- Share & Explore Dropdown Logic ---
 const shareBtn = document.getElementById('share-btn');
 const shareDropdown = document.getElementById('share-dropdown');
 const shareViewBtn = document.getElementById('share-view-btn');
 const shareLocationBtn = document.getElementById('share-location-btn');
 
+const exploreBtn = document.getElementById('explore-btn');
+const exploreDropdown = document.getElementById('explore-dropdown');
+
 if (shareBtn && shareDropdown) {
   shareBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     shareDropdown.classList.toggle('show');
+    if (exploreDropdown) {
+      exploreDropdown.classList.remove('show');
+      exploreBtn?.setAttribute('aria-expanded', 'false');
+    }
   });
+}
 
-  document.addEventListener('click', (e) => {
-    if (!shareDropdown.contains(e.target) && !shareBtn.contains(e.target)) {
+if (exploreBtn && exploreDropdown) {
+  exploreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isShown = exploreDropdown.classList.toggle('show');
+    exploreBtn.setAttribute('aria-expanded', isShown);
+    if (shareDropdown) {
       shareDropdown.classList.remove('show');
     }
+  });
+}
+
+document.addEventListener('click', (e) => {
+  if (shareDropdown && shareBtn && !shareDropdown.contains(e.target) && !shareBtn.contains(e.target)) {
+    shareDropdown.classList.remove('show');
+  }
+  if (exploreDropdown && exploreBtn && !exploreDropdown.contains(e.target) && !exploreBtn.contains(e.target)) {
+    exploreDropdown.classList.remove('show');
+    exploreBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+
+if (exploreDropdown && exploreBtn) {
+  exploreDropdown.querySelectorAll('.explore-dropdown-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      exploreDropdown.classList.remove('show');
+      exploreBtn.setAttribute('aria-expanded', 'false');
+    });
   });
 }
 
@@ -224,19 +255,57 @@ function updateMapHeaderFromUrl(urlString) {
 
     const tags = [];
 
-    // 1. GPS shared location
+    // 1. Active Tour Tag (placed before GPS/Highlight to keep a stable position)
+    const tour = searchParams.get('tour');
+    if (tour) {
+      const tourNames = {
+        'borough': 'Borough Tour',
+        'businesses': 'Business Tour',
+        'parks': 'Parks & Rec Tour',
+        'parks-and-rec': 'Parks & Rec Tour',
+        'recreation': 'Parks & Rec Tour',
+        'public': 'Public Services Tour',
+        'public-resources': 'Public Services Tour',
+        'public_resources': 'Public Services Tour'
+      };
+      const tourLabel = tourNames[tour.toLowerCase()] || 'Tour';
+      tags.push(`<span class="map-tag highlight tour-highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/compass.svg" alt=""> Running: ${tourLabel}<button type="button" class="tour-close-btn" aria-label="Stop tour" style="background:none; border:none; color:inherit; padding:0 0 0 4px; display:inline-flex; align-items:center; cursor:pointer;"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></span>`);
+    }
+
+    // Update active state of tour items in the dropdown
+    const tourItems = document.querySelectorAll('#explore-dropdown .explore-dropdown-btn[data-tour]');
+    tourItems.forEach(item => {
+      const itemTour = item.getAttribute('data-tour');
+      if (tour && itemTour && tour.toLowerCase() === itemTour.toLowerCase()) {
+        item.classList.add('active');
+        if (!item.querySelector('.active-indicator')) {
+          const indicator = document.createElement('span');
+          indicator.className = 'active-indicator';
+          indicator.style.marginLeft = 'auto';
+          indicator.style.fontSize = '0.8rem';
+          indicator.style.color = 'var(--accent-gold)';
+          indicator.innerHTML = '●';
+          item.appendChild(indicator);
+        }
+      } else {
+        item.classList.remove('active');
+        item.querySelector('.active-indicator')?.remove();
+      }
+    });
+
+    // 2. GPS shared location
     const gps = searchParams.get('gps');
     if (gps) {
       tags.push(`<span class="map-tag highlight gps-highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/my-location.svg" alt=""> Shared location</span>`);
     }
 
-    // 2. Highlighted feature
+    // 3. Highlighted feature
     const feature = searchParams.get('feature');
     if (feature && !gps) {
       tags.push(`<span class="map-tag highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/map-pin.svg" alt=""> Highlighted: ${feature}<button type="button" class="tag-close-btn" aria-label="Clear highlight"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></span>`);
     }
 
-    // 3. Active filters
+    // 4. Active filters
     const filter = searchParams.get('filter');
     if (filter) {
       const filters = filter.split(',');
@@ -248,7 +317,7 @@ function updateMapHeaderFromUrl(urlString) {
       });
     }
 
-    // 4. Search query
+    // 5. Search query
     const searchStr = searchParams.get('search');
     if (searchStr && !feature) {
       tags.push(`<span class="map-tag" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/search.svg" alt=""> Search: "${searchStr}"</span>`);
@@ -349,7 +418,7 @@ window.addEventListener('message', (event) => {
   }
 });
 
-// Clear highlight when clicking the close button on the map tag
+// Clear highlight or stop tour when clicking the close button on map tags
 const transientContainer = document.getElementById('map-transient-tags');
 if (transientContainer) {
   transientContainer.addEventListener('click', (e) => {
@@ -360,6 +429,16 @@ if (transientContainer) {
       const iframe = document.getElementById('mapFrame');
       if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage({ type: 'clear-highlight' }, '*');
+      }
+    }
+
+    const tourBtn = e.target.closest('.tour-close-btn');
+    if (tourBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const iframe = document.getElementById('mapFrame');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'stop-tour' }, '*');
       }
     }
   });

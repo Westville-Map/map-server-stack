@@ -109,12 +109,49 @@
           </div>
 
           <div class="map-header-actions">
-            <a id="full-map-link" href="https://map.westville.app" class="header-btn" target="_blank">
-              <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
-                <img style="width:18px; height:18px;" src="/images/map-folded.svg" alt="">
-              </span>
-              <span class="header-btn-text">Full Map</span>
-            </a>
+            <div class="explore-wrapper" id="explore-wrapper">
+              <button id="explore-btn" class="header-btn" title="Explore tours and full map options" aria-haspopup="true" aria-expanded="false">
+                <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+                  <img style="width:18px; height:18px;" src="/images/compass.svg" alt="">
+                </span>
+                <span class="header-btn-text">Explore</span>
+                <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
+              </button>
+              <div id="explore-dropdown" class="explore-dropdown">
+                <div class="dropdown-section-title">Guided Tours</div>
+                <a href="https://map.westville.app/?tour=borough" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="borough">
+                  <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/w-pin.svg" alt="">
+                  </span>
+                  <span class="explore-dropdown-btn-text">Borough Tour</span>
+                </a>
+                <a href="https://map.westville.app/?tour=businesses" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="businesses">
+                  <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/store.svg" alt="">
+                  </span>
+                  <span class="explore-dropdown-btn-text">Business Tour</span>
+                </a>
+                <a href="https://map.westville.app/?tour=parks" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="parks">
+                  <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/tree.svg" alt="">
+                  </span>
+                  <span class="explore-dropdown-btn-text">Parks &amp; Rec Tour</span>
+                </a>
+                <a href="https://map.westville.app/?tour=public" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="public">
+                  <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/map-pin.svg" alt="">
+                  </span>
+                  <span class="explore-dropdown-btn-text">Public Services Tour</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a id="full-map-link" href="https://map.westville.app" target="_blank" class="explore-dropdown-btn highlight-option">
+                  <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                    <img style="width:14px; height:14px;" src="/images/map-folded.svg" alt="">
+                  </span>
+                  <span class="explore-dropdown-btn-text">Open Full Map</span>
+                </a>
+              </div>
+            </div>
             <button id="print-btn" class="header-btn" title="Print map or directory cards">
               <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
                 <img style="width:18px; height:18px;" src="/images/printer.svg" alt="">
@@ -246,64 +283,55 @@
 
 
   <!-- Print Options Modal (Config Window) -->
-  <div id="print-modal" class="modal-overlay" role="dialog" aria-labelledby="print-modal-title" aria-modal="true" style="display: none;">
-    <div class="modal-content glass-card animate-zoom">
-      <div class="modal-header">
-        <h3 id="print-modal-title" style="display: flex; align-items: center; gap: 8px;">
-          <img style="width:24px; height:24px;" src="/images/printer.svg" alt="Printer icon">
-          Print & Export Options
-        </h3>
-        <button id="print-modal-close-btn" class="close-btn" aria-label="Close dialog">&times;</button>
+  <wv-modal modal-id="print-modal" modal-title="Print & Export Options" title-icon="/images/printer.svg">
+    <div slot="body">
+      <div class="form-group">
+        <label for="print-orientation"><strong>Orientation:</strong></label>
+        <select id="print-orientation" class="form-control">
+          <option value="portrait" selected>Portrait (8.5" x 11")</option>
+          <option value="landscape">Landscape (11" x 8.5")</option>
+        </select>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="print-orientation"><strong>Orientation:</strong></label>
-          <select id="print-orientation" class="form-control">
-            <option value="portrait" selected>Portrait (8.5" x 11")</option>
-            <option value="landscape">Landscape (11" x 8.5")</option>
-          </select>
-        </div>
-        
-        <div class="form-group checkbox-group">
-          <input type="checkbox" id="print-include-map" checked>
-          <label for="print-include-map"><strong>Include Map View</strong></label>
-        </div>
-        
-        <div class="form-group">
-          <label for="print-include-cards"><strong>Include Directory Cards:</strong></label>
-          <select id="print-include-cards" class="form-control">
-            <option value="none" selected>Do not include cards</option>
-            <option value="filtered">Filtered / visible cards only</option>
-            <option value="all">All directory cards</option>
-          </select>
-        </div>
+      
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="print-include-map" checked>
+        <label for="print-include-map"><strong>Include Map View</strong></label>
+      </div>
+      
+      <div class="form-group">
+        <label for="print-include-cards"><strong>Include Directory Cards:</strong></label>
+        <select id="print-include-cards" class="form-control">
+          <option value="none" selected>Do not include cards</option>
+          <option value="filtered">Filtered / visible cards only</option>
+          <option value="all">All directory cards</option>
+        </select>
+      </div>
 
-        <div id="print-loading-msg" class="print-loading-status" style="display: none;">
-          <span class="spinner">
-            <img style="width:16px; height:16px; vertical-align: middle;" src="/images/hourglass.svg" alt="Hourglass spinner">
-          </span>
-          <span id="print-loading-text">Capturing current map state...</span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <div class="action-buttons-group">
-          <button id="print-pdf-btn" class="btn-main">
-            <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
-              <img style="width:16px; height:16px;" src="/images/floppy-disk.svg" alt="Save icon">
-            </span>
-            Save PDF
-          </button>
-          <button id="print-execute-btn" class="btn-main font-bold">
-            <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
-              <img style="width:16px; height:16px;" src="/images/printer.svg" alt="Printer icon">
-            </span>
-            Print
-          </button>
-        </div>
-        <button id="print-cancel-btn" class="btn-secondary">Cancel</button>
+      <div id="print-loading-msg" class="print-loading-status" style="display: none;">
+        <span class="spinner">
+          <img style="width:16px; height:16px; vertical-align: middle;" src="/images/hourglass.svg" alt="Hourglass spinner">
+        </span>
+        <span id="print-loading-text">Capturing current map state...</span>
       </div>
     </div>
-  </div>
+    <div slot="footer" class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+      <div class="wv-modal-print-group">
+        <button id="print-pdf-btn" class="btn-main">
+          <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+            <img style="width:16px; height:16px;" src="/images/floppy-disk.svg" alt="Save icon">
+          </span>
+          Save PDF
+        </button>
+        <button id="print-execute-btn" class="btn-main font-bold">
+          <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+            <img style="width:16px; height:16px;" src="/images/printer.svg" alt="Printer icon">
+          </span>
+          Print
+        </button>
+      </div>
+      <button id="print-cancel-btn" class="btn-secondary" style="width: 100%;">Cancel</button>
+    </div>
+  </wv-modal>
 
   <!-- Hidden container used solely for browser native printing -->
   <div id="print-layout-container"></div>

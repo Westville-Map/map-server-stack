@@ -150,6 +150,159 @@ class SiteFooter extends HTMLElement {
 customElements.define('site-header', SiteHeader);
 customElements.define('site-footer', SiteFooter);
 
+class WvModal extends HTMLElement {
+  connectedCallback() {
+    this.render();
+  }
+
+  render() {
+    const modalId = this.getAttribute('modal-id') || 'wv-modal';
+    const modalTitle = this.getAttribute('modal-title') || '';
+    const titleIcon = this.getAttribute('title-icon') || '';
+    const titleEmoji = this.getAttribute('title-emoji') || '';
+    const fullScreenMobile = this.hasAttribute('full-screen-mobile');
+
+    // Hold original children
+    const originalChildren = Array.from(this.childNodes);
+    this.innerHTML = '';
+
+    // Create overall overlay
+    const overlay = document.createElement('div');
+    overlay.id = modalId;
+    overlay.className = `wv-modal-overlay${fullScreenMobile ? ' full-screen-mobile' : ''}`;
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-labelledby', `${modalId}-title`);
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.style.display = 'none';
+
+    // Card
+    const card = document.createElement('div');
+    card.className = 'wv-modal-card glass-card animate-zoom';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'wv-modal-header';
+
+    const title = document.createElement('h3');
+    title.id = `${modalId}-title`;
+    title.className = 'wv-modal-title';
+
+    const headerIconSlot = originalChildren.find(child => child.nodeType === Node.ELEMENT_NODE && child.getAttribute('slot') === 'header-icon');
+    if (headerIconSlot) {
+      headerIconSlot.removeAttribute('slot');
+      title.appendChild(headerIconSlot);
+    } else if (titleIcon) {
+      const img = document.createElement('img');
+      img.src = titleIcon;
+      img.style.width = '24px';
+      img.style.height = '24px';
+      img.alt = '';
+      title.appendChild(img);
+    } else if (titleEmoji) {
+      const emojiSpan = document.createElement('span');
+      emojiSpan.style.fontSize = '1.25rem';
+      emojiSpan.textContent = titleEmoji;
+      title.appendChild(emojiSpan);
+    }
+
+    const titleTextSpan = document.createElement('span');
+    titleTextSpan.textContent = modalTitle;
+    title.appendChild(titleTextSpan);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.id = `${modalId}-close-btn`;
+    closeBtn.className = 'wv-modal-close close-btn';
+    closeBtn.setAttribute('aria-label', 'Close dialog');
+    closeBtn.innerHTML = '&times;';
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    card.appendChild(header);
+
+    // Body
+    const bodyContainer = document.createElement('div');
+    bodyContainer.className = 'wv-modal-body';
+
+    // Footer
+    const footerContainer = document.createElement('div');
+    footerContainer.className = 'wv-modal-footer';
+    let hasFooter = false;
+
+    // Distribute children
+    originalChildren.forEach(child => {
+      if (child.nodeType === Node.ELEMENT_NODE && child.getAttribute('slot') === 'footer') {
+        hasFooter = true;
+        child.removeAttribute('slot');
+        footerContainer.appendChild(child);
+      } else if (child.nodeType === Node.ELEMENT_NODE && child.getAttribute('slot') === 'body') {
+        child.removeAttribute('slot');
+        bodyContainer.appendChild(child);
+      } else if (child === headerIconSlot) {
+        // Skip since we distributed it directly to title
+      } else {
+        // Only append if it's not a purely whitespace text node
+        if (child.nodeType !== Node.TEXT_NODE || child.textContent.trim().length > 0) {
+          bodyContainer.appendChild(child);
+        }
+      }
+    });
+
+    card.appendChild(bodyContainer);
+    if (hasFooter) {
+      card.appendChild(footerContainer);
+    }
+
+    overlay.appendChild(card);
+    this.appendChild(overlay);
+
+    // Wire local close event
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.close();
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        this.close();
+      }
+    });
+  }
+
+  isOpen() {
+    const overlay = this.querySelector('.wv-modal-overlay');
+    return overlay && overlay.classList.contains('active');
+  }
+
+  open() {
+    const overlay = this.querySelector('.wv-modal-overlay');
+    if (overlay) {
+      this._previouslyFocusedElement = document.activeElement;
+      overlay.style.display = 'flex';
+      requestAnimationFrame(() => {
+        overlay.classList.add('active');
+      });
+      document.body.style.overflow = 'hidden';
+      const closeBtn = this.querySelector('.wv-modal-close');
+      if (closeBtn) closeBtn.focus();
+    }
+  }
+
+  close() {
+    const overlay = this.querySelector('.wv-modal-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        if (this._previouslyFocusedElement && typeof this._previouslyFocusedElement.focus === 'function') {
+          this._previouslyFocusedElement.focus();
+        }
+      }, 250);
+    }
+  }
+}
+customElements.define('wv-modal', WvModal);
+
 class SiteHelp extends HTMLElement {
   constructor() {
     super();
@@ -186,157 +339,148 @@ class SiteHelp extends HTMLElement {
     }
 
     this.innerHTML = `
-      <div id="help-popover" class="help-popover-overlay" role="dialog" aria-modal="true" aria-labelledby="help-popover-title">
-        <div class="help-popover-card">
-          <div class="help-popover-header">
-            <h3 id="help-popover-title">Welcome to Westville Help</h3>
-            <button class="help-popover-close" id="help-popover-close-btn" aria-label="Close help">&times;</button>
-          </div>
+      <wv-modal modal-id="help-popover" modal-title="Welcome to Westville Help" full-screen-mobile>
+        <span slot="header-icon" class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle; color: var(--primary-blue, #1e3a8a); margin-right: 2px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block;">
+            <path d="M12 21.5s-7-7.75-7-12.5a7 7 0 1 1 14 0c0 4.75-7 12.5-7 12.5z" />
+            <path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2.5-2.5 2.5" />
+            <path d="M12 14h.01" />
+          </svg>
+        </span>
+        <div slot="body">
+          <p>Welcome to the Borough of Westville Interactive Portal! Use this comprehensive help panel to learn about map navigation, the directory, printing options, and event guides. Select a quick category below to scroll directly to its instructions.</p>
           
-          <div class="help-popover-body">
-            <p>Welcome to the Borough of Westville Interactive Portal! Use this comprehensive help panel to learn about map navigation, the directory, printing options, and event guides. Select a quick category below to scroll directly to its instructions.</p>
-            
-            <!-- Quick navigation pill shortcuts inside help -->
-            <div class="help-nav-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;">
-              <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="portal">Map</button>
-              <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="directory">Directory</button>
-              ${SHOW_FESTIVAL ? `<button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="festival">Fall Festival</button>` : ''}
-              <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="universal">Sharing & Printing</button>
-            </div>
-
-            <ul class="help-popover-list">
-              <!-- Section: Map & Portal -->
-              <li id="help-section-portal" class="help-section-item">
-                <div class="help-item-header">
-                  <span class="help-popover-icon">
-                    <img style="width:20px; height:20px;" src="/images/map-folded.svg" alt="Map icon">
-                  </span>
-                  <strong>Map &amp; Layers</strong>
-                </div>
-                <p class="help-item-desc">
-                  Explore the Borough visually on our main page. Toggle street layouts, recreation parks, public parking zones, or local business establishments. Toggle high-resolution <strong>Satellite Map</strong> views, or keep street names readable with the <strong>Satellite Labels</strong> toggle.
-                </p>
-                <p class="help-item-desc">
-                  <strong>Quick Filter Tags</strong>: Select Public Parking, Local Establishments, or Recreation Parks tags in the map header to instantly clear search terms, reset viewpoint, and highlight just that group.
-                </p>
-                <p class="help-item-desc">
-                  <strong>My Location (GPS)</strong>: Click the target crosshair button (below zoom buttons) to track your position in real-time. This runs purely in-browser and doesn't store your coordinates.
-                </p>
-                <p class="help-item-desc">
-                  <strong>Interactive Directory Cards</strong>: Click any card to re-center, zoom, and highlight that physical location on the map.
-                </p>
-              </li>
-
-              <!-- Section: Standalone Directory -->
-              <li id="help-section-directory" class="help-section-item">
-                <div class="help-item-header">
-                  <span class="help-popover-icon">
-                    <img style="width:20px; height:20px;" src="/images/search.svg" alt="Search icon">
-                  </span>
-                  <strong>Local Directory</strong>
-                </div>
-                <p class="help-item-desc">
-                  The standalone <strong><a class="help-link" href="/directory/">Directory</a></strong> page lists all commercial, industrial, recreation, and public providers in Westville.
-                </p>
-                <p class="help-item-desc">
-                  <strong>Searching &amp; Advanced Filtering</strong>: Start typing in the search box to instantly search listings. Narrow results down by selecting specific tags or categories from the custom multi-select dropdown menus.
-                </p>
-                <p class="help-item-desc">
-                  <strong>Custom Sorting &amp; Quick Reset</strong>: Sort establishments alphabetically, by category, or by tags. Click the <strong>Reset</strong> button at any time to clear search text, reset selectors, and restore default A-Z lists.
-                </p>
-                <p class="help-item-desc">
-                  <strong>Card Actions</strong>: Use the direct call links to place a call, click Website to open their portal, or tap Directions to route to them instantly on Google Maps.
-                </p>
-              </li>
-
-              <!-- Section: Fall Festival Guide (Conditional) -->
-              ${festivalSectionHTML}
-
-              <!-- Section: Universal Features (Sharing & Printing) -->
-              <li id="help-section-universal" class="help-section-item">
-                <div class="help-item-header">
-                  <span class="help-popover-icon">
-                    <img style="width:20px; height:20px;" src="/images/share.svg" alt="Share icon">
-                  </span>
-                  <strong>Sharing Views &amp; Custom Printing</strong>
-                </div>
-                <p class="help-item-desc">
-                  <strong>Copy &amp; Share Links</strong>: Tap the <strong>Share</strong> button in the header of any map page to copy a dynamic link. This link perfectly restores your zoom level, coordinates, toggled layer checkboxes, active search query, and highlighted cards so you share exactly what you are seeing.
-                </p>
-                <p class="help-item-desc">
-                  <strong>Privacy-Safe Location Sharing</strong>: Click the drop-arrow next to "Share" and click "Share my location" to generate a specialized link showing your current GPS coordinates. It disables card highlights and doesn't store any data to protect privacy. Only your current latitude and longitude coordinates are shared, no other personally-identifiable data is used, and you remain in charge of who you share the unique link with.
-                </p>
-                <p class="help-item-desc">
-                  <strong>High-Resolution Printing &amp; PDFs</strong>: Click the <strong>Print</strong> button to configure output. Customize portrait/landscape orientations, choose to hide or include map views, and select whether to print your filtered cards or compile a complete local directory PDF.
-                </p>
-              </li>
-            </ul>
+          <!-- Quick navigation pill shortcuts inside help -->
+          <div class="help-nav-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;">
+            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="portal">Map &amp; Layers</button>
+            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="tours">Guided Tours</button>
+            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="directory">Directory</button>
+            ${SHOW_FESTIVAL ? `<button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="festival">Fall Festival</button>` : ''}
+            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="universal">Sharing &amp; Printing</button>
           </div>
-          
-          <div class="help-popover-footer">
-            <div class="help-popover-footer-links">
-              <a href="/credits.html" class="help-footer-btn">
-                <img style="width:16px; height:16px;" src="/images/credits-scroll.svg" alt="">
-                <span>Credits &amp; Thanks</span>
-              </a>
-              <a href="/privacy-tos.html" class="help-footer-btn">
-                <img style="width:16px; height:16px;" src="/images/shield-privacy.svg" alt="">
-                <span>Privacy &amp; Terms</span>
-              </a>
-            </div>
-            <button id="help-popover-ok-btn" class="btn-main help-popover-action-btn">Got It!</button>
-          </div>
+
+          <ul class="help-popover-list">
+            <!-- Section: Map & Portal -->
+            <li id="help-section-portal" class="help-section-item">
+              <div class="help-item-header">
+                <span class="help-popover-icon">
+                  <img style="width:20px; height:20px;" src="/images/map-folded.svg" alt="Map icon">
+                </span>
+                <strong>Map &amp; Layers</strong>
+              </div>
+              <p class="help-item-desc">
+                Explore the Borough visually on our main page. Control visible features using the <strong>Toggle Layers</strong> checkboxes inside the Map Footer (below the map) for Parking, Establishments, and Recreation.
+              </p>
+              <p class="help-item-desc">
+                <strong>Map &amp; Satellite Views</strong>: Switch between the standard street <strong>Map</strong> view or a high-resolution <strong>Satellite</strong> view. When Satellite is checked, you can toggle street and landmark <strong>Labels</strong>.
+              </p>
+              <p class="help-item-desc">
+                <strong>Quick Filter Tags</strong>: Click the Parking, Establishments, or Recreation tags in the header row to instantly clear any active search, reset the viewpoint, and highlight just those locations.
+              </p>
+              <p class="help-item-desc">
+                <strong>My Location (GPS)</strong>: Click the target crosshair button (below the zoom controls on the map) to center on and track your current physical position in real-time. This runs purely in-browser and protects your privacy.
+              </p>
+              <p class="help-item-desc">
+                <strong>Interactive Directory Cards</strong>: Click any card below the map to re-center, zoom, and highlight that specific location on the map.
+              </p>
+            </li>
+
+            <!-- Section: Guided Tours & Exploration -->
+            <li id="help-section-tours" class="help-section-item">
+              <div class="help-item-header">
+                <span class="help-popover-icon">
+                  <img style="width:20px; height:20px;" src="/images/compass.svg" alt="Compass icon">
+                </span>
+                <strong>Guided Tours &amp; Exploration</strong>
+              </div>
+              <p class="help-item-desc">
+                Tap the <strong>Explore</strong> button in the header actions to access custom automated guided tours:
+              </p>
+              <ul class="help-tour-list" style="margin: 4px 0 8px 1.5rem; padding: 0; color: #555; font-size: 0.9rem; line-height: 1.5; list-style-type: disc;">
+                <li><strong>Borough Tour</strong> Comprehensive tour of public parks, parking, and municipal services.</li>
+                <li><strong>Business Tour</strong> Showcase of commercial businesses and local establishments.</li>
+                <li><strong>Parks &amp; Rec Tour</strong> Highlights public parks, fields, courts, and trails.</li>
+                <li><strong>Public Services Tour</strong> Highlights municipal resources, library, schools, fire, and police.</li>
+              </ul>
+              <p class="help-item-desc">
+                <strong>How Tours Work</strong>: When a tour is active, the map camera moves using smooth, cinematic transitions to pan and zoom from location to location automatically, showing each place's details popup card before proceeding.
+              </p>
+              <p class="help-item-desc">
+                <strong>Controlling the Tour</strong>: To cancel or stop an active tour, click the (X) button on the "Running" banner in the header, close the details card popup on the map, or click anywhere on the map to begin exploring freely.
+              </p>
+              <p class="help-item-desc">
+                <strong>Open Full Map</strong>: Select the <strong>Open Full Map</strong> button at the bottom of the Explore dropdown menu to launch the full-screen interactive mapping application in a new browser tab.
+              </p>
+            </li>
+
+            <!-- Section: Standalone Directory -->
+            <li id="help-section-directory" class="help-section-item">
+              <div class="help-item-header">
+                <span class="help-popover-icon">
+                  <img style="width:20px; height:20px;" src="/images/search.svg" alt="Search icon">
+                </span>
+                <strong>Local Directory</strong>
+              </div>
+              <p class="help-item-desc">
+                The standalone <strong><a class="help-link" href="/directory/">Directory</a></strong> page lists all commercial, industrial, recreation, and public providers in Westville.
+              </p>
+              <p class="help-item-desc">
+                <strong>Searching &amp; Advanced Filtering</strong>: Start typing in the search box to instantly search listings. Narrow results down by selecting specific tags or categories from the custom multi-select dropdown menus.
+              </p>
+              <p class="help-item-desc">
+                <strong>Custom Sorting &amp; Quick Reset</strong>: Sort establishments alphabetically, by category, or by tags. Click the <strong>Reset</strong> button at any time to clear search text, reset selectors, and restore default A-Z lists.
+              </p>
+              <p class="help-item-desc">
+                <strong>Card Actions</strong>: Use the direct call links to place a call, click Website to open their portal, or tap Directions to route to them instantly on Google Maps.
+              </p>
+            </li>
+
+            <!-- Section: Fall Festival Guide (Conditional) -->
+            ${festivalSectionHTML}
+
+            <!-- Section: Universal Features (Sharing & Printing) -->
+            <li id="help-section-universal" class="help-section-item">
+              <div class="help-item-header">
+                <span class="help-popover-icon">
+                  <img style="width:20px; height:20px;" src="/images/share.svg" alt="Share icon">
+                </span>
+                <strong>Sharing Views &amp; Custom Printing</strong>
+              </div>
+              <p class="help-item-desc">
+                <strong>Copy &amp; Share Links</strong>: Tap the <strong>Share</strong> button in the header of any map page to copy a dynamic link. This link perfectly restores your zoom level, coordinates, toggled layer checkboxes, active search query, and highlighted cards so you share exactly what you are seeing.
+              </p>
+              <p class="help-item-desc">
+                <strong>Privacy-Safe Location Sharing</strong>: Click the drop-arrow next to "Share" and click "Share my location" to generate a specialized link showing your current GPS coordinates. It disables card highlights and doesn't store any data to protect privacy. Only your current latitude and longitude coordinates are shared, no other personally-identifiable data is used, and you remain in charge of who you share the unique link with.
+              </p>
+              <p class="help-item-desc">
+                <strong>High-Resolution Printing &amp; PDFs</strong>: Click the <strong>Print</strong> button to configure output. Customize portrait/landscape orientations, choose to hide or include map views, and select whether to print your filtered cards or compile a complete local directory PDF.
+              </p>
+            </li>
+          </ul>
         </div>
-      </div>
+        
+        <div slot="footer" class="help-popover-footer-links" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+          <div style="display: flex; gap: 10px; width: 100%;">
+            <a href="/credits.html" class="help-footer-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 12px;">
+              <img style="width:16px; height:16px; flex-shrink: 0;" src="/images/credits-scroll.svg" alt="">
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Credits</span>
+            </a>
+            <a href="/privacy-tos.html" class="help-footer-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 12px;">
+              <img style="width:16px; height:16px; flex-shrink: 0;" src="/images/shield-privacy.svg" alt="">
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Privacy &amp; TOS</span>
+            </a>
+          </div>
+          <button id="help-popover-ok-btn" class="btn-main help-popover-action-btn" style="width: 100%; margin: 0; padding: 12px;">Ok</button>
+        </div>
+      </wv-modal>
     `;
 
     this.overlay = this.querySelector('#help-popover');
-    this.closeBtn = this.querySelector('#help-popover-close-btn');
     this.okBtn = this.querySelector('#help-popover-ok-btn');
   }
 
   setupListeners() {
-    if (this.closeBtn) this.closeBtn.addEventListener('click', () => this.close());
     if (this.okBtn) this.okBtn.addEventListener('click', () => this.close());
-    
-    if (this.overlay) {
-      this.overlay.addEventListener('click', (e) => {
-        if (e.target === this.overlay) this.close();
-      });
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.overlay && this.overlay.classList.contains('active')) {
-        this.close();
-      }
-    });
-
-    // Complete focus trap inside the SiteHelp popover dialog (WCAG 2.4.3)
-    this.addEventListener('keydown', (e) => {
-      if (e.key === 'Tab' && this.overlay && this.overlay.classList.contains('active')) {
-        const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-        const focusables = Array.from(this.querySelectorAll(focusableSelectors)).filter(el => {
-          return el.offsetWidth > 0 && el.offsetHeight > 0 && !el.disabled;
-        });
-        
-        if (focusables.length === 0) return;
-        
-        const firstEl = focusables[0];
-        const lastEl = focusables[focusables.length - 1];
-        
-        if (e.shiftKey) {
-          if (document.activeElement === firstEl) {
-            lastEl.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === lastEl) {
-            firstEl.focus();
-            e.preventDefault();
-          }
-        }
-      }
-    });
 
     const navPills = this.querySelectorAll('.help-nav-pill');
     navPills.forEach(pill => {
@@ -380,33 +524,24 @@ class SiteHelp extends HTMLElement {
   }
 
   open(sectionId) {
-    if (!this.overlay) return;
-    this._previouslyFocusedElement = document.activeElement; // Track starting focus context
-    this.overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    if (this.okBtn) this.okBtn.focus();
-
-    if (sectionId) {
-      setTimeout(() => {
-        this.scrollToSection(sectionId);
-      }, 150);
-    } else {
-      const body = this.querySelector('.help-popover-body');
-      if (body) body.scrollTop = 0;
+    const modal = this.querySelector('wv-modal');
+    if (modal) {
+      modal.open();
+      if (sectionId) {
+        setTimeout(() => {
+          this.scrollToSection(sectionId);
+        }, 150);
+      } else {
+        const body = this.querySelector('.wv-modal-body');
+        if (body) body.scrollTop = 0;
+      }
     }
   }
 
   close() {
-    if (!this.overlay) return;
-    this.overlay.classList.remove('active');
-    document.body.style.overflow = '';
-    
-    // Restore focus context gracefully
-    if (this._previouslyFocusedElement && typeof this._previouslyFocusedElement.focus === 'function') {
-      this._previouslyFocusedElement.focus();
-    } else {
-      const firstHelpBtn = document.querySelector('.help-btn');
-      if (firstHelpBtn) firstHelpBtn.focus();
+    const modal = this.querySelector('wv-modal');
+    if (modal) {
+      modal.close();
     }
   }
 

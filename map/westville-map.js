@@ -117,6 +117,8 @@ let tourFeatures = [];
 let tourIndex = 0;
 let tourIntervalId = null;
 
+let updateUrlParams = () => {};
+
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
   'establishments': 'custom-markers',
@@ -1135,33 +1137,44 @@ try {
           const rect = popupEl.getBoundingClientRect();
           const mapRect = map.getContainer().getBoundingClientRect();
 
+          const H = mapRect.bottom - mapRect.top;
+          const h = rect.bottom - rect.top;
+
           let dx = 0;
           let dy = 0;
 
-           // Detect top/bottom overflow with 20px padding
-           if (rect.top < mapRect.top) {
-               dy = mapRect.top - rect.top + 20;
-               // Cap dy to prevent pushing the marker tip off-screen at the bottom
-               const markerPixel = map.project(popup.getLngLat());
-               const maxDy = mapRect.bottom - 40 - markerPixel.y;
-               if (dy > maxDy) {
-                   dy = Math.max(0, maxDy);
-               }
-           } else if (rect.bottom > mapRect.bottom) {
-               dy = mapRect.bottom - rect.bottom - 20;
-               // Cap dy to prevent pushing the marker tip off-screen at the top
-               const markerPixel = map.project(popup.getLngLat());
-               const minDy = mapRect.top + 40 - markerPixel.y;
-               if (dy < minDy) {
-                   dy = Math.min(0, minDy);
-               }
-           }
-
-          // Detect left/right overflow with 20px padding
+          // 1. Detect left/right overflow with 15px padding
           if (rect.left < mapRect.left) {
-              dx = mapRect.left - rect.left + 20;
+              dx = mapRect.left - rect.left + 15;
           } else if (rect.right > mapRect.right) {
-              dx = mapRect.right - rect.right - 20;
+              dx = mapRect.right - rect.right - 15;
+          }
+
+          // 2. Detect top/bottom overflow
+          if (h + 40 > H) {
+              // If the popup is too tall to fit in the viewport with padding,
+              // align the top of the popup with the top of the map (plus 10px padding)
+              // so that it can be read, as requested by the user.
+              dy = mapRect.top - rect.top + 10;
+          } else {
+              // If it fits, make sure both popup and marker tip are onscreen
+              if (rect.top < mapRect.top) {
+                  dy = mapRect.top - rect.top + 15;
+                  // Cap dy to prevent pushing the marker tip off-screen at the bottom
+                  const markerPixel = map.project(popup.getLngLat());
+                  const maxDy = mapRect.bottom - 20 - markerPixel.y;
+                  if (dy > maxDy) {
+                      dy = Math.max(0, maxDy);
+                  }
+              } else if (rect.bottom > mapRect.bottom) {
+                  dy = mapRect.bottom - rect.bottom - 15;
+                  // Cap dy to prevent pushing the marker tip off-screen at the top
+                  const markerPixel = map.project(popup.getLngLat());
+                  const minDy = mapRect.top + 20 - markerPixel.y;
+                  if (dy < minDy) {
+                      dy = Math.min(0, minDy);
+                  }
+              }
           }
 
           if (dx !== 0 || dy !== 0) {
@@ -1237,6 +1250,12 @@ try {
 
       let activePopup = null;
 
+      map.on('resize', () => {
+          if (activePopup) {
+              ensurePopupInView(activePopup);
+          }
+      });
+
       function dismissActivePopup() {
           console.log('[Tour debug] dismissActivePopup() triggered. activePopup exists:', !!activePopup);
           if (!activePopup) return Promise.resolve();
@@ -1302,7 +1321,7 @@ try {
             lat = coordinates[1];
           }
           // Set focusAfterOpen to false so that the browser does not scroll/jump the page or iframe to focus the popup close button
-          activePopup = new maplibregl.Popup({ focusAfterOpen: false })
+          activePopup = new maplibregl.Popup({ focusAfterOpen: false, anchor: 'bottom' })
               .setLngLat(coordinates)
               .setHTML(`<div class="wv-map-popup">
                   <h3 class="wv-opensans">${linkedName}</h3>
@@ -1325,6 +1344,12 @@ try {
           activePopup.on('open', () => {
               // Run immediately for instant loads or static openings
               requestAnimationFrame(() => ensurePopupInView(activePopup));
+              // Fallback with a short timeout to handle layout/rendering delay or race conditions
+              setTimeout(() => {
+                  if (activePopup) {
+                      ensurePopupInView(activePopup);
+                  }
+              }, 150);
               // Run again when any active camera flight completes to ensure perfect alignment
               map.once('moveend', () => ensurePopupInView(activePopup));
           });
@@ -1343,7 +1368,7 @@ try {
       searchInput.addEventListener('input', performSearch);
       let lastMapVisible = null;
 
-      function updateUrlParams() {
+      updateUrlParams = function() {
           const newParams = new URLSearchParams();
           
            // Compute show/hide based on checkboxes if rendered, otherwise fall back to layerStates
@@ -1744,6 +1769,11 @@ try {
               }
               hasInteracted = true;
               updateUrlParams();
+              return;
+          }
+
+          if (event.data && event.data.type === 'stop-tour') {
+              stopTour();
               return;
           }
 

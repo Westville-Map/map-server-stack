@@ -241,6 +241,11 @@ a.help-link{
 color: var(--primary-blue);
 }
 
+.help-tour-list li {
+line-height: 1;
+margin-bottom: 15px;
+}
+
 /* Footer styling matching header */
 footer {
   background-color: var(--primary-blue);
@@ -543,14 +548,16 @@ wv-sort {
   background-color: var(--wv-hover-bg, #f7f1eb) !important;
 }
 
-/* Help Pop-over (Overlay Model) - Global Styles */
-.help-popover-overlay {
+/* ==========================================
+   Unified Modal & Dialog Design System
+   ========================================== */
+.wv-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(15, 23, 42, 0.45); /* Modern, slightly darker slate overlay */
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: 2000;
@@ -562,16 +569,15 @@ wv-sort {
   transition: opacity 0.25s ease;
 }
 
-.help-popover-overlay.active {
+.wv-modal-overlay.active {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Help Pop-over Card */
-.help-popover-card {
+.wv-modal-card {
   background: var(--white);
   border-radius: 16px;
-  max-width: 580px;
+  max-width: 540px;
   width: 90%;
   max-height: 85vh;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
@@ -584,111 +590,136 @@ wv-sort {
   overflow: hidden;
 }
 
-.help-popover-overlay.active .help-popover-card {
+.wv-modal-overlay.active .wv-modal-card {
   transform: scale(1);
 }
 
-.help-popover-header {
-  padding: 1.5rem 2rem 1rem 2rem;
+.wv-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.75rem 1rem 1.75rem;
   border-bottom: 1px solid #e2e8f0;
-  position: relative;
+  min-height: 56px;
+  box-sizing: border-box;
 }
 
-.help-popover-body {
-  padding: 1.5rem 2rem;
+.wv-modal-title {
+  color: var(--primary-blue);
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  margin-right: 12px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.wv-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  color: #64748b;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.wv-modal-close:hover {
+  color: var(--text-dark);
+  background-color: #f1f5f9;
+}
+
+.wv-modal-body {
+  padding: 1.5rem 1.75rem;
   overflow-y: auto;
-  max-height: 48vh;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+  flex-grow: 1;
 }
 
-.help-popover-body::-webkit-scrollbar {
+.wv-modal-body::-webkit-scrollbar {
   width: 6px;
 }
 
-.help-popover-body::-webkit-scrollbar-track {
+.wv-modal-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.help-popover-body::-webkit-scrollbar-thumb {
+.wv-modal-body::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
 
-.help-popover-footer {
-  padding: 1.2rem 2rem;
+.wv-modal-footer {
+  padding: 1.25rem 1.75rem;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.help-popover-footer-links {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-}
-
-.help-footer-btn {
-  flex: 1;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 0.9rem;
-  color: var(--text-dark);
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  justify-content: flex-end;
+  gap: 12px;
+  box-sizing: border-box;
 }
 
-.help-footer-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: var(--primary-blue);
+/* Option C: Responsive Layouts (Site Help expands to full-screen, Print Modal stays centered) */
+@media (max-width: 768px) {
+  .wv-modal-overlay.full-screen-mobile .wv-modal-card {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    transform: none !important;
+  }
+  .wv-modal-overlay.full-screen-mobile .wv-modal-header {
+    padding: 1rem;
+    min-height: 48px;
+  }
+  .wv-modal-overlay.full-screen-mobile .wv-modal-body {
+    padding: 1rem;
+    max-height: calc(100vh - 180px);
+  }
+  .wv-modal-overlay.full-screen-mobile .wv-modal-footer {
+    padding: 1rem;
+  }
 }
 
-.help-popover-close {
-  position: absolute;
-  top: 1rem;
-  right: 1.25rem;
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  color: #888;
-  cursor: pointer;
-  line-height: 1;
-  padding: 4px;
-  transition: color 0.2s;
+/* Small Viewport Optimization (iPhone SE) */
+@media (max-width: 375px) {
+  .wv-modal-title {
+    font-size: 1.1rem;
+    margin-right: 8px;
+    gap: 6px;
+  }
+  .wv-modal-title img {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .wv-modal-close {
+    font-size: 1.5rem;
+    width: 28px;
+    height: 28px;
+  }
 }
 
-.help-popover-close:hover {
-  color: var(--text-dark);
-}
-
-.help-popover-card h3 {
-  color: var(--primary-blue);
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: left;
-}
-
-.help-popover-card p {
-  color: #555;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
-
+/* Help-specific content styling inside modal */
 .help-popover-list {
   list-style: none;
   padding: 0;
@@ -706,13 +737,11 @@ wv-sort {
   text-align: left;
 }
 
-/* Base style for individual help-sections (allowing scroll-margin for smooth header alignment) */
 .help-section-item {
   scroll-margin-top: 24px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Premium smooth highlight pulse effect when active help section is selected */
 @keyframes highlight-pulse-animation {
   0% {
     background-color: rgba(229, 193, 88, 0.25);
@@ -789,27 +818,84 @@ wv-sort {
   background-color: #1d4ed8;
 }
 
-/* Responsive Overrides for Help Pop-over */
-@media (max-width: 768px) {
-  .help-popover-card {
-    width: 100%;
-    max-width: 100%;
-    height: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-    margin: 0;
-    padding: 0;
-    transform: none !important;
-  }
-  .help-popover-header {
-    padding: 1rem;
-  }
-  .help-popover-body {
-    padding: 1rem;
-    max-height: calc(100vh - 180px);
-  }
-  .help-popover-footer {
-    padding: 1rem;
+/* ==========================================
+   Help Footer Button & Mobile Stack Enhancements
+   ========================================== */
+.help-footer-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--white, #ffffff);
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: var(--text-dark, #334155);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.help-footer-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: var(--primary-blue, #1e3a8a);
+}
+
+.help-footer-btn img {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Print/Save PDF Button Group Layout */
+.wv-modal-print-group {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.wv-modal-print-group .btn-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rounded corners and unified font styling for all bottom controls in modals and popovers */
+.wv-modal-footer .btn-main,
+.wv-modal-footer .btn-secondary,
+.wv-modal-footer .help-footer-btn,
+.wv-modal-footer .help-popover-action-btn,
+.help-popover-footer-links .btn-main,
+.help-popover-footer-links .btn-secondary,
+.help-popover-footer-links .help-footer-btn,
+.help-popover-footer-links .help-popover-action-btn {
+  border-radius: 10px !important;
+  font-size: 1.1rem !important;
+  font-weight: bold !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Selectively lighten weight of Credits and Privacy & TOS links inside the help dialog */
+.help-popover-footer-links .help-footer-btn {
+  font-weight: 600 !important;
+}
+
+/* Mobile responsive stacking for Print Options */
+@media (max-width: 480px) {
+  .wv-modal-print-group {
+    flex-direction: column !important;
+    gap: 8px !important;
   }
 }
+
 
