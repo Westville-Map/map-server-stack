@@ -1257,19 +1257,15 @@ try {
       });
 
       function dismissActivePopup() {
-          console.log('[Tour debug] dismissActivePopup() triggered. activePopup exists:', !!activePopup);
           if (!activePopup) return Promise.resolve();
           const popup = activePopup;
           activePopup = null; // Clear instantly so other flows know it's being removed
           
           const popupEl = popup.getElement();
-          console.log('[Tour debug] popupEl retrieved:', !!popupEl);
           if (popupEl) {
               const contentEl = popupEl.querySelector('.maplibregl-popup-content');
               const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
-              console.log('[Tour debug] contentEl found:', !!contentEl, 'tipEl found:', !!tipEl);
               if (contentEl) {
-                  console.log('[Tour debug] Applying popupContentFadeOut animation dynamically to content and tip');
                   const animStyle = 'popupContentFadeOut 0.5s cubic-bezier(0.16, 1, 0.3, 1) both';
                   contentEl.style.animation = animStyle;
                   if (tipEl) {
@@ -1277,14 +1273,12 @@ try {
                   }
                   return new Promise(resolve => {
                       setTimeout(() => {
-                          console.log('[Tour debug] Animation duration completed. Removing popup from map');
                           popup.remove();
                           resolve();
                       }, 480);
                   });
               }
           }
-          console.log('[Tour debug] Fallback: removing popup immediately');
           popup.remove();
           return Promise.resolve();
       }
@@ -1533,10 +1527,8 @@ try {
       }
 
       function playTourStep() {
-          console.log('[Tour debug] playTourStep called. tourActive:', tourActive, 'tourIndex:', tourIndex, 'total features:', tourFeatures.length);
           if (!tourActive || tourFeatures.length === 0) return;
           const f = tourFeatures[tourIndex];
-          console.log('[Tour debug] Selecting feature:', f.properties.name);
           selectFeature(f, true); // Pass true to indicate it's a tour selection
           
           tourIntervalId = setTimeout(() => {
@@ -1544,7 +1536,6 @@ try {
               
               let nextIndex = tourIndex + 1;
               if (nextIndex >= tourFeatures.length) {
-                  console.log('[Tour debug] Reached end of tour features list. Reshuffling for next round.');
                   tourFeatures = shuffleArray(tourFeatures);
                   nextIndex = 0;
               }
@@ -1559,7 +1550,6 @@ try {
       }
 
       function stopTour() {
-          console.log('[Tour debug] stopTour called. tourActive was:', tourActive);
           if (!tourActive) return;
           tourActive = false;
           if (tourIntervalId) {
@@ -1608,7 +1598,6 @@ try {
           
           // Initialize Tour feature if 'tour' URL parameter is present
           const tourParam = initUrl.get('tour');
-          console.log('[Tour debug] map once idle called. tourParam:', tourParam, 'allFeatures length:', allFeatures.length);
           let isTourStarted = false;
           if (tourParam) {
               const cleanTour = tourParam.toLowerCase().trim();
@@ -1634,7 +1623,6 @@ try {
                   tourType = 'borough';
               }
               
-              console.log('[Tour debug] cleanTour:', cleanTour, 'matchedFeatures count:', matchedFeatures.length);
               if (matchedFeatures.length > 0) {
                   activeTourName = tourType;
                   tourActive = true;
@@ -1659,7 +1647,6 @@ try {
                   tourIndex = 0;
                   isTourStarted = true;
                   
-                  console.log('[Tour debug] Starting tour:', tourType, 'with randomized order:', tourFeatures.map(f => f.properties.name));
                   playTourStep();
                   
                   // Register interaction hooks to automatically stop tour when user interacts
@@ -1754,6 +1741,9 @@ try {
 
       // Sync map state with parent directory searching/filtering
       window.addEventListener('message', (event) => {
+          // Security check: Accept messages from parent host window or same window
+          if (event.source !== window.parent && event.source !== window) return;
+
           if (event.data && event.data.type === 'clear-highlight') {
               const ptSource = map.getSource('highlight-point-source');
               const polySource = map.getSource('highlight-poly-source');

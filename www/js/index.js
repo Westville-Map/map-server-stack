@@ -302,7 +302,7 @@ function updateMapHeaderFromUrl(urlString) {
     // 3. Highlighted feature
     const feature = searchParams.get('feature');
     if (feature && !gps) {
-      tags.push(`<span class="map-tag highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/map-pin.svg" alt=""> Highlighted: ${feature}<button type="button" class="tag-close-btn" aria-label="Clear highlight"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></span>`);
+      tags.push(`<span class="map-tag highlight" style="display: inline-flex; align-items: center; gap: 4px;"><img style="width:12px; height:12px; vertical-align: middle;" src="/images/map-pin.svg" alt=""> Highlighted: ${feature}<button type="button" class="tag-close-btn" aria-label="Clear highlight" style="background:none; border:none; color:inherit; padding:0 0 0 4px; display:inline-flex; align-items:center; cursor:pointer;"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></span>`);
     }
 
     // 4. Active filters
@@ -399,6 +399,9 @@ function updateMapHeaderFromUrl(urlString) {
 
 // Listen for postMessage from the map iframe to sync URL & update the header in real-time
 window.addEventListener('message', (event) => {
+  const iframe = document.getElementById('mapFrame');
+  if (iframe && event.source !== iframe.contentWindow) return;
+
   if (event.data && event.data.type === 'westville-map-state-change') {
     updateMapHeaderFromUrl(event.data.url);
 
@@ -459,7 +462,6 @@ if (mapFrame) {
 
 document.querySelectorAll('.scroll-trigger').forEach(link => {
   link.addEventListener('click', function(e) {
-    console.log('clicked');
     const iframe = document.getElementById('mapFrame');
     
     if (iframe) {

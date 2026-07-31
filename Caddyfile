@@ -1,4 +1,14 @@
 map.westville.app:80, map.westville.app:80 {
+    # Enable Gzip and Zstd compression
+    encode gzip zstd
+
+    # HTTP Security Headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
     # Route API requests to the backend container
     reverse_proxy /api/* wvmap_backend:3000
 
@@ -8,7 +18,18 @@ map.westville.app:80, map.westville.app:80 {
 }
 
 westville.app:80, www.westville.app:80 {
+    # Enable Gzip and Zstd compression
+    encode gzip zstd
+
+    # HTTP Security Headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
     # Serve static files
     root * /srv/www
     file_server
 }
+

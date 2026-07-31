@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Trash & Recycling Schedule - Borough of Westville</title>
+  <meta name="description" content="Official Public Works 2026 waste collection schedule, recycling guidelines, special waste rules, holiday changes, and interactive zone map for Westville, NJ.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=fallback" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />   
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- MapLibre GL JS -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+  <!-- Global & Directory Styles -->
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/index.css">
+  <link rel="stylesheet" href="/directory/directory.css">
+  <link rel="stylesheet" href="/css/trash.css">
+
+  <script src="/js/components.js" defer></script>
+  <script src="/js/trash.js?v=2" defer></script>
+</head>
+<body class="trash-page-theme">
+
+  <site-header active-page="trash"></site-header>
+
+  <main>
+    <div class="container directory-page-container">
+      
+      <!-- Top Action Bar -->
+      <div class="directory-header-row">
+        <h3 class="directory-page-title">Municipal Collection Schedule & Guidelines</h3>
+        <div class="directory-header-actions">
+          <p class="directory-count" id="results-count">Showing all streets</p>
+          <button id="print-btn" class="header-btn" title="Print trash schedule">
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <img style="width:18px; height:18px;" src="/images/printer.svg" alt="">
+            </span>
+            <span class="header-btn-text">Print</span>
+          </button>
+          <button id="share-btn" class="header-btn" title="Share current schedule view">
+            <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
+              <img style="width:18px; height:18px;" src="/images/share.svg" alt="">
+            </span>
+            <span class="header-btn-text">Share</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Public Works Welcome Note -->
+      <div class="pw-welcome-card">
+        <div class="pw-welcome-header">
+          <h4 class="pw-welcome-title">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="20" height="20" stroke="var(--primary-navy)" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            Public Works Department &mdash; 2026 Notice to Residents
+          </h4>
+          <span class="pw-contact-badge">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            DPW Office: 856-456-7785 (Mon&ndash;Fri 8:00 AM &ndash; 3:00 PM)
+          </span>
+        </div>
+        <p style="margin: 0; font-size: 0.88rem; color: #334155; line-height: 1.5;">
+          This information has been prepared for your convenience in understanding Westville&rsquo;s trash and recycling regulations. Help reduce incinerator fees by recycling. Recycling cans are available through the Borough.
+        </p>
+      </div>
+
+      <!-- Curbside Rules Strip -->
+      <div class="pw-rules-strip">
+        <div class="pw-rule-card">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--accent-gold)" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <div class="rule-text">
+            <strong>Curb Placement Time:</strong> Place items out no earlier than <strong>6:00 PM</strong> on the evening before collection day.
+          </div>
+        </div>
+        <div class="pw-rule-card">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#e11d48" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <div class="rule-text">
+            <strong>7:00 AM Cutoff:</strong> Cans not at the curb by <strong>7:00 AM</strong> on collection day may not be collected.
+          </div>
+        </div>
+        <div class="pw-rule-card">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#16a34a" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <div class="rule-text">
+            <strong>Container Removal:</strong> Remove all empty containers from the curb line by <strong>7:00 PM</strong> on the day of collection.
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Layout: Map Card + Street Directory -->
+      <div class="trash-grid-container">
+        <!-- Interactive Map Card -->
+        <div class="map-container trash-map-box">
+          <div class="map-header">
+            <div class="map-header-left">
+              <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--accent-gold);">Interactive Pickup Zones Map</h3>
+            </div>
+            <div class="map-header-actions">
+              <span style="font-size: 0.82rem;  color: var(--accent-gold); font-weight: 600;">Click any zone for details</span>
+            </div>
+          </div>
+          <div class="trash-pills">
+            <button type="button" class="zone-pill tuesday" data-day="tuesday" title="Filter Tuesday Zone">
+              <svg class="pw-svg-icon" viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Tuesday Zone
+            </button>
+            <button type="button" class="zone-pill wednesday" data-day="wednesday" title="Filter Wednesday Zone">
+              <svg class="pw-svg-icon" viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Wednesday Zone
+            </button>
+            <button type="button" class="zone-pill friday" data-day="friday" title="Filter Friday Zone">
+              <svg class="pw-svg-icon" viewBox="0 0 24 24" width="16" height="16" stroke="#ffffff" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Friday Zone
+            </button>
+          </div>
+          <div id="trash-map" class="trash-map-canvas"></div>
+        </div>
+
+        <!-- Street Schedule Cards List & Controls -->
+        <div class="trash-directory-column">
+          <!-- Search Controls Bar -->
+          <div class="directory-controls trash-controls">
+            <input type="search" id="trash-search" class="directory-search" placeholder="Search street name (e.g. Woodbine, Harvard, Olive)..." aria-label="Search Westville street schedule" />
+            
+            <div class="custom-multiselect" id="day-category-container">
+              <div class="multiselect-trigger" id="day-category-trigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter schedule by pickup day">
+                <span class="trigger-text" id="day-trigger-text">All Collection Days</span>
+                <span class="trigger-arrow">▼</span>
+              </div>
+              <div class="multiselect-dropdown" id="day-category-dropdown" role="listbox">
+                <div class="multiselect-option active" data-day="all" role="option">
+                  <span>All Collection Days</span>
+                </div>
+                <div class="multiselect-option" data-day="tuesday" role="option">
+                  <span class="day-dot tuesday"></span>
+                  <span>Tuesday Zone</span>
+                </div>
+                <div class="multiselect-option" data-day="wednesday" role="option">
+                  <span class="day-dot wednesday"></span>
+                  <span>Wednesday Zone</span>
+                </div>
+                <div class="multiselect-option" data-day="friday" role="option">
+                  <span class="day-dot friday"></span>
+                  <span>Friday Zone</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="street-directory" class="directory-grid trash-street-grid">
+            <p class="loading-text">Loading street schedule database...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Breakdown: Trash vs. Recycle -->
+      <div class="items-breakdown-grid">
+        <div class="items-card trash-card">
+          <h4 class="items-card-title">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Items to be TRASHED
+          </h4>
+          <ul class="items-list">
+            <li>Regular household waste</li>
+            <li>Any painted or stained wood</li>
+            <li>Grass clippings &amp; mulch</li>
+            <li>Dried out latex and oil paints</li>
+            <li>Leaves (from mid-December to mid-October)</li>
+          </ul>
+        </div>
+
+        <div class="items-card recycle-card">
+          <h4 class="items-card-title">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            Items to be RECYCLED (Blue Cans)
+          </h4>
+          <ul class="items-list">
+            <li>Newspapers, magazines, telephone books, corrugated boxes, cardboard cereal boxes</li>
+            <li>Plastics (soda bottles, household detergents, water/milk containers, etc.)</li>
+            <li>Glass bottles and jars (all colors)</li>
+            <li>Tin, aluminum, &amp; bi-metallic cans (rinsed, food removed, caps removed)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Strict Recycling Prohibitions Banner -->
+      <div class="prohibited-banner">
+        <div class="prohibited-title">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+          Strict Recycling Prohibitions &mdash; Do NOT Place in Blue Cans:
+        </div>
+        <div class="prohibited-pills">
+          <span class="prohibited-pill">NO PLASTIC BAGS (Any size or color)</span>
+          <span class="prohibited-pill">NO SHREDDED PAPER</span>
+          <span class="prohibited-pill">NO PIZZA BOXES (Oily contaminants)</span>
+        </div>
+        <p style="margin: 8px 0 0; font-size: 0.82rem;">* Recyclable items must be placed in a blue recycling can. No other items will be collected from blue cans.</p>
+      </div>
+
+      <!-- Special Waste Collections Schedule Table -->
+      <div class="pw-section-card">
+        <div class="pw-section-header">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+          <h3 class="pw-section-title">Special Waste Collections Schedules &mdash; Entire Town</h3>
+        </div>
+        <p class="pw-subtitle">Collections may be interrupted by observed holidays. Please see Holiday schedule below or call DPW for questions.</p>
+        
+        <div class="pw-table-wrapper">
+          <table class="pw-table">
+            <thead>
+              <tr>
+                <th>MATERIAL</th>
+                <th>HOW TO PLACE AT CURB</th>
+                <th>DAYS OF COLLECTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Vegetative Waste</strong><br><span style="font-size: 0.8rem; color: #64748b;">Ex. weeds, flowers, shrubbery</span></td>
+                <td>Loose in a can, neatly tied at curb, or in a paper yard waste bag</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong><br><span style="font-size: 0.78rem; color: #d97706;">*See Seasonal Changes</span></td>
+              </tr>
+              <tr>
+                <td><strong>Tree Branches, Unpainted Wood</strong></td>
+                <td>Cut in sections &le; 5 ft, &le; 50 lbs, neatly tied at curb</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong><br><span style="font-size: 0.78rem; color: #d97706;">*See Seasonal Changes</span></td>
+              </tr>
+              <tr>
+                <td><strong>Grass Clippings</strong><br><span style="font-size: 0.78rem; color: #dc2626;">Do NOT blow into street!</span></td>
+                <td>Loose in can or bagged with trash (do not mix with yard waste)</td>
+                <td><strong>Regular Trash Day</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Leaves</strong><br><span style="font-size: 0.8rem; color: #64748b;">(Mid-December to mid-October)</span></td>
+                <td>Loose in can or bagged with trash (do not mix with yard waste)</td>
+                <td><strong>Regular Trash Day</strong><br><span style="font-size: 0.78rem; color: #d97706;">*See Seasonal Changes</span></td>
+              </tr>
+              <tr>
+                <td><strong>Metal Items &amp; Appliances</strong></td>
+                <td>Place at curbline (fridge &amp; freezer doors MUST be removed)</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Tires &amp; Batteries</strong><br><span style="font-size: 0.8rem; color: #64748b;">Personal cars &amp; trucks ONLY</span></td>
+                <td>Place at curbline (no more than 4 tires)</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Concrete, Bricks, Cinder Blocks</strong></td>
+                <td>Place chunks at curb or in containers (&le; 50 lbs per piece/container)</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Large Articles</strong><br><span style="font-size: 0.8rem; color: #64748b;">Ex. sofas, mattresses, rugs, dressers</span></td>
+                <td>Place at curb (mattresses should be bagged)</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Electronics</strong><br><span style="font-size: 0.8rem; color: #64748b;">Ex. TVs, computers, monitors</span></td>
+                <td>Place at curb</td>
+                <td><strong>1st &amp; 3rd Monday of the Month</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Textile Recycling Program</strong></td>
+                <td>Place in weatherproof bag obtained from DPW at curb</td>
+                <td><strong>2nd Monday of the Month</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Hazardous Waste</strong><br><span style="font-size: 0.8rem; color: #64748b;">Ex. motor oil, fuels, pesticides</span></td>
+                <td><span style="color: #dc2626; font-weight: 700;">Not accepted at curbside</span></td>
+                <td>See Household Hazardous Waste section below</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Seasonal Collections Changes Table -->
+      <div class="pw-section-card">
+        <div class="pw-section-header">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <h3 class="pw-section-title">Seasonal Collections Changes &mdash; Entire Town</h3>
+        </div>
+        
+        <div class="pw-table-wrapper">
+          <table class="pw-table">
+            <thead>
+              <tr>
+                <th>MATERIAL</th>
+                <th>SPECIAL SEASON &amp; INSTRUCTIONS</th>
+                <th>DAYS OF COLLECTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Vegetative Waste</strong><br><span style="font-size: 0.8rem; color: #64748b;">Ex. weeds, flowers, shrubbery</span></td>
+                <td>May through September</td>
+                <td><strong>Every Monday</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Tree Branches, Unpainted Wood</strong></td>
+                <td>May through September</td>
+                <td><strong>Every Monday</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Leaves</strong></td>
+                <td>Mid-October to mid-December<br><em>Rake to curb, do not bag</em></td>
+                <td>Please call DPW for schedule (posted on Facebook too)</td>
+              </tr>
+              <tr>
+                <td><strong>Leaves (Spring Clean Up)</strong></td>
+                <td>1 week in Spring as designated by DPW<br><em>Rake to curb, do not bag</em></td>
+                <td>Please call DPW for designated schedule</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Important Notes & Regulations List -->
+      <div class="pw-section-card">
+        <div class="pw-section-header">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <h3 class="pw-section-title">Note the Following Regulations</h3>
+        </div>
+        <ul class="pw-notes-list">
+          <li><strong>Separation Required:</strong> Trash mixed with recyclables will not be collected until separated. Recycling cans being used for non-recyclables will not be collected until the next regular day.</li>
+          <li><strong>Blue Recycling Cans:</strong> Recyclable materials must be placed in a blue can. Cans are available through the Borough.</li>
+          <li><strong>50 lb Weight Limit:</strong> Waste containers and loose waste should not exceed the 50 pound weight limit.</li>
+          <li><strong>Grass Clippings:</strong> Homeowners should recycle grass clippings around trees, plants, and bushes for mulch, leave on lawn, or dispose in regular trash.</li>
+          <li><strong>Storm Drain Regulations:</strong> Do not rake leaves onto or within 10 ft of a storm drain, and do not blow grass clippings into the street (violates Federal Storm Water regulations subject to fines).</li>
+          <li><strong>Private Contractors:</strong> Public Works will not collect trash generated from private contractors or from outside of town.</li>
+          <li><strong>Prohibited Landfill Items:</strong> Roof shingles, dirt, and hazardous waste are not accepted by the landfill or incinerator. The resident or contractor must dispose of these properly.</li>
+          <li><strong>Holiday Interruptions:</strong> Collections may be interrupted by observed holidays.</li>
+        </ul>
+      </div>
+
+      <!-- 2026 Observed Holidays Table -->
+      <div class="pw-section-card">
+        <div class="pw-section-header">
+          <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <h3 class="pw-section-title">2026 Observed Holidays &amp; Collection Changes</h3>
+        </div>
+        <p class="pw-subtitle">When a holiday falls on a Monday, there will be no collection of large articles, vegetative waste, or leaves for that week. *Public Works holidays may be observed on a different day than Borough offices.</p>
+
+        <div class="pw-table-wrapper">
+          <table class="pw-table">
+            <thead>
+              <tr>
+                <th>HOLIDAY CELEBRATED</th>
+                <th>DATE OBSERVED</th>
+                <th>COLLECTION CHANGE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>New Year's Day</td><td>1/1/26 (Thur.)</td><td>No change</td></tr>
+              <tr><td>MLK Day</td><td>1/19/26 (Mon.)</td><td><span style="color: #dc2626; font-weight: 700;">Special collections are cancelled</span></td></tr>
+              <tr><td>President's Day (Lincoln)</td><td>2/9/26 (Mon.)</td><td>No change</td></tr>
+              <tr><td>President's Day (Washington)</td><td>2/16/26 (Mon.)</td><td><span style="color: #dc2626; font-weight: 700;">Special collections are cancelled</span></td></tr>
+              <tr><td>Good Friday</td><td>4/6/26 (Mon.)</td><td><span style="color: #dc2626; font-weight: 700;">Special collections are cancelled</span></td></tr>
+              <tr><td>Memorial Day</td><td>5/25/26 (Mon.)</td><td><span style="color: #dc2626; font-weight: 700;">Veg/Brush is cancelled</span></td></tr>
+              <tr><td>Independence Day</td><td>7/6/26 (Mon.)</td><td><span style="color: #dc2626; font-weight: 700;">Special collections are cancelled</span></td></tr>
+              <tr><td>Labor Day</td><td>9/7/26 (Mon.)</td><td><span style="color: #dc2626; font-weight: 700;">Special collections are cancelled</span></td></tr>
+              <tr><td>Columbus Day</td><td>10/12/26 (Mon.)</td><td>No change</td></tr>
+              <tr><td>Veteran's Day</td><td>11/9/26 (Mon.)</td><td>No change</td></tr>
+              <tr><td>Thanksgiving Day</td><td>11/26/26 (Thur.)</td><td>No change</td></tr>
+              <tr><td>Christmas Day</td><td>12/25/26 (Fri.)</td><td>Friday's trash &amp; recycling collected on <strong>Monday 12/28/26</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Services Grid: Hazardous Waste & Textile Program -->
+      <div class="pw-services-grid">
+        <div class="pw-section-card" style="margin-bottom: 0;">
+          <div class="pw-section-header">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <h3 class="pw-section-title">Household Hazardous Waste</h3>
+          </div>
+          <p style="font-size: 0.85rem; color: #334155; line-height: 1.5; margin-bottom: 8px;">
+            Hazardous waste is collected by Gloucester County Improvement Authority (GCIA). Call the Office of Recycling at <strong>856-478-6045</strong> or visit <a href="https://www.gcianj.com" target="_blank" rel="noopener">www.gcianj.com</a> for free event dates.
+          </p>
+          <strong style="font-size: 0.82rem; color: #0f172a;">Accepted County Disposal Items:</strong>
+          <div class="hazardous-tags-flex">
+            <span class="hazardous-tag">Oil-Based Paint / Stains</span>
+            <span class="hazardous-tag">Paint Thinners</span>
+            <span class="hazardous-tag">Epoxy &amp; Resins</span>
+            <span class="hazardous-tag">Pesticides &amp; Weed Killers</span>
+            <span class="hazardous-tag">Pool Chemicals</span>
+            <span class="hazardous-tag">Antifreeze &amp; Motor Oil</span>
+            <span class="hazardous-tag">Gas / Diesel Fuel</span>
+            <span class="hazardous-tag">Propane Tanks</span>
+            <span class="hazardous-tag">Bleach &amp; Oven Cleaner</span>
+            <span class="hazardous-tag">Fluorescent Bulbs</span>
+            <span class="hazardous-tag">Batteries</span>
+          </div>
+        </div>
+
+        <div class="pw-section-card" style="margin-bottom: 0;">
+          <div class="pw-section-header">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            <h3 class="pw-section-title">Clothing &amp; Textile Program</h3>
+          </div>
+          <p style="font-size: 0.85rem; color: #334155; line-height: 1.5;">
+            Place gently used clothing into plastic bags inside the DPW weatherproof bag at the curb on the <strong>2nd Monday of the month</strong>. DPW delivers a replacement bag upon pickup.
+          </p>
+          <strong style="font-size: 0.82rem; color: #0f172a;">Permanent Donation Drop Boxes:</strong>
+          <ul style="font-size: 0.85rem; color: #334155; margin: 6px 0 0; padding-left: 1.2rem;">
+            <li>Public Works Garage (Crown Point Rd)</li>
+            <li>Parkview Elementary School (Birch Ave)</li>
+            <li>Senior Center (Broadway)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Snow Removal & Water Conservation Services -->
+      <div class="pw-services-grid">
+        <div class="pw-section-card" style="margin-bottom: 0;">
+          <div class="pw-section-header">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="8" y1="20" x2="8.01" y2="20"></line><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="22" x2="12.01" y2="22"></line><line x1="16" y1="16" x2="16.01" y2="16"></line><line x1="16" y1="20" x2="16.01" y2="20"></line></svg>
+            <h3 class="pw-section-title">Snow Removal Regulations</h3>
+          </div>
+          <ul class="pw-notes-list">
+            <li><strong>3 Inch Rule:</strong> Plowing commences when 3+ inches of snow have accumulated.</li>
+            <li><strong>Driveway Parking:</strong> Park in driveways and refrain from parking in alleys so plows can clear the area.</li>
+            <li><strong>Driveway Aprons:</strong> Refrain from clearing driveway aprons until Public Works clears the street.</li>
+            <li><strong>Street Prohibition:</strong> Do not blow or shovel snow into the street.</li>
+          </ul>
+        </div>
+
+        <div class="pw-section-card" style="margin-bottom: 0;">
+          <div class="pw-section-header">
+            <svg class="pw-svg-icon" viewBox="0 0 24 24" width="22" height="22" stroke="var(--primary-navy)" stroke-width="2" fill="none"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+            <h3 class="pw-section-title">Water Conservation &amp; Emergencies</h3>
+          </div>
+          <p style="font-size: 0.85rem; color: #334155; line-height: 1.5; margin-bottom: 8px;">
+            Water early morning or late evening. Odd house numbers water on odd calendar days; even house numbers water on even days.
+          </p>
+          <strong style="font-size: 0.82rem; color: #0f172a;">Water &amp; Sewer Emergency Contacts:</strong>
+          <ul style="font-size: 0.85rem; color: #334155; margin: 6px 0 0; padding-left: 1.2rem; line-height: 1.6;">
+            <li><strong>Mon&ndash;Fri (7:00 AM &ndash; 3:00 PM):</strong> Call DPW <strong>856-456-7785</strong> or Borough Hall <strong>856-456-0030</strong></li>
+            <li><strong>After 3:00 PM &amp; Weekends:</strong> Call Emergency Line <strong>856-456-0028</strong></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <site-footer active-page="trash"></site-footer>
+
+</body>
+</html>

@@ -13,8 +13,8 @@ app.use(helmet());
 
 // Rate Limiter to prevent Denial of Service and Brute Force attacks
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 5 minutes
-    max: 10, // Limit each IP to 100 requests per window
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    max: 10, // Limit each IP to 10 requests per window
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -25,7 +25,7 @@ app.use(express.json({ limit: '5mb' }));
 
 // Whitelist of allowed feature types to prevent path traversal attacks
 const ALLOWED_FEATURE_TYPES = new Set(['parks', 'roads', 'boundaries',
-'users', 'establishments', 'home-business', 'industrial', 'fall-festival']); 
+'users', 'establishments', 'home-business', 'industrial', 'fall-festival', 'trash-schedule']); 
 
 const DATA_DIR = path.join(__dirname, 'data');
 
@@ -86,7 +86,6 @@ app.post('/api/map_data_save', async (req, res) => {
         await fs.writeFile(TEMP_FILE_PATH, JSON.stringify(payload, null, null), 'utf8');
         await fs.rename(TEMP_FILE_PATH, FINAL_FILE_PATH);
 
-        console.log(`Data successfully written for feature: ${featureType}`);
         return res.json({ status: 'success', message: 'Data written successfully' });
 
     } catch (err) {

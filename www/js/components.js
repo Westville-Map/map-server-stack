@@ -976,3 +976,14 @@ window.closeDropdown = function(trigger, dropdown) {
   }
 };
 
+// Register Service Worker for offline shell caching (progressive enhancement)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      // Silently handle registration errors in restricted sandbox or dev environments
+      console.debug('[SW] ServiceWorker registration skipped/failed:', err);
+    });
+  });
+}
+
+
