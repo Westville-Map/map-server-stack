@@ -5,7 +5,8 @@ map.westville.app:80, map.westville.app:80 {
     # HTTP Security Headers
     header {
         X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
+        # X-Frame-Options "SAMEORIGIN"
+        # Content-Security-Policy "frame-ancestors 'self' https://www.westville.app https://westville.app;"
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
@@ -25,6 +26,7 @@ westville.app:80, www.westville.app:80 {
     header {
         X-Content-Type-Options "nosniff"
         X-Frame-Options "SAMEORIGIN"
+        Content-Security-Policy "frame-ancestors 'self' https://www.westville.app https://westville.app;"
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
