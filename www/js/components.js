@@ -818,6 +818,13 @@ const categoryColors = {
     fill: '#5E6D75',
     text: '#455056',
     tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes']
+  },
+  'boating': {
+    title: 'Boating & Marine',
+    colorName: 'Ocean Blue',
+    fill: '#0284c7',
+    text: '#0369a1',
+    tags: ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat']
   }
 };
 
