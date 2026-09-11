@@ -77,8 +77,9 @@ try {
         innerEl.innerText = spaceNumber;
         el.appendChild(innerEl);
 
+        const placeId = (props.id && typeof props.id === 'string' && !/^(mock|vendor)-/i.test(props.id.trim())) ? props.id.trim() : '';
         // Setup Popup HTML content
-        let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
+        let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}${placeId ? `&destination_place_id=${encodeURIComponent(placeId)}` : ''}`;
         
         let badgeColor = '#b45309'; // Darker amber for contrast
         if (props.class === 'event-zone') {

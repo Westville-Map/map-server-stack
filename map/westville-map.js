@@ -1314,6 +1314,8 @@ try {
             lng = coordinates[0];
             lat = coordinates[1];
           }
+          const placeId = (props.id && typeof props.id === 'string' && !/^(mock|vendor)-/i.test(props.id.trim())) ? props.id.trim() : '';
+          const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}${placeId ? `&destination_place_id=${encodeURIComponent(placeId)}` : ''}`;
           // Set focusAfterOpen to false so that the browser does not scroll/jump the page or iframe to focus the popup close button
           activePopup = new maplibregl.Popup({ focusAfterOpen: false, anchor: 'bottom' })
               .setLngLat(coordinates)
@@ -1328,7 +1330,7 @@ try {
                   <hr>
                   ${phone}
                   ${address}
-                  <a class="wv-directions-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" title="Google Maps Directions to ${props.name}">
+                  <a class="wv-directions-btn" target="_blank" href="${directionsUrl}" title="Google Maps Directions to ${props.name}">
                       <svg class="wv-btn-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
                       <span>Directions</span>
                   </a>

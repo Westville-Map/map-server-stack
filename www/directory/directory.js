@@ -444,11 +444,12 @@ function renderDirectory() {
     // Contact & links
     const phone = f.properties.phone;
     const url = f.properties.url;
+    const placeId = (f.properties && f.properties.id && typeof f.properties.id === 'string' && !/^(mock|vendor)-/i.test(f.properties.id.trim())) ? f.properties.id.trim() : '';
     
     let directionsUrl = '';
     if (f.geometry && f.geometry.type === 'Point') {
       const coords = f.geometry.coordinates;
-      directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
+      directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}${placeId ? `&destination_place_id=${encodeURIComponent(placeId)}` : ''}`;
     }
 
     let phoneButton = phone ? `
