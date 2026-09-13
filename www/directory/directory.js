@@ -58,7 +58,7 @@ async function initDirectory() {
   try {
     if (dirGrid) dirGrid.innerHTML = '<p class="loading-text">Loading Westville directory data...</p>';
     
-    const files = ['parking', 'establishments', 'recreation', 'home-business', 'industrial'];
+    const files = ['parking', 'establishments', 'recreation'];
     const requestPromises = files.map(file => fetch(`/data/${file}.geojson`));
     const responses = await Promise.all(requestPromises);
 
