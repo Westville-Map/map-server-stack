@@ -754,49 +754,49 @@ const categoryColors = {
     colorName: 'Rose',
     fill: '#db2777',
     text: '#be123c',
-    tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza']
+    tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza', 'italian', 'mexican', 'puerto rican', 'shakes', 'bowls', 'coffee', 'breakfast', 'lunch', 'dinner', 'deli', 'hoagies', 'sandwiches', 'seafood', 'juice bar', 'smoothies']
   },
   'wellness': {
     title: 'Wellness, Health & Salons',
     colorName: 'Teal',
     fill: '#0d9488',
     text: '#0f766e',
-    tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor']
+    tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor', 'gym', 'gymnastics', 'personal training']
   },
   'shop': {
     title: 'Shop & Retail',
     colorName: 'Emerald',
     fill: '#059669',
     text: '#047857',
-    tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco']
+    tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco', 'supermarket', 'collectibles', 'custom framing', 'bait', 'provisions', 'lottery']
   },
   'services': {
     title: 'Services & Professional',
     colorName: 'Purple',
     fill: '#81007F',
     text: '#81007F',
-    tags: ['laundry', 'service', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'bail bonds', 'bank', 'home insurance']
+    tags: ['laundry', 'service', 'services', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'cloud services', 'bail bonds', 'bank', 'atm', 'home insurance', 'professional', 'photography', 'real estate', 'property management', 'hospitality', 'consulting', 'business services', 'financial', 'funeral home', 'human services', 'union', 'cleaning', 'disaster restoration', 'telecommunications']
   },
   'public': {
     title: 'Public & Government Resources',
     colorName: 'Royal Blue',
     fill: '#2563eb',
     text: '#1d4ed8',
-    tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public']
+    tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public', 'daycare', 'child care']
   },
   'autos': {
     title: 'Automotive',
     colorName: 'Gold',
     fill: '#ffd700',
     text: '#854d0e',
-    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning', 'car insurance']
+    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning', 'car insurance', 'automotive']
   },
   'recreation': {
     title: 'Parks & Recreation',
     colorName: 'Forest Green',
     fill: '#16a34a',
     text: '#15803d',
-    tags: ['park', 'recreation', 'walking path', 'walkingpath']
+    tags: ['park', 'recreation', 'walking path', 'walkingpath', 'entertainment']
   },
   'parking': {
     title: 'Parking',
@@ -813,23 +813,52 @@ const categoryColors = {
     tags: ['home-business', 'web design', 'software', 'bookkeeping', 'finance', 'crafts', 'candles', 'tutoring', 'education', 'gardening', 'landscaping', 'music', 'piano', 'voice lessons', 'pet sitting', 'dog walking']
   },
   'industrial': {
-    title: 'Industrial & Manufacturing',
+    title: 'Industrial, Manufacturing & Trade',
     colorName: 'Steel Grey',
     fill: '#5E6D75',
     text: '#455056',
-    tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes']
+    tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes', 'contractors', 'carpentry', 'flooring', 'plumbing', 'fence', 'machinery', 'environmental', 'pest control', 'lawn care', 'outdoor', 'textiles', 'apparel', 'upholstery', 'medical supplies']
   },
   'boating': {
     title: 'Boating & Marine',
     colorName: 'Ocean Blue',
     fill: '#0284c7',
     text: '#0369a1',
-    tags: ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat']
+    tags: ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat', 'boating & marine']
   }
 };
 
-// Expose categoryColors globally
+// Curated Directory Views (Quick Views)
+const directoryViews = {
+  'all': {
+    title: 'All Listings',
+    categories: ['safety', 'nightlife', 'food', 'wellness', 'shop', 'services', 'public', 'autos', 'recreation', 'parking', 'home-business', 'industrial', 'boating']
+  },
+  'walkup': {
+    title: 'Walk-Up & Retail',
+    categories: ['food', 'nightlife', 'shop', 'wellness']
+  },
+  'industrial': {
+    title: 'Industrial & Trade',
+    categories: ['industrial']
+  },
+  'services': {
+    title: 'Services & Pro',
+    categories: ['services', 'home-business']
+  },
+  'public': {
+    title: 'Parks & Public',
+    categories: ['public', 'safety', 'recreation', 'parking']
+  },
+  'automarine': {
+    title: 'Auto & Marine',
+    categories: ['autos', 'boating']
+  }
+};
+
+// Expose categoryColors and directoryViews globally
 window.categoryColors = categoryColors;
+window.directoryViews = directoryViews;
 
 // Centralized dynamic tag mapping
 window.tagColors = {};

@@ -5,6 +5,7 @@
 
 // Global Directory State
 let allDirFeatures = [];
+let selectedView = 'all';
 const selectedCategories = new Set(['all']);
 const selectedFilters = new Set(['all']);
 
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (dirSearch) dirSearch.addEventListener('input', renderDirectory);
   if (dirSort) dirSort.addEventListener('change', renderDirectory);
 
+  initQuickViews();
   initResetButton();
 
   // Boot Directory
@@ -180,6 +182,15 @@ async function initDirectory() {
       dirSearch.value = initialSearch;
     }
 
+    const initialView = bootUrlParams.get('view');
+    if (initialView && window.directoryViews && window.directoryViews[initialView]) {
+      selectedView = initialView;
+      setActiveView(initialView, false);
+    }
+
+    // Update live counter badges for Quick Views
+    updateQuickViewCounts();
+
     // Populate drop-downs
     populateCategoryDropdown();
     populateTagDropdown(sortedTags);
@@ -194,6 +205,77 @@ async function initDirectory() {
   } catch (err) {
     console.error('Error loading directory files:', err);
     if (dirGrid) dirGrid.innerHTML = '<p class="error-text">Could not load directory data.</p>';
+  }
+}
+
+// Quick Views Helper Functions
+function getFeatureCategory(f) {
+  if (!f || !f.properties) return null;
+  const primTag = f.properties.primary_tag;
+  if (primTag && window.tagToCategory && window.tagToCategory[primTag]) {
+    return window.tagToCategory[primTag];
+  }
+  if (f._source && window.tagToCategory && window.tagToCategory[f._source]) {
+    return window.tagToCategory[f._source];
+  }
+  return null;
+}
+
+function featureMatchesView(f, viewKey) {
+  if (!viewKey || viewKey === 'all') return true;
+  if (!window.directoryViews || !window.directoryViews[viewKey]) return true;
+  const featCat = getFeatureCategory(f);
+  return featCat && window.directoryViews[viewKey].categories.includes(featCat);
+}
+
+function updateQuickViewCounts() {
+  if (!window.directoryViews) return;
+  const counts = { all: allDirFeatures.length };
+  Object.keys(window.directoryViews).forEach(vk => {
+    if (vk !== 'all') counts[vk] = 0;
+  });
+
+  allDirFeatures.forEach(f => {
+    const featCat = getFeatureCategory(f);
+    if (!featCat) return;
+    Object.keys(window.directoryViews).forEach(vk => {
+      if (vk === 'all') return;
+      if (window.directoryViews[vk].categories.includes(featCat)) {
+        counts[vk]++;
+      }
+    });
+  });
+
+  Object.keys(counts).forEach(vk => {
+    const countEl = document.getElementById(`count-${vk}`);
+    if (countEl) countEl.innerText = counts[vk];
+  });
+}
+
+function initQuickViews() {
+  const pillsContainer = document.getElementById('quick-views-pills');
+  if (!pillsContainer) return;
+  pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const viewKey = btn.getAttribute('data-view') || 'all';
+      setActiveView(viewKey, true);
+    });
+  });
+}
+
+function setActiveView(viewKey, triggerRender = true) {
+  selectedView = viewKey;
+  const pillsContainer = document.getElementById('quick-views-pills');
+  if (pillsContainer) {
+    pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+      const isCurrent = btn.getAttribute('data-view') === viewKey;
+      btn.classList.toggle('active', isCurrent);
+      btn.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+    });
+  }
+  if (triggerRender) {
+    updateUrlParams(true);
+    renderDirectory();
   }
 }
 
@@ -341,6 +423,11 @@ function renderDirectory() {
   const sortVal = dirSort.value;
 
   const results = allDirFeatures.filter(f => {
+    // Filter by Quick View
+    if (!featureMatchesView(f, selectedView)) {
+      return false;
+    }
+
     // Custom Multi-select Tags filter
     if (!selectedFilters.has('all') && selectedFilters.size > 0) {
       const tags = [];
@@ -523,6 +610,12 @@ function updateUrlParams(immediate = false) {
       newParams.delete('search');
     }
 
+    if (selectedView && selectedView !== 'all') {
+      newParams.set('view', selectedView);
+    } else {
+      newParams.delete('view');
+    }
+
     const filterValues = [];
     
     if (selectedFilters && !selectedFilters.has('all')) {
@@ -570,6 +663,17 @@ function initResetButton() {
   if (!resetBtn) return;
 
   resetBtn.addEventListener('click', () => {
+    // 0. Reset selected Quick View
+    selectedView = 'all';
+    const pillsContainer = document.getElementById('quick-views-pills');
+    if (pillsContainer) {
+      pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+        const isAll = btn.getAttribute('data-view') === 'all';
+        btn.classList.toggle('active', isAll);
+        btn.setAttribute('aria-pressed', isAll ? 'true' : 'false');
+      });
+    }
+
     // 1. Reset directory search
     if (dirSearch) dirSearch.value = '';
 
@@ -627,6 +731,11 @@ function getFilteredCards(includeAll = false) {
   const sortVal = dirSort.value;
 
   const results = allDirFeatures.filter(f => {
+    // Filter by Quick View
+    if (!featureMatchesView(f, selectedView)) {
+      return false;
+    }
+
     // Custom Multi-select Tags filter
     if (!selectedFilters.has('all') && selectedFilters.size > 0) {
       const tags = [];
@@ -704,6 +813,11 @@ function getPrintHeaderTitle() {
   const url = new URL(window.location.href);
   const searchParams = url.searchParams;
   const selections = [];
+
+  const view = searchParams.get('view');
+  if (view && window.directoryViews && window.directoryViews[view] && view !== 'all') {
+    selections.push(`View: ${window.directoryViews[view].title}`);
+  }
   
   const filter = searchParams.get('filter');
   if (filter) {

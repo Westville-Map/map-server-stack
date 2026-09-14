@@ -51,6 +51,37 @@
         </div>
       </div>
 
+      <!-- Quick Views / Summary Statistics Bar -->
+      <div class="directory-quick-views" id="directory-quick-views" role="toolbar" aria-label="Quick directory views">
+        <span class="quick-views-label">Quick Views:</span>
+        <div class="quick-views-pills" id="quick-views-pills">
+          <button type="button" class="quick-view-pill active" data-view="all" aria-pressed="true">
+            <span class="quick-view-title">All Listings</span>
+            <span class="quick-view-count" id="count-all">0</span>
+          </button>
+          <button type="button" class="quick-view-pill" data-view="walkup" aria-pressed="false">
+            <span class="quick-view-title">Walk-Up &amp; Retail</span>
+            <span class="quick-view-count" id="count-walkup">0</span>
+          </button>
+          <button type="button" class="quick-view-pill" data-view="industrial" aria-pressed="false">
+            <span class="quick-view-title">Industrial &amp; Trade</span>
+            <span class="quick-view-count" id="count-industrial">0</span>
+          </button>
+          <button type="button" class="quick-view-pill" data-view="services" aria-pressed="false">
+            <span class="quick-view-title">Services &amp; Pro</span>
+            <span class="quick-view-count" id="count-services">0</span>
+          </button>
+          <button type="button" class="quick-view-pill" data-view="public" aria-pressed="false">
+            <span class="quick-view-title">Parks &amp; Public</span>
+            <span class="quick-view-count" id="count-public">0</span>
+          </button>
+          <button type="button" class="quick-view-pill" data-view="automarine" aria-pressed="false">
+            <span class="quick-view-title">Auto &amp; Marine</span>
+            <span class="quick-view-count" id="count-automarine">0</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Directory Controls (Matches Home Page design exactly for complete consistency) -->
       <div class="directory-controls">
         <input type="search" id="dir-search" class="directory-search" placeholder="Search businesses, services, parks..." aria-label="Search Westville directory" />
