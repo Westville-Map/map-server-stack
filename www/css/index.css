@@ -818,13 +818,13 @@
   cursor: pointer;
   pointer-events: auto;
 }
-.labels-sub-tag:not(.checked) {
+.labels-sub-tag:not(.checked):not(:has(#layer-labels:checked)) {
   opacity: 0.8 !important;
   filter: saturate(0.8) grayscale(10%) !important;
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.35);
 }
-.labels-sub-tag:not(.checked):hover {
+.labels-sub-tag:not(.checked):not(:has(#layer-labels:checked)):hover {
   opacity: 1 !important;
   filter: none !important;
   background-color: rgba(236, 72, 153, 0.15) !important;

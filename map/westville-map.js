@@ -386,7 +386,36 @@ try {
           return;
       }
 
-      // Call original function for other layers (e.g. satellite-layer, Background)
+      // Check if Background (basemap) is being toggled - virtual layer, not in MapLibre style
+      if (layerId === 'Background') {
+          if (name === 'visibility') {
+              layerStates['Background'].visible = (value === 'visible');
+              syncMapStyleState();
+          }
+          return;
+      }
+
+      // Check if satellite layer is being toggled
+      if (layerId === 'satellite-layer') {
+          originalSetLayoutProperty(layerId, name, value);
+          if (name === 'visibility') {
+              const isSatOn = (value === 'visible');
+              layerStates['satellite-layer'].visible = isSatOn;
+              // If satellite is turned off and labels are hidden, automatically restore labels
+              if (!isSatOn && !layerStates['map-labels'].visible) {
+                  map.setLayoutProperty('map-labels', 'visibility', 'visible');
+                  const labelsSpan = document.querySelector('span.layer-control-name[title="map-labels"], span.layer-control-name[title="Labels"]');
+                  if (labelsSpan) {
+                      const labelsCb = labelsSpan.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+                      if (labelsCb) labelsCb.checked = true;
+                  }
+              }
+              syncMapStyleState();
+          }
+          return;
+      }
+
+      // Call original function for other layers
       originalSetLayoutProperty(layerId, name, value);
 
       if (name === 'visibility') {
@@ -1485,6 +1514,20 @@ try {
                        }
                    }
                });
+           // Ensure virtual layers not present in layerCheckboxes (e.g. map-labels or Background) are always reflected
+           if (!currentShows.includes('labels') && !currentHides.includes('labels')) {
+               if (layerStates['map-labels'] && layerStates['map-labels'].visible) {
+                   currentShows.push('labels');
+               } else {
+                   currentHides.push('labels');
+               }
+           }
+           if (!currentShows.includes('map') && !currentHides.includes('map')) {
+               if (layerStates['Background'] && layerStates['Background'].visible) {
+                   currentShows.push('map');
+               } else {
+                   currentHides.push('map');
+               }
            }
 
           if (currentShows.length > 0) newParams.set('show', currentShows.join(','));
@@ -1965,14 +2008,26 @@ window.addEventListener('message', (event) => {
                 map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
             }
 
+            // If satellite is being toggled off and labels are hidden, automatically restore labels
+            if (friendlyName === 'satellite' && !visible && !layerStates['map-labels'].visible) {
+                layerStates['map-labels'].visible = true;
+                if (map) {
+                    map.setLayoutProperty('map-labels', 'visibility', 'visible');
+                }
+                const labelsSpan = document.querySelector('span.layer-control-name[title="map-labels"], span.layer-control-name[title="Labels"]');
+                if (labelsSpan) {
+                    const labelsCb = labelsSpan.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
+                    if (labelsCb) labelsCb.checked = true;
+                }
+            }
+
             // Synchronize the layer control widget checkbox if present
-            const title = (layerId === 'Background') ? 'Background' : layerStates[layerId].name;
-            let labelSpan = document.querySelector(`span.layer-control-name[title="${title}"]`);
+            let labelSpan = document.querySelector(`span.layer-control-name[title="${layerId}"], span.layer-control-name[title="${layerStates[layerId].name}"]`);
             if (!labelSpan && layerId === 'Background') {
                 labelSpan = document.querySelector(`span.layer-control-name[title="Map"]`);
             }
             if (labelSpan) {
-                const container = labelSpan.closest('label') || labelSpan.parentElement;
+                const container = labelSpan.closest('.layer-control-item') || labelSpan.closest('label') || labelSpan.parentElement;
                 if (container) {
                     const checkbox = container.querySelector('input[type="checkbox"]');
                     if (checkbox) {

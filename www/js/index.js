@@ -160,50 +160,40 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
     const show = searchParams.get('show');
     const hide = searchParams.get('hide');
 
-    // Default: all thematic layers, map, and satellite are visible by default
-    let visible = true;
-
-    if (show) {
-      const showParams = show.toLowerCase().split(',');
-      if (showParams.includes('all')) {
-        visible = true;
-      } else {
-        const thematicLayers = ['parking', 'establishments', 'recreation'];
-        if (thematicLayers.includes(friendlyName)) {
-          visible = showParams.includes(friendlyName);
-        } else if (friendlyName === 'satellite') {
-          visible = showParams.includes('satellite');
-        } else if (friendlyName === 'map') {
-          if (showParams.includes('map')) {
-            visible = true;
-          } else if (showParams.includes('satellite')) {
-            visible = false;
-          }
-        } else if (friendlyName === 'labels') {
-          visible = showParams.includes('labels');
-        }
-      }
-    } else if (friendlyName === 'labels') {
-      visible = true;
-    }
-
+    // 1. Explicit hide check
     if (hide) {
       const hideParams = hide.toLowerCase().split(',');
-      if (hideParams.includes('all')) {
-        visible = false;
-      } else if (hideParams.includes(friendlyName)) {
-        visible = false;
+      if (hideParams.includes('all') || hideParams.includes(friendlyName)) {
+        return false;
       }
     }
 
+    // 2. Explicit show check
     if (show) {
       const showParams = show.toLowerCase().split(',');
-      if (showParams.includes(friendlyName)) {
-        visible = true;
+      if (showParams.includes('all') || showParams.includes(friendlyName)) {
+        return true;
+      }
+
+      // If show is specified and friendlyName is not in it:
+      const thematicLayers = ['parking', 'establishments', 'recreation'];
+      if (thematicLayers.includes(friendlyName)) {
+        return false;
+      }
+      if (friendlyName === 'map') {
+        return showParams.includes('map') || !showParams.includes('satellite');
+      }
+      if (friendlyName === 'satellite') {
+        return showParams.includes('satellite');
+      }
+      if (friendlyName === 'labels') {
+        // Labels is visible unless explicitly present in hide (checked above)
+        return true;
       }
     }
 
-    return visible;
+    // Default: visible
+    return true;
   } catch (e) {
     return true;
   }
@@ -2047,6 +2037,19 @@ function initLayerCheckboxes() {
             } else {
               labelsContainer.style.display = 'none';
               labelsContainer.closest('.satellite-merged-group')?.classList.remove('has-labels');
+              // If satellite is toggled off and labels were hidden, automatically re-enable labels
+              if (labelsCb && !labelsCb.checked) {
+                labelsCb.checked = true;
+                labelsContainer.classList.add('checked');
+                const iframe = document.getElementById('mapFrame');
+                if (iframe && iframe.contentWindow) {
+                  iframe.contentWindow.postMessage({
+                    type: 'parent-toggle-layer',
+                    layer: 'labels',
+                    visible: true
+                  }, '*');
+                }
+              }
             }
           }
         }
