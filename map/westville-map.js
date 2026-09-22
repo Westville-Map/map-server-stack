@@ -128,6 +128,24 @@ const LAYER_ID_MAP = {
   'labels': 'map-labels'
 };
 
+const FOCUS_PRESETS = {
+  'parking': {
+    visible: ['parking', 'map', 'satellite', 'labels'],
+    hidden: ['establishments', 'recreation'],
+    label: 'Parking'
+  },
+  'establishments': {
+    visible: ['establishments', 'map', 'satellite', 'labels'],
+    hidden: ['parking', 'recreation'],
+    label: 'Establishments'
+  },
+  'recreation': {
+    visible: ['recreation', 'map', 'satellite', 'labels'],
+    hidden: ['parking', 'establishments'],
+    label: 'Recreation'
+  }
+};
+
 const layerStates = {
   'custom-parking-fill': { visible: true, opacity: 0.3, name: 'Parking' },
   'custom-markers': { visible: true, opacity: 1, name: 'Establishments' },
@@ -138,71 +156,45 @@ const layerStates = {
 };
 
 // Apply URL overrides
-const allLayerNames = Object.keys(LAYER_ID_MAP);
+const focusParam = params.get('focus') ? params.get('focus').toLowerCase().trim() : null;
 
-if (params.get('show')) {
-  if (showParams.includes('all')) {
-    allLayerNames.forEach(name => {
-      layerStates[LAYER_ID_MAP[name]].visible = true;
-    });
-  } else {
-    // 1. Hide thematic layers not explicitly listed in show
-    const thematicLayers = ['parking', 'establishments', 'recreation'];
-    thematicLayers.forEach(friendlyName => {
-      const layerId = LAYER_ID_MAP[friendlyName];
-      if (showParams.includes(friendlyName)) {
-        layerStates[layerId].visible = true;
-      } else {
-        layerStates[layerId].visible = false;
-      }
-    });
-
-    // 2. Map & Satellite exclusivity / visibility rules
-    if (showParams.includes('satellite')) {
-      layerStates['satellite-layer'].visible = true;
-    } else {
-      layerStates['satellite-layer'].visible = false;
-    }
-
-    if (showParams.includes('map')) {
-      layerStates['Background'].visible = true;
-    } else if (showParams.includes('satellite') && !showParams.includes('map')) {
-      layerStates['Background'].visible = false;
-    }
-
-    // 3. Labels visibility rule
-    if (showParams.includes('labels')) {
-      layerStates['map-labels'].visible = true;
-    } else {
-      layerStates['map-labels'].visible = false;
-    }
-  }
+// 1. Apply focus preset if specified
+if (focusParam && FOCUS_PRESETS[focusParam]) {
+  const preset = FOCUS_PRESETS[focusParam];
+  preset.visible.forEach(friendly => {
+    const layerId = LAYER_ID_MAP[friendly];
+    if (layerId && layerStates[layerId]) layerStates[layerId].visible = true;
+  });
+  preset.hidden.forEach(friendly => {
+    const layerId = LAYER_ID_MAP[friendly];
+    if (layerId && layerStates[layerId]) layerStates[layerId].visible = false;
+  });
 }
 
-// 3. Handle magic 'all' hide
+// 2. Apply explicit hide deltas
 if (hideParams.includes('all')) {
-  allLayerNames.forEach(name => {
-    layerStates[LAYER_ID_MAP[name]].visible = false;
-  });
-} else {
-  // Apply specific hides
-  hideParams.forEach(friendlyName => {
-    const layerId = LAYER_ID_MAP[friendlyName];
-    if (layerId) {
-      layerStates[layerId].visible = false;
-    }
+  ['parking', 'establishments', 'recreation'].forEach(friendly => {
+    const layerId = LAYER_ID_MAP[friendly];
+    if (layerId && layerStates[layerId]) layerStates[layerId].visible = false;
   });
 }
+hideParams.forEach(friendly => {
+  if (friendly === 'all') return;
+  const layerId = LAYER_ID_MAP[friendly];
+  if (layerId && layerStates[layerId]) {
+    layerStates[layerId].visible = false;
+  }
+});
 
-// 4. Double check any specific show parameters are explicitly respected (if hide didn't block them)
-showParams.forEach(friendlyName => {
-  const layerId = LAYER_ID_MAP[friendlyName];
-  if (layerId && friendlyName !== 'all') {
+// 3. Apply explicit show deltas (strictly additive)
+showParams.forEach(friendly => {
+  const layerId = LAYER_ID_MAP[friendly];
+  if (layerId && layerStates[layerId]) {
     layerStates[layerId].visible = true;
   }
 });
 
-// 5. Enforce at least one background layer is visible initially
+// 4. Enforce at least one background layer is visible initially
 if (!layerStates['Background'].visible && !layerStates['satellite-layer'].visible) {
   layerStates['Background'].visible = true;
 }
@@ -1481,65 +1473,52 @@ try {
       updateUrlParams = function() {
           const newParams = new URLSearchParams();
           
-           // Compute show/hide based on checkboxes if rendered, otherwise fall back to layerStates
-           const currentShows = [];
-           const currentHides = [];
-           const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
-           if (layerCheckboxes.length > 0) {
-               layerCheckboxes.forEach(cb => {
-                   const item = cb.closest('.layer-control-item');
-                   if (item) {
-                       const labelEl = item.querySelector('.layer-control-name');
-                       const title = labelEl ? labelEl.getAttribute('title') : '';
-                       const layerId = Object.keys(layerStates).find(id => id === title || layerStates[id].name === title);
-                       if (layerId) {
-                           layerStates[layerId].visible = cb.checked; // Synchronize layerStates!
-                           const friendly = Object.keys(LAYER_ID_MAP).find(k => LAYER_ID_MAP[k] === layerId);
-                           if (friendly) {
-                               if (cb.checked) currentShows.push(friendly);
-                               else currentHides.push(friendly);
-                           }
-                       }
-                   }
-               });
-           } else {
-               // Fallback to layerStates before checkboxes are rendered
-               Object.keys(LAYER_ID_MAP).forEach(friendly => {
-                   const layerId = LAYER_ID_MAP[friendly];
-                   if (layerStates[layerId]) {
-                       if (layerStates[layerId].visible) {
-                           currentShows.push(friendly);
-                       } else {
-                           currentHides.push(friendly);
-                       }
-                   }
-               });
-           }
+          // Synchronize layerStates from layer control checkboxes if rendered
+          const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
+          if (layerCheckboxes.length > 0) {
+              layerCheckboxes.forEach(cb => {
+                  const item = cb.closest('.layer-control-item');
+                  if (item) {
+                      const labelEl = item.querySelector('.layer-control-name');
+                      const title = labelEl ? labelEl.getAttribute('title') : '';
+                      const layerId = Object.keys(layerStates).find(id => id === title || layerStates[id].name === title);
+                      if (layerId) {
+                          layerStates[layerId].visible = cb.checked;
+                      }
+                  }
+              });
+          }
 
-           // Ensure virtual layers not present in layerCheckboxes (e.g. map-labels or Background) are always reflected
-           if (!currentShows.includes('labels') && !currentHides.includes('labels')) {
-               if (layerStates['map-labels'] && layerStates['map-labels'].visible) {
-                   currentShows.push('labels');
-               } else {
-                   currentHides.push('labels');
-               }
-           }
-           if (!currentShows.includes('map') && !currentHides.includes('map')) {
-               if (layerStates['Background'] && layerStates['Background'].visible) {
-                   currentShows.push('map');
-               } else {
-                   currentHides.push('map');
-               }
-           }
+          // Check if current layer states match any FOCUS_PRESETS exactly
+          let matchedPreset = null;
+          for (const [presetKey, preset] of Object.entries(FOCUS_PRESETS)) {
+              const matchesVisible = preset.visible.every(f => layerStates[LAYER_ID_MAP[f]]?.visible);
+              const matchesHidden = preset.hidden.every(f => !layerStates[LAYER_ID_MAP[f]]?.visible);
+              if (matchesVisible && matchesHidden) {
+                  matchedPreset = presetKey;
+                  break;
+              }
+          }
 
-          if (currentShows.length > 0) newParams.set('show', currentShows.join(','));
-          if (currentHides.length > 0) newParams.set('hide', currentHides.join(','));
+          if (matchedPreset) {
+              newParams.set('focus', matchedPreset);
+          } else {
+              const defaultLayers = ['parking', 'establishments', 'recreation', 'satellite', 'map', 'labels'];
+              const isDefaultAll = defaultLayers.every(f => layerStates[LAYER_ID_MAP[f]]?.visible);
+              if (!isDefaultAll) {
+                  const hidden = defaultLayers.filter(f => !layerStates[LAYER_ID_MAP[f]]?.visible);
+                  const thematic = ['parking', 'establishments', 'recreation'];
+                  const allThematicHidden = thematic.every(f => hidden.includes(f));
+                  if (allThematicHidden && hidden.length === 3) {
+                      newParams.set('hide', 'all');
+                  } else if (hidden.length > 0) {
+                      newParams.set('hide', hidden.join(','));
+                  }
+              }
+          }
 
           // Dynamically adjust satellite opacity based on Map (Background) layer checkbox state changes
           let mapVisible = layerStates['Background'].visible;
-          if (layerCheckboxes.length > 0) {
-              mapVisible = currentShows.includes('map');
-          }
           if (lastMapVisible === null) {
               lastMapVisible = mapVisible;
           } else if (mapVisible !== lastMapVisible) {
@@ -1850,31 +1829,9 @@ try {
                       map.flyTo({ center: [lng, lat], zoom: 16 });
                   }
               } else if (initFeature) {
-                  if (initFeature.toLowerCase() === 'parking') {
-                      selectedFeatureName = 'Parking';
-                      if (searchInput) searchInput.value = 'Parking';
-                      if (searchResults) searchResults.classList.remove('active');
-
-                      map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-
-                      const parkingFeatures = collections.parking ? collections.parking.features : [];
-                      map.getSource('highlight-poly-source').setData({
-                          type: 'FeatureCollection',
-                          features: parkingFeatures
-                      });
-
-                      const bounds = getFeaturesBounds(parkingFeatures);
-                      if (bounds) {
-                          map.fitBounds(bounds, {
-                              padding: { top: 120, bottom: 60, left: 60, right: 60 },
-                              maxZoom: 16
-                          });
-                      }
-                  } else {
-                      const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
-                      if (match) {
-                          selectFeature(match);
-                      }
+                  const match = allFeatures.find(f => (f.properties.name||'').toLowerCase() === initFeature.toLowerCase());
+                  if (match) {
+                      selectFeature(match);
                   }
               } else if (initSearchStr || initUrl.get('filter')) {
                   if (initSearchStr) searchInput.value = initSearchStr;

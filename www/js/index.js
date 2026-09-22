@@ -153,46 +153,60 @@ if (shareLocationBtn) {
 
 
 // --- Map Header Synchronization ---
+const FOCUS_PRESETS = {
+  'parking': {
+    visible: ['parking', 'map', 'satellite', 'labels'],
+    hidden: ['establishments', 'recreation'],
+    label: 'Parking'
+  },
+  'establishments': {
+    visible: ['establishments', 'map', 'satellite', 'labels'],
+    hidden: ['parking', 'recreation'],
+    label: 'Establishments'
+  },
+  'recreation': {
+    visible: ['recreation', 'map', 'satellite', 'labels'],
+    hidden: ['parking', 'establishments'],
+    label: 'Recreation'
+  }
+};
+
 function getLayerVisibilityFromUrl(urlString, friendlyName) {
   try {
     const url = new URL(urlString);
     const searchParams = url.searchParams;
-    const show = searchParams.get('show');
+    const focus = searchParams.get('focus') ? searchParams.get('focus').toLowerCase().trim() : null;
     const hide = searchParams.get('hide');
+    const show = searchParams.get('show');
 
-    // 1. Explicit hide check
+    // 1. Focus preset evaluation
+    if (focus && FOCUS_PRESETS[focus]) {
+      const preset = FOCUS_PRESETS[focus];
+      if (preset.hidden.includes(friendlyName)) return false;
+      if (preset.visible.includes(friendlyName)) return true;
+    }
+
+    // 2. Explicit hide check
     if (hide) {
-      const hideParams = hide.toLowerCase().split(',');
-      if (hideParams.includes('all') || hideParams.includes(friendlyName)) {
+      const hideParams = hide.toLowerCase().split(',').map(s => s.trim());
+      if (hideParams.includes('all')) {
+        if (['parking', 'establishments', 'recreation'].includes(friendlyName)) {
+          return false;
+        }
+      } else if (hideParams.includes(friendlyName)) {
         return false;
       }
     }
 
-    // 2. Explicit show check
+    // 3. Explicit show check (strictly additive)
     if (show) {
-      const showParams = show.toLowerCase().split(',');
+      const showParams = show.toLowerCase().split(',').map(s => s.trim());
       if (showParams.includes('all') || showParams.includes(friendlyName)) {
         return true;
       }
-
-      // If show is specified and friendlyName is not in it:
-      const thematicLayers = ['parking', 'establishments', 'recreation'];
-      if (thematicLayers.includes(friendlyName)) {
-        return false;
-      }
-      if (friendlyName === 'map') {
-        return showParams.includes('map') || !showParams.includes('satellite');
-      }
-      if (friendlyName === 'satellite') {
-        return showParams.includes('satellite');
-      }
-      if (friendlyName === 'labels') {
-        // Labels is visible unless explicitly present in hide (checked above)
-        return true;
-      }
     }
 
-    // Default: visible
+    // Default baseline: all layers visible
     return true;
   } catch (e) {
     return true;
@@ -200,38 +214,17 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
 }
 
 function checkQuickViewActive(searchParams, viewType) {
-  const hide = searchParams.get('hide') || '';
-  const show = searchParams.get('show') || '';
-  const filter = searchParams.get('filter') || '';
+  const focus = searchParams.get('focus') ? searchParams.get('focus').toLowerCase().trim() : '';
   const search = searchParams.get('search') || '';
   const feature = searchParams.get('feature') || '';
   const gps = searchParams.get('gps') || '';
 
-  if (viewType === 'parking' && feature.toLowerCase() === 'parking') {
-    return !search && !gps;
-  }
-
+  // Feature, search, or gps override preset highlight
   if (search || feature || gps) {
     return false;
   }
 
-  const normalizeList = (str) => {
-    return str.toLowerCase().split(',').map(s => s.trim()).filter(Boolean).sort().join(',');
-  };
-
-  const normHide = normalizeList(hide);
-  const normShow = normalizeList(show);
-  const normFilter = normalizeList(filter);
-
-  if (viewType === 'parking') {
-    return normHide === 'establishments' && normFilter === 'parking' && normShow === '';
-  } else if (viewType === 'establishments') {
-    return normHide === 'all' && normShow === 'establishments,map,satellite' && normFilter === '';
-  } else if (viewType === 'recreation') {
-    return normHide === 'establishments' && normShow === 'recreation' && normFilter === '';
-  }
-
-  return false;
+  return focus === viewType;
 }
 
 function updateMapHeaderFromUrl(urlString) {
@@ -1083,7 +1076,7 @@ function renderDirectory() {
     const triggerMapCenter = () => {
       const iframe = document.getElementById('mapFrame');
       if (iframe) {
-        const nextUrl = `${MAP_DOMAIN}/?show=all&feature=${encodeURIComponent(f.properties.name)}`;
+        const nextUrl = `${MAP_DOMAIN}/?feature=${encodeURIComponent(f.properties.name)}`;
         iframe.src = nextUrl;
         if (typeof updateMapHeaderFromUrl === 'function') {
           updateMapHeaderFromUrl(nextUrl);
@@ -1313,14 +1306,9 @@ function getPrintHeaderTitle() {
   const search = searchParams.get('search');
   if (search && !feature) selections.push(`Search: "${search}"`);
   
-  const show = searchParams.get('show');
-  if (show) {
-    show.split(',').forEach(s => {
-      const clean = s.trim().toLowerCase();
-      if (clean === 'establishments') selections.push('Establishments');
-      else if (clean === 'recreation') selections.push('Recreation');
-      else if (clean === 'parking') selections.push('Parking');
-    });
+  const focus = searchParams.get('focus');
+  if (focus && FOCUS_PRESETS[focus.toLowerCase()]) {
+    selections.push(FOCUS_PRESETS[focus.toLowerCase()].label);
   }
   
   if (selections.length === 0) {
