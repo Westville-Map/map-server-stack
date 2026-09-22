@@ -207,6 +207,13 @@ if (!layerStates['Background'].visible && !layerStates['satellite-layer'].visibl
   layerStates['Background'].visible = true;
 }
 
+// Track user category overlay preferences so toggling Labels off/on never destroys user selections
+const userOverlayPreferences = {
+  'custom-parking-fill': layerStates['custom-parking-fill'].visible,
+  'custom-markers': layerStates['custom-markers'].visible,
+  'park-layer-fill': layerStates['park-layer-fill'].visible
+};
+
 
 const bounds = [-75.25794564779246, 39.75364908034561, -75.00289227019784, 39.98850386620689];
 
@@ -299,7 +306,7 @@ try {
       
       const mapVisible = mapCheckbox ? mapCheckbox.checked : layerStates['Background'].visible;
       const satelliteVisible = satelliteCheckbox ? satelliteCheckbox.checked : layerStates['satellite-layer'].visible;
-      const labelsVisible = (labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible) && (value === undefined || layerId !== 'map-labels' ? true : value === 'visible');
+      const labelsVisible = (layerId === 'map-labels' && value !== undefined) ? (value === 'visible') : (labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible);
 
       const currentZoom = map ? map.getZoom() : 14.25;
       const shouldBasemapBeVisible = mapVisible || (satelliteVisible && currentZoom >= 18.5);
@@ -316,18 +323,18 @@ try {
                   }
               });
 
-              // Synchronize custom parking overlay
-              const parkingTarget = (layerStates['custom-parking-fill'].visible && isLabelsOn) ? 'visible' : 'none';
+              // Synchronize custom parking overlay according to user overlay preference
+              const parkingTarget = (userOverlayPreferences['custom-parking-fill'] && isLabelsOn) ? 'visible' : 'none';
               if (map.getLayer('custom-parking-fill')) originalSetLayoutProperty('custom-parking-fill', 'visibility', parkingTarget);
               if (map.getLayer('parking-layer-symbols')) originalSetLayoutProperty('parking-layer-symbols', 'visibility', parkingTarget);
 
-              // Synchronize custom establishments overlay
-              const estTarget = (layerStates['custom-markers'].visible && isLabelsOn) ? 'visible' : 'none';
+              // Synchronize custom establishments overlay according to user overlay preference
+              const estTarget = (userOverlayPreferences['custom-markers'] && isLabelsOn) ? 'visible' : 'none';
               if (map.getLayer('custom-markers')) originalSetLayoutProperty('custom-markers', 'visibility', estTarget);
               if (map.getLayer('custom-labels')) originalSetLayoutProperty('custom-labels', 'visibility', estTarget);
 
-              // Synchronize custom recreation overlay
-              const recTarget = (layerStates['park-layer-fill'].visible && isLabelsOn) ? 'visible' : 'none';
+              // Synchronize custom recreation overlay according to user overlay preference
+              const recTarget = (userOverlayPreferences['park-layer-fill'] && isLabelsOn) ? 'visible' : 'none';
               if (map.getLayer('park-layer-fill')) originalSetLayoutProperty('park-layer-fill', 'visibility', recTarget);
               if (map.getLayer('custom-park-outline')) originalSetLayoutProperty('custom-park-outline', 'visibility', recTarget);
               if (map.getLayer('walkingpath-outline')) originalSetLayoutProperty('walkingpath-outline', 'visibility', recTarget);
@@ -344,26 +351,32 @@ try {
           return;
       }
 
-      // Check if thematic layers are being toggled while map-labels is off
+      // Check if thematic layers are being toggled
       if (layerId === 'custom-parking-fill' && name === 'visibility') {
-          layerStates['custom-parking-fill'].visible = (value === 'visible');
-          const effectiveVal = (value === 'visible' && labelsVisible) ? 'visible' : 'none';
+          const isRequestedVisible = (value === 'visible');
+          userOverlayPreferences['custom-parking-fill'] = isRequestedVisible;
+          layerStates['custom-parking-fill'].visible = isRequestedVisible;
+          const effectiveVal = (isRequestedVisible && labelsVisible) ? 'visible' : 'none';
           originalSetLayoutProperty('custom-parking-fill', 'visibility', effectiveVal);
           originalSetLayoutProperty('parking-layer-symbols', 'visibility', effectiveVal);
           syncMapStyleState();
           return;
       }
       if (layerId === 'custom-markers' && name === 'visibility') {
-          layerStates['custom-markers'].visible = (value === 'visible');
-          const effectiveVal = (value === 'visible' && labelsVisible) ? 'visible' : 'none';
+          const isRequestedVisible = (value === 'visible');
+          userOverlayPreferences['custom-markers'] = isRequestedVisible;
+          layerStates['custom-markers'].visible = isRequestedVisible;
+          const effectiveVal = (isRequestedVisible && labelsVisible) ? 'visible' : 'none';
           originalSetLayoutProperty('custom-markers', 'visibility', effectiveVal);
           originalSetLayoutProperty('custom-labels', 'visibility', effectiveVal);
           syncMapStyleState();
           return;
       }
       if (layerId === 'park-layer-fill' && name === 'visibility') {
-          layerStates['park-layer-fill'].visible = (value === 'visible');
-          const effectiveVal = (value === 'visible' && labelsVisible) ? 'visible' : 'none';
+          const isRequestedVisible = (value === 'visible');
+          userOverlayPreferences['park-layer-fill'] = isRequestedVisible;
+          layerStates['park-layer-fill'].visible = isRequestedVisible;
+          const effectiveVal = (isRequestedVisible && labelsVisible) ? 'visible' : 'none';
           originalSetLayoutProperty('park-layer-fill', 'visibility', effectiveVal);
           originalSetLayoutProperty('custom-park-outline', 'visibility', effectiveVal);
           originalSetLayoutProperty('walkingpath-outline', 'visibility', effectiveVal);
@@ -429,8 +442,8 @@ try {
           });
       }
 
-      // 2. Synchronize thematic overlay layers with labelsVisible state
-      const parkingTarget = (layerStates['custom-parking-fill'].visible && labelsVisible) ? 'visible' : 'none';
+      // 2. Synchronize thematic overlay layers with userOverlayPreferences and labelsVisible state
+      const parkingTarget = (userOverlayPreferences['custom-parking-fill'] && labelsVisible) ? 'visible' : 'none';
       if (map.getLayer('custom-parking-fill') && map.getLayoutProperty('custom-parking-fill', 'visibility') !== parkingTarget) {
           originalSetLayoutProperty('custom-parking-fill', 'visibility', parkingTarget);
       }
@@ -438,7 +451,7 @@ try {
           originalSetLayoutProperty('parking-layer-symbols', 'visibility', parkingTarget);
       }
 
-      const estTarget = (layerStates['custom-markers'].visible && labelsVisible) ? 'visible' : 'none';
+      const estTarget = (userOverlayPreferences['custom-markers'] && labelsVisible) ? 'visible' : 'none';
       if (map.getLayer('custom-markers') && map.getLayoutProperty('custom-markers', 'visibility') !== estTarget) {
           originalSetLayoutProperty('custom-markers', 'visibility', estTarget);
       }
@@ -446,7 +459,7 @@ try {
           originalSetLayoutProperty('custom-labels', 'visibility', estTarget);
       }
 
-      const recTarget = (layerStates['park-layer-fill'].visible && labelsVisible) ? 'visible' : 'none';
+      const recTarget = (userOverlayPreferences['park-layer-fill'] && labelsVisible) ? 'visible' : 'none';
       if (map.getLayer('park-layer-fill') && map.getLayoutProperty('park-layer-fill', 'visibility') !== recTarget) {
           originalSetLayoutProperty('park-layer-fill', 'visibility', recTarget);
       }
@@ -1587,7 +1600,19 @@ try {
                   }
               }
 
+              // Update userOverlayPreferences for any changed layer control checkboxes
+              const targetItem = e.target.closest('.layer-control-item');
+              if (targetItem) {
+                  const labelEl = targetItem.querySelector('.layer-control-name');
+                  const title = labelEl ? labelEl.getAttribute('title') : '';
+                  const layerId = Object.keys(layerStates).find(id => id === title || layerStates[id].name === title);
+                  if (layerId && userOverlayPreferences[layerId] !== undefined) {
+                      userOverlayPreferences[layerId] = e.target.checked;
+                  }
+              }
+
               updateUrlParams();
+              syncMapStyleState();
           });
       });
       
@@ -1929,6 +1954,18 @@ window.addEventListener('message', (event) => {
         const visible = event.data.visible;
         const layerId = LAYER_ID_MAP[friendlyName];
         if (layerId) {
+            hasInteracted = true;
+            layerStates[layerId].visible = visible;
+            if (userOverlayPreferences[layerId] !== undefined) {
+                userOverlayPreferences[layerId] = visible;
+            }
+
+            // Directly invoke setLayoutProperty on the map
+            if (map) {
+                map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+            }
+
+            // Synchronize the layer control widget checkbox if present
             const title = (layerId === 'Background') ? 'Background' : layerStates[layerId].name;
             let labelSpan = document.querySelector(`span.layer-control-name[title="${title}"]`);
             if (!labelSpan && layerId === 'Background') {
@@ -1938,18 +1975,13 @@ window.addEventListener('message', (event) => {
                 const container = labelSpan.closest('label') || labelSpan.parentElement;
                 if (container) {
                     const checkbox = container.querySelector('input[type="checkbox"]');
-                    if (checkbox && checkbox.checked !== visible) {
-                        checkbox.click();
+                    if (checkbox) {
+                        checkbox.checked = visible;
                     }
                 }
-            } else {
-                // Fallback if layer control is not yet rendered
-                layerStates[layerId].visible = visible;
-                if (map) {
-                    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-                }
-                updateUrlParams();
             }
+
+            updateUrlParams();
         }
     }
 

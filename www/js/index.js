@@ -183,6 +183,8 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
           visible = showParams.includes('labels');
         }
       }
+    } else if (friendlyName === 'labels') {
+      visible = true;
     }
 
     if (hide) {

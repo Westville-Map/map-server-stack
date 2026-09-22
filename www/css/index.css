@@ -813,6 +813,25 @@
   filter: drop-shadow(0 0 3.5px #db2777) drop-shadow(0 0 1.5px #ec4899); /* Dual intense pink/rose glow */
 }
 
+/* Ensure labels-sub-tag is crisp, unmistakably clickable, and distinct when off */
+.labels-sub-tag {
+  cursor: pointer;
+  pointer-events: auto;
+}
+.labels-sub-tag:not(.checked) {
+  opacity: 0.8 !important;
+  filter: saturate(0.8) grayscale(10%) !important;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.labels-sub-tag:not(.checked):hover {
+  opacity: 1 !important;
+  filter: none !important;
+  background-color: rgba(236, 72, 153, 0.15) !important;
+  border-color: rgba(236, 72, 153, 0.6) !important;
+}
+
+
 /* Custom eyeball status indicator icon for labels toggle */
 .map-tag.interactive-tag:has(#layer-labels)::before,
 .map-tag.interactive-tag.labels-sub-tag::before {
