@@ -1514,6 +1514,8 @@ try {
                        }
                    }
                });
+           }
+
            // Ensure virtual layers not present in layerCheckboxes (e.g. map-labels or Background) are always reflected
            if (!currentShows.includes('labels') && !currentHides.includes('labels')) {
                if (layerStates['map-labels'] && layerStates['map-labels'].visible) {
