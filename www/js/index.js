@@ -180,7 +180,7 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
             visible = false;
           }
         } else if (friendlyName === 'labels') {
-          visible = true;
+          visible = showParams.includes('labels');
         }
       }
     }
@@ -346,13 +346,13 @@ function updateMapHeaderFromUrl(urlString) {
       }
     });
 
-    // Dynamically show/hide the Labels toggle depending on whether Satellite (and only Satellite) is checked
+    // Dynamically show/hide the Labels toggle depending on whether Satellite is checked
     const satelliteCb = document.getElementById('layer-satellite');
     const mapCb = document.getElementById('layer-map');
     const labelsCb = document.getElementById('layer-labels');
     const labelsContainer = document.getElementById('layer-labels-container');
     if (satelliteCb && mapCb && labelsContainer) {
-      const showLabelsToggle = satelliteCb.checked && !mapCb.checked;
+      const showLabelsToggle = satelliteCb.checked;
       if (showLabelsToggle) {
         labelsContainer.style.display = '';
         labelsContainer.closest('.satellite-merged-group')?.classList.add('has-labels');
@@ -2030,7 +2030,7 @@ function initLayerCheckboxes() {
           }
         }
 
-        // Dynamically show/hide the Labels toggle depending on whether Satellite (and only Satellite) is checked
+        // Dynamically show/hide the Labels toggle depending on whether Satellite is checked
         if (layer === 'satellite' || layer === 'map') {
           const satelliteCb = document.getElementById('layer-satellite');
           const mapCb = document.getElementById('layer-map');
@@ -2038,7 +2038,7 @@ function initLayerCheckboxes() {
           const labelsContainer = document.getElementById('layer-labels-container');
           
           if (satelliteCb && mapCb && labelsContainer) {
-            const showLabelsToggle = satelliteCb.checked && !mapCb.checked;
+            const showLabelsToggle = satelliteCb.checked;
             if (showLabelsToggle) {
               labelsContainer.style.display = '';
               labelsContainer.closest('.satellite-merged-group')?.classList.add('has-labels');
@@ -2219,11 +2219,11 @@ function initResetButton() {
       }
     });
 
-    // Hide labels container (defaults to hidden because both map & satellite are checked)
+    // Show labels container (defaults to visible because satellite is checked by default)
     const labelsContainer = document.getElementById('layer-labels-container');
     if (labelsContainer) {
-      labelsContainer.style.display = 'none';
-      labelsContainer.closest('.satellite-merged-group')?.classList.remove('has-labels');
+      labelsContainer.style.display = '';
+      labelsContainer.closest('.satellite-merged-group')?.classList.add('has-labels');
     }
 
     // 6. Reset parent URL

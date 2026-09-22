@@ -170,7 +170,12 @@ if (params.get('show')) {
       layerStates['Background'].visible = false;
     }
 
-
+    // 3. Labels visibility rule
+    if (showParams.includes('labels')) {
+      layerStates['map-labels'].visible = true;
+    } else {
+      layerStates['map-labels'].visible = false;
+    }
   }
 }
 
@@ -294,51 +299,82 @@ try {
       
       const mapVisible = mapCheckbox ? mapCheckbox.checked : layerStates['Background'].visible;
       const satelliteVisible = satelliteCheckbox ? satelliteCheckbox.checked : layerStates['satellite-layer'].visible;
-      const labelsVisible = labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible;
+      const labelsVisible = (labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible) && (value === undefined || layerId !== 'map-labels' ? true : value === 'visible');
 
       const currentZoom = map ? map.getZoom() : 14.25;
       const shouldBasemapBeVisible = mapVisible || (satelliteVisible && currentZoom >= 18.5);
 
       if (layerId === 'map-labels') {
           if (name === 'visibility') {
-              const targetValue = (shouldBasemapBeVisible || value === 'visible') ? 'visible' : 'none';
+              const isLabelsOn = (value === 'visible');
+              layerStates['map-labels'].visible = isLabelsOn;
+
+              // Update base style text labels
               labelLayers.forEach(lId => {
                   if (map.getLayer(lId)) {
-                      originalSetLayoutProperty(lId, 'visibility', targetValue);
+                      originalSetLayoutProperty(lId, 'visibility', isLabelsOn ? 'visible' : 'none');
                   }
               });
-              layerStates['map-labels'].visible = (value === 'visible');
+
+              // Synchronize custom parking overlay
+              const parkingTarget = (layerStates['custom-parking-fill'].visible && isLabelsOn) ? 'visible' : 'none';
+              if (map.getLayer('custom-parking-fill')) originalSetLayoutProperty('custom-parking-fill', 'visibility', parkingTarget);
+              if (map.getLayer('parking-layer-symbols')) originalSetLayoutProperty('parking-layer-symbols', 'visibility', parkingTarget);
+
+              // Synchronize custom establishments overlay
+              const estTarget = (layerStates['custom-markers'].visible && isLabelsOn) ? 'visible' : 'none';
+              if (map.getLayer('custom-markers')) originalSetLayoutProperty('custom-markers', 'visibility', estTarget);
+              if (map.getLayer('custom-labels')) originalSetLayoutProperty('custom-labels', 'visibility', estTarget);
+
+              // Synchronize custom recreation overlay
+              const recTarget = (layerStates['park-layer-fill'].visible && isLabelsOn) ? 'visible' : 'none';
+              if (map.getLayer('park-layer-fill')) originalSetLayoutProperty('park-layer-fill', 'visibility', recTarget);
+              if (map.getLayer('custom-park-outline')) originalSetLayoutProperty('custom-park-outline', 'visibility', recTarget);
+              if (map.getLayer('walkingpath-outline')) originalSetLayoutProperty('walkingpath-outline', 'visibility', recTarget);
+              if (map.getLayer('park-layer-symbols')) originalSetLayoutProperty('park-layer-symbols', 'visibility', recTarget);
+              if (map.getLayer('walkingpath-layer-symbol')) originalSetLayoutProperty('walkingpath-layer-symbol', 'visibility', recTarget);
           }
           return; // Intercept completely
       }
 
       if (labelLayers.includes(layerId) && name === 'visibility') {
-          // Force individual style label layers to obey the map-labels checkbox state,
-          // but ensure they are always visible if the standard map is active.
-          const targetValue = (shouldBasemapBeVisible || labelsVisible) ? 'visible' : 'none';
+          // Force individual style label layers to obey map-labels state
+          const targetValue = labelsVisible ? 'visible' : 'none';
           originalSetLayoutProperty(layerId, name, targetValue);
           return;
       }
 
-      // Call the original function first so the master layer updates
-      originalSetLayoutProperty(layerId, name, value);
-  
-      // Check if the master layer's visibility is being changed
+      // Check if thematic layers are being toggled while map-labels is off
       if (layerId === 'custom-parking-fill' && name === 'visibility') {
-          // Force the dependent layer to match the new value
-          originalSetLayoutProperty('parking-layer-symbols', 'visibility', value);
+          layerStates['custom-parking-fill'].visible = (value === 'visible');
+          const effectiveVal = (value === 'visible' && labelsVisible) ? 'visible' : 'none';
+          originalSetLayoutProperty('custom-parking-fill', 'visibility', effectiveVal);
+          originalSetLayoutProperty('parking-layer-symbols', 'visibility', effectiveVal);
+          syncMapStyleState();
+          return;
       }
       if (layerId === 'custom-markers' && name === 'visibility') {
-          // Force the dependent layer to match the new value
-          originalSetLayoutProperty('custom-labels', 'visibility', value);
+          layerStates['custom-markers'].visible = (value === 'visible');
+          const effectiveVal = (value === 'visible' && labelsVisible) ? 'visible' : 'none';
+          originalSetLayoutProperty('custom-markers', 'visibility', effectiveVal);
+          originalSetLayoutProperty('custom-labels', 'visibility', effectiveVal);
+          syncMapStyleState();
+          return;
       }
       if (layerId === 'park-layer-fill' && name === 'visibility') {
-          // Force the dependent layer to match the new value
-          originalSetLayoutProperty('custom-park-outline', 'visibility', value);
-          originalSetLayoutProperty('walkingpath-outline', 'visibility', value);
-          originalSetLayoutProperty('park-layer-symbols', 'visibility', value);
-          originalSetLayoutProperty('walkingpath-layer-symbol', 'visibility', value);
+          layerStates['park-layer-fill'].visible = (value === 'visible');
+          const effectiveVal = (value === 'visible' && labelsVisible) ? 'visible' : 'none';
+          originalSetLayoutProperty('park-layer-fill', 'visibility', effectiveVal);
+          originalSetLayoutProperty('custom-park-outline', 'visibility', effectiveVal);
+          originalSetLayoutProperty('walkingpath-outline', 'visibility', effectiveVal);
+          originalSetLayoutProperty('park-layer-symbols', 'visibility', effectiveVal);
+          originalSetLayoutProperty('walkingpath-layer-symbol', 'visibility', effectiveVal);
+          syncMapStyleState();
+          return;
       }
+
+      // Call original function for other layers (e.g. satellite-layer, Background)
+      originalSetLayoutProperty(layerId, name, value);
 
       if (name === 'visibility') {
           syncMapStyleState();
@@ -365,9 +401,8 @@ try {
       if (layers && layers.length > 0) {
           layers.forEach(layer => {
               if (labelLayers.includes(layer.id)) {
-                  // For label layers, visibility is controlled by labelsVisible in satellite-only mode,
-                  // and always visible if standard map is shown.
-                  const targetVisibility = (shouldBasemapBeVisible || labelsVisible) ? 'visible' : 'none';
+                  // Obey labelsVisible strictly: if labels are off, no text labels should show
+                  const targetVisibility = labelsVisible ? 'visible' : 'none';
                   if (map.getLayer(layer.id)) {
                       const currentVis = map.getLayoutProperty(layer.id, 'visibility');
                       if (currentVis !== targetVisibility) {
@@ -392,6 +427,40 @@ try {
                   }
               }
           });
+      }
+
+      // 2. Synchronize thematic overlay layers with labelsVisible state
+      const parkingTarget = (layerStates['custom-parking-fill'].visible && labelsVisible) ? 'visible' : 'none';
+      if (map.getLayer('custom-parking-fill') && map.getLayoutProperty('custom-parking-fill', 'visibility') !== parkingTarget) {
+          originalSetLayoutProperty('custom-parking-fill', 'visibility', parkingTarget);
+      }
+      if (map.getLayer('parking-layer-symbols') && map.getLayoutProperty('parking-layer-symbols', 'visibility') !== parkingTarget) {
+          originalSetLayoutProperty('parking-layer-symbols', 'visibility', parkingTarget);
+      }
+
+      const estTarget = (layerStates['custom-markers'].visible && labelsVisible) ? 'visible' : 'none';
+      if (map.getLayer('custom-markers') && map.getLayoutProperty('custom-markers', 'visibility') !== estTarget) {
+          originalSetLayoutProperty('custom-markers', 'visibility', estTarget);
+      }
+      if (map.getLayer('custom-labels') && map.getLayoutProperty('custom-labels', 'visibility') !== estTarget) {
+          originalSetLayoutProperty('custom-labels', 'visibility', estTarget);
+      }
+
+      const recTarget = (layerStates['park-layer-fill'].visible && labelsVisible) ? 'visible' : 'none';
+      if (map.getLayer('park-layer-fill') && map.getLayoutProperty('park-layer-fill', 'visibility') !== recTarget) {
+          originalSetLayoutProperty('park-layer-fill', 'visibility', recTarget);
+      }
+      if (map.getLayer('custom-park-outline') && map.getLayoutProperty('custom-park-outline', 'visibility') !== recTarget) {
+          originalSetLayoutProperty('custom-park-outline', 'visibility', recTarget);
+      }
+      if (map.getLayer('walkingpath-outline') && map.getLayoutProperty('walkingpath-outline', 'visibility') !== recTarget) {
+          originalSetLayoutProperty('walkingpath-outline', 'visibility', recTarget);
+      }
+      if (map.getLayer('park-layer-symbols') && map.getLayoutProperty('park-layer-symbols', 'visibility') !== recTarget) {
+          originalSetLayoutProperty('park-layer-symbols', 'visibility', recTarget);
+      }
+      if (map.getLayer('walkingpath-layer-symbol') && map.getLayoutProperty('walkingpath-layer-symbol', 'visibility') !== recTarget) {
+          originalSetLayoutProperty('walkingpath-layer-symbol', 'visibility', recTarget);
       }
 
       // 2. Apply contrast paint overrides for labels in satellite mode
@@ -506,7 +575,7 @@ try {
           minzoom: 13.0,
           filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']], // Only apply to parking features
           layout: {
-              'visibility': layerStates['custom-parking-fill'].visible ? 'visible' : 'none'
+              'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'fill-color': '#3b82f6', // Translucent blue
@@ -521,7 +590,7 @@ try {
           minzoom: 13.0,
           filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
           layout: {
-              'visibility': layerStates['custom-parking-fill'].visible ? 'visible' : 'none',
+              'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'icon-image': 'images/parking.svg',
               'icon-size': 0.15, // Scale as needed
               'icon-allow-overlap': false,
@@ -538,7 +607,7 @@ try {
           filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           minzoom: 13.0,
           layout: {
-              'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none'
+              'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'fill-color': '#32a852', // Translucent blue
@@ -554,7 +623,7 @@ try {
           minzoom: 13.0,
           filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           layout: {
-              'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none'
+              'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'line-color': '#1f6e34',
@@ -569,7 +638,7 @@ try {
           minzoom: 13.0,
           filter: ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']],
           layout: {
-              'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none'
+              'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'line-color': '#1f6e34',
@@ -584,7 +653,7 @@ try {
           minzoom: 13.0,
           filter: ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']],
           layout: {
-              'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none',
+              'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'icon-image': 'images/person-walking-icon.svg',
               'symbol-placement': 'line-center',
               // 'icon-rotate': 180,
@@ -617,7 +686,7 @@ try {
           minzoom: 13.0,
           filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           layout: {
-              'visibility': layerStates['park-layer-fill'].visible ? 'visible' : 'none',
+              'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'icon-image': 'images/park.svg',
               'icon-size': [
                 'interpolate',
@@ -658,7 +727,7 @@ try {
               ['!', ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']]]
           ], // Exclude parking polygons
           layout: {
-              'visibility': layerStates['custom-markers'].visible ? 'visible' : 'none'
+              'visibility': (layerStates['custom-markers'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'circle-radius': 8,
@@ -696,7 +765,7 @@ try {
               ['!', ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']]]
           ],
           layout: {
-              'visibility': layerStates['custom-markers'].visible ? 'visible' : 'none',
+              'visibility': (layerStates['custom-markers'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'text-field': ['get', 'name'],
               "text-font": ["Noto Sans Regular"],
               'text-size': 12,
@@ -1484,6 +1553,16 @@ try {
           if (container) {
               const checkbox = container.querySelector('input[type="checkbox"]');
               if (checkbox && layerStates['Background'] && !layerStates['Background'].visible) {
+                  checkbox.checked = false;
+              }
+          }
+      });
+
+      waitForElement('span.layer-control-name[title="Labels"]').then(labelstxt => {
+          const container = labelstxt.closest('label') || labelstxt.parentElement;
+          if (container) {
+              const checkbox = container.querySelector('input[type="checkbox"]');
+              if (checkbox && layerStates['map-labels'] && !layerStates['map-labels'].visible) {
                   checkbox.checked = false;
               }
           }
