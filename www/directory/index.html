@@ -54,6 +54,15 @@
       <!-- Quick Views / Summary Statistics Bar -->
       <div class="directory-quick-views" id="directory-quick-views" role="toolbar" aria-label="Quick directory views">
         <span class="quick-views-label">Quick Views:</span>
+        <!-- TEMPORARY: Dropdown trigger for mobile A/B testing (?mobile_view=dropdown) -->
+        <div class="quick-views-dropdown-wrapper" id="dir-quick-views-dropdown-wrapper">
+          <button type="button" class="quick-views-dropdown-trigger" id="dir-quick-views-dropdown-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="dropdown-trigger-label" id="dir-dropdown-active-label">All Listings</span>
+            <span class="dropdown-trigger-count" id="dir-dropdown-active-count">0</span>
+            <span class="dropdown-trigger-arrow">▼</span>
+          </button>
+          <div class="quick-views-dropdown-menu" id="dir-quick-views-dropdown-menu" role="listbox"></div>
+        </div>
         <div class="quick-views-pills" id="quick-views-pills">
           <button type="button" class="quick-view-pill active" data-view="all" aria-pressed="true">
             <span class="quick-view-title">All Listings</span>
@@ -78,6 +87,10 @@
           <button type="button" class="quick-view-pill" data-view="automarine" aria-pressed="false">
             <span class="quick-view-title">Auto &amp; Marine</span>
             <span class="quick-view-count" id="count-automarine">0</span>
+          </button>
+          <button type="button" class="quick-view-pill" data-view="parking" aria-pressed="false">
+            <span class="quick-view-title">Parking</span>
+            <span class="quick-view-count" id="count-parking">0</span>
           </button>
         </div>
       </div>

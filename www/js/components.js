@@ -848,17 +848,29 @@ const directoryViews = {
   },
   'public': {
     title: 'Parks & Public',
-    categories: ['public', 'safety', 'recreation', 'parking']
+    categories: ['public', 'safety', 'recreation']
   },
   'automarine': {
     title: 'Auto & Marine',
     categories: ['autos', 'boating']
+  },
+  'parking': {
+    title: 'Parking',
+    categories: ['parking']
   }
 };
+
+function getQuickViewCategories(viewKey) {
+  if (!viewKey || viewKey === 'all' || !directoryViews[viewKey]) {
+    return directoryViews['all'] ? directoryViews['all'].categories : [];
+  }
+  return directoryViews[viewKey].categories || [];
+}
 
 // Expose categoryColors and directoryViews globally
 window.categoryColors = categoryColors;
 window.directoryViews = directoryViews;
+window.getQuickViewCategories = getQuickViewCategories;
 
 // Centralized dynamic tag mapping
 window.tagColors = {};

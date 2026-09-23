@@ -119,6 +119,140 @@ let tourIntervalId = null;
 
 let updateUrlParams = () => {};
 
+// Quick Views state
+let activeQuickView = null;
+
+const DIRECTORY_VIEWS = {
+  'all': {
+    title: 'All Listings',
+    categories: ['safety', 'nightlife', 'food', 'wellness', 'shop', 'services', 'public', 'autos', 'recreation', 'parking', 'home-business', 'industrial', 'boating']
+  },
+  'walkup': {
+    title: 'Walk-Up & Retail',
+    categories: ['food', 'nightlife', 'shop', 'wellness']
+  },
+  'industrial': {
+    title: 'Industrial & Trade',
+    categories: ['industrial']
+  },
+  'services': {
+    title: 'Services & Pro',
+    categories: ['services', 'home-business']
+  },
+  'public': {
+    title: 'Parks & Public',
+    categories: ['public', 'safety', 'recreation']
+  },
+  'automarine': {
+    title: 'Auto & Marine',
+    categories: ['autos', 'boating']
+  },
+  'parking': {
+    title: 'Parking',
+    categories: ['parking']
+  }
+};
+
+const TAG_TO_CATEGORY_MAP = {
+  'safety': 'safety', 'police station': 'safety', 'fire station': 'safety', 'police': 'safety',
+  'brewery': 'nightlife', 'bar': 'nightlife', 'pub': 'nightlife', 'nightlife': 'nightlife', 'craft beer': 'nightlife', 'liquor store': 'nightlife', 'wine': 'nightlife', 'beer': 'nightlife', 'spirits': 'nightlife',
+  'restaurant': 'food', 'dining': 'food', 'food': 'food', 'cafe': 'food', 'banquet hall': 'food', 'event space': 'food', 'diner': 'food', 'bakery': 'food', 'sweets': 'food', 'take out': 'food', 'takeout': 'food', 'bbq': 'food', 'dessert': 'food', 'cookie cakes': 'food', 'cookies': 'food', 'pizza': 'food', 'italian': 'food', 'mexican': 'food', 'puerto rican': 'food', 'shakes': 'food', 'bowls': 'food', 'coffee': 'food', 'breakfast': 'food', 'lunch': 'food', 'dinner': 'food', 'deli': 'food', 'hoagies': 'food', 'sandwiches': 'food', 'seafood': 'food', 'juice bar': 'food', 'smoothies': 'food',
+  'wellness': 'wellness', 'fitness': 'wellness', 'yoga': 'wellness', 'tai chi': 'wellness', 'health': 'wellness', 'umaa': 'wellness', 'salon': 'wellness', 'hair styling': 'wellness', 'barber': 'wellness', 'barbershop': 'wellness', 'kickboxing': 'wellness', 'karate': 'wellness', 'jujitsu': 'wellness', 'doctor': 'wellness', 'gym': 'wellness', 'gymnastics': 'wellness', 'personal training': 'wellness',
+  'convenience store': 'shop', 'retail': 'shop', 'groceries': 'shop', 'shop': 'shop', 'appliances': 'shop', 'smoke shop': 'shop', 'tobacco': 'shop', 'supermarket': 'shop', 'collectibles': 'shop', 'custom framing': 'shop', 'bait': 'shop', 'provisions': 'shop', 'lottery': 'shop',
+  'laundry': 'services', 'service': 'services', 'services': 'services', 'laundromat': 'services', 'locksmith': 'services', 'key duplication': 'services', 'tax prep': 'services', 'bookkeeping': 'services', 'it management': 'services', 'cloud services': 'services', 'bail bonds': 'services', 'bank': 'services', 'atm': 'services', 'home insurance': 'services', 'professional': 'services', 'photography': 'services', 'real estate': 'services', 'property management': 'services', 'hospitality': 'services', 'consulting': 'services', 'business services': 'services', 'financial': 'services', 'funeral home': 'services', 'human services': 'services', 'union': 'services', 'cleaning': 'services', 'disaster restoration': 'services', 'telecommunications': 'services',
+  'borough offices': 'public', 'public resource': 'public', 'government': 'public', 'library': 'public', 'community': 'public', 'post office': 'public', 'education': 'public', 'public elementary school': 'public', 'pre-kindergarten school': 'public', 'pk-6': 'public', 'mail': 'public', 'packages': 'public', 'po boxes': 'public', 'senior center': 'public', 'public': 'public', 'daycare': 'public', 'child care': 'public',
+  'auto repair': 'autos', 'dealership': 'autos', 'mechanic': 'autos', 'mechanic service': 'autos', 'auto service': 'autos', 'oil change': 'autos', 'used cars': 'autos', 'new cars': 'autos', 'car wash': 'autos', 'detailing': 'autos', 'performance tuning': 'autos', 'car insurance': 'autos', 'automotive': 'autos',
+  'park': 'recreation', 'recreation': 'recreation', 'walking path': 'recreation', 'walkingpath': 'recreation', 'entertainment': 'recreation',
+  'parking': 'parking', 'free': 'parking',
+  'home-business': 'home-business', 'web design': 'home-business', 'software': 'home-business', 'crafts': 'home-business', 'candles': 'home-business', 'tutoring': 'home-business', 'gardening': 'home-business', 'landscaping': 'home-business', 'music': 'home-business', 'piano': 'home-business', 'voice lessons': 'home-business', 'pet sitting': 'home-business', 'dog walking': 'home-business',
+  'industrial': 'industrial', 'manufacturing': 'industrial', 'machining': 'industrial', 'metal fab': 'industrial', 'logistics': 'industrial', 'warehousing': 'industrial', 'distribution': 'industrial', 'building materials': 'industrial', 'wholesale': 'industrial', 'auto body': 'industrial', 'collision repair': 'industrial', 'commercial printing': 'industrial', 'publishing': 'industrial', 'hvac': 'industrial', 'packaging': 'industrial', 'shipping boxes': 'industrial', 'contractors': 'industrial', 'carpentry': 'industrial', 'flooring': 'industrial', 'plumbing': 'industrial', 'fence': 'industrial', 'machinery': 'industrial', 'environmental': 'industrial', 'pest control': 'industrial', 'lawn care': 'industrial', 'outdoor': 'industrial', 'textiles': 'industrial', 'apparel': 'industrial', 'upholstery': 'industrial', 'medical supplies': 'industrial',
+  'marine': 'boating', 'boating': 'boating', 'boat sales': 'boating', 'marina': 'boating', 'boat club': 'boating', 'yacht club': 'boating', 'power boat': 'boating', 'boating & marine': 'boating'
+};
+
+function getFeatureCategory(f) {
+  if (!f || !f.properties) return null;
+  let primTag = '';
+  if (f.properties.primary_tag) {
+    primTag = f.properties.primary_tag.toLowerCase();
+  } else if (f.properties.tags) {
+    primTag = f.properties.tags.split(',')[0].trim().toLowerCase();
+  } else if (f.properties.class) {
+    primTag = f.properties.class.toLowerCase();
+  } else if (f._source) {
+    primTag = f._source.toLowerCase();
+  }
+
+  if (TAG_TO_CATEGORY_MAP[primTag]) return TAG_TO_CATEGORY_MAP[primTag];
+  if (f._source && TAG_TO_CATEGORY_MAP[f._source]) return TAG_TO_CATEGORY_MAP[f._source];
+  return f._source || null;
+}
+
+function applyQuickView(viewKey, smoothFit = true) {
+  const cleanView = (viewKey || 'all').toLowerCase().trim();
+  activeQuickView = (cleanView === 'all') ? null : cleanView;
+
+  if (cleanView === 'all') {
+    const ptSource = map.getSource('highlight-point-source');
+    const polySource = map.getSource('highlight-poly-source');
+    if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
+    if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+    dismissActivePopup();
+
+    if (smoothFit) {
+      map.fitBounds([
+        [-75.145165, 39.856238],
+        [-75.112685, 39.887555]
+      ], { padding: 10, duration: 800 });
+    }
+    return;
+  }
+
+  if (cleanView === 'parking') {
+    dismissActivePopup();
+    const parkingFeatures = allFeatures.filter(f => f._source === 'parking');
+    const ptFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type === 'Point');
+    const polyFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type !== 'Point');
+
+    const ptSource = map.getSource('highlight-point-source');
+    const polySource = map.getSource('highlight-poly-source');
+    if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
+    if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+
+    if (parkingFeatures.length > 0 && smoothFit) {
+      const bounds = getFeaturesBounds(parkingFeatures);
+      if (bounds) {
+        map.fitBounds(bounds, { padding: 40, maxZoom: 18, duration: 800 });
+      }
+    }
+    return;
+  }
+
+  const viewObj = DIRECTORY_VIEWS[cleanView];
+  const allowedCategories = viewObj ? viewObj.categories : [];
+
+  const matched = allFeatures.filter(f => {
+    const cat = getFeatureCategory(f);
+    return cat && allowedCategories.includes(cat);
+  });
+
+  const ptFeatures = matched.filter(f => f.geometry && f.geometry.type === 'Point');
+  const polyFeatures = matched.filter(f => f.geometry && f.geometry.type !== 'Point');
+
+  const ptSource = map.getSource('highlight-point-source');
+  const polySource = map.getSource('highlight-poly-source');
+  if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
+  if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+
+  dismissActivePopup();
+
+  if (matched.length > 0 && smoothFit) {
+    const bounds = getFeaturesBounds(matched);
+    if (bounds) {
+      map.fitBounds(bounds, { padding: 50, maxZoom: 18, duration: 800 });
+    }
+  }
+}
+
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
   'establishments': 'custom-markers',
@@ -1545,15 +1679,14 @@ try {
           const term = searchInput.value.trim();
           if (selectedFeatureName) {
               newParams.set('feature', selectedFeatureName);
+              newParams.delete('view');
           } else if (term) {
               newParams.set('search', term);
-          }
-          
-          if (activeTourName) {
+              newParams.delete('view');
+          } else if (activeTourName) {
               newParams.set('tour', activeTourName);
-          }
-          
-          if (!selectedFilters.has('all') && selectedFilters.size > 0) {
+              newParams.delete('view');
+          } else if (!selectedFilters.has('all') && selectedFilters.size > 0) {
               const filterValues = [];
               selectedFilters.forEach(val => {
                   if (val === 'all') return;
@@ -1565,6 +1698,9 @@ try {
               if (filterValues.length > 0) {
                   newParams.set('filter', filterValues.join(','));
               }
+              newParams.delete('view');
+          } else if (activeQuickView) {
+              newParams.set('view', activeQuickView);
           }
           
           if (hasInteracted) {
@@ -1833,6 +1969,8 @@ try {
                   if (match) {
                       selectFeature(match);
                   }
+              } else if (initUrl.get('view')) {
+                  applyQuickView(initUrl.get('view'), false);
               } else if (initSearchStr || initUrl.get('filter')) {
                   if (initSearchStr) searchInput.value = initSearchStr;
                   performSearch();
@@ -1854,6 +1992,14 @@ try {
       window.addEventListener('message', (event) => {
           // Security check: Accept messages from parent host window or same window
           if (event.source !== window.parent && event.source !== window) return;
+
+          if (event.data && event.data.type === 'apply-quick-view') {
+              stopTour();
+              applyQuickView(event.data.view, true);
+              hasInteracted = true;
+              updateUrlParams();
+              return;
+          }
 
           if (event.data && event.data.type === 'clear-highlight') {
               const ptSource = map.getSource('highlight-point-source');

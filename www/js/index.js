@@ -214,6 +214,7 @@ function getLayerVisibilityFromUrl(urlString, friendlyName) {
 }
 
 function checkQuickViewActive(searchParams, viewType) {
+  const view = searchParams.get('view') ? searchParams.get('view').toLowerCase().trim() : '';
   const focus = searchParams.get('focus') ? searchParams.get('focus').toLowerCase().trim() : '';
   const search = searchParams.get('search') || '';
   const feature = searchParams.get('feature') || '';
@@ -224,7 +225,8 @@ function checkQuickViewActive(searchParams, viewType) {
     return false;
   }
 
-  return focus === viewType;
+  const effectiveView = view || focus || 'all';
+  return effectiveView === viewType;
 }
 
 function updateMapHeaderFromUrl(urlString) {
@@ -348,34 +350,39 @@ function updateMapHeaderFromUrl(urlString) {
     }
 
     // Update active state of Quick Views
-    const parkingActive = checkQuickViewActive(searchParams, 'parking');
-    const establishmentsActive = checkQuickViewActive(searchParams, 'establishments');
-    const recreationActive = checkQuickViewActive(searchParams, 'recreation');
+    const currentView = searchParams.get('view') || searchParams.get('focus') || 'all';
+    const isCleanView = !searchParams.get('search') && !searchParams.get('feature') && !searchParams.get('gps');
+    const activeViewKey = isCleanView ? currentView.toLowerCase().trim() : '';
 
-    const quickParking = document.getElementById('quick-view-parking');
-    const quickEstablishments = document.getElementById('quick-view-establishments');
-    const quickRecreation = document.getElementById('quick-view-recreation');
+    const pillsContainer = document.getElementById('map-quick-views-pills');
+    if (pillsContainer) {
+      pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+        const vKey = btn.getAttribute('data-view');
+        const isActive = activeViewKey ? (vKey === activeViewKey) : false;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    }
 
-    if (quickParking) {
-      if (parkingActive) {
-        quickParking.classList.add('active', 'active-parking');
-      } else {
-        quickParking.classList.remove('active', 'active-parking');
-      }
+    // Sync mobile dropdown trigger
+    const triggerLabel = document.getElementById('map-dropdown-active-label');
+    const triggerCount = document.getElementById('map-dropdown-active-count');
+    if (triggerLabel && window.directoryViews && window.directoryViews[activeViewKey]) {
+      triggerLabel.innerText = window.directoryViews[activeViewKey].title;
+    } else if (triggerLabel && activeViewKey === 'all') {
+      triggerLabel.innerText = 'All Listings';
     }
-    if (quickEstablishments) {
-      if (establishmentsActive) {
-        quickEstablishments.classList.add('active', 'active-establishments');
-      } else {
-        quickEstablishments.classList.remove('active', 'active-establishments');
-      }
+    const countEl = document.getElementById(`map-count-${activeViewKey}`);
+    if (triggerCount && countEl) {
+      triggerCount.innerText = countEl.innerText;
     }
-    if (quickRecreation) {
-      if (recreationActive) {
-        quickRecreation.classList.add('active', 'active-recreation');
-      } else {
-        quickRecreation.classList.remove('active', 'active-recreation');
-      }
+
+    // Sync active state in mobile dropdown menu items
+    const menu = document.getElementById('map-quick-views-dropdown-menu');
+    if (menu) {
+      menu.querySelectorAll('.map-quick-views-dropdown-item').forEach(item => {
+        item.classList.toggle('active', item.getAttribute('data-view') === activeViewKey);
+      });
     }
   } catch (e) {
     console.error('Error updating map header:', e);
@@ -683,6 +690,9 @@ async function initDirectory() {
       }
     });
     const sortedTags = Array.from(uniqueTags).sort();
+
+    // Update live counter badges for Portal Quick Views
+    updatePortalQuickViewCounts(allDirFeatures);
 
     // Check if initial filters are specified in parent URL on boot
     const initialFilters = parentUrlParams.get('filter');
@@ -2086,27 +2096,167 @@ function initMobileLayerDropdown() {
   });
 }
 
-function initMobileQuickViewsDropdown() {
-  const container = document.querySelector('.map-quick-filters');
-  if (!container) return;
-  
-  const label = container.querySelector('.quick-filters-label');
-  if (!label) return;
-  
-  label.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
-      e.stopPropagation();
-      container.classList.toggle('active');
-    }
+/* TEMPORARY: A/B testing mobile_view param (chips vs dropdown). Will remove unchosen mode. */
+function initPortalMobileViewMode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const mobileMode = urlParams.get('mobile_view'); // 'dropdown' or 'chips' (default)
+  const isDropdownMode = mobileMode === 'dropdown';
+
+  const container = document.getElementById('portal-quick-views');
+  if (container) {
+    container.classList.toggle('mode-dropdown', isDropdownMode);
+    container.classList.toggle('mode-chips', !isDropdownMode);
+  }
+
+  const trigger = document.getElementById('map-quick-views-dropdown-trigger');
+  const menu = document.getElementById('map-quick-views-dropdown-menu');
+  if (!trigger || !menu) return;
+
+  menu.innerHTML = '';
+  if (window.directoryViews) {
+    const currentView = urlParams.get('view') || urlParams.get('focus') || 'all';
+    Object.entries(window.directoryViews).forEach(([key, viewObj]) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'map-quick-views-dropdown-item' + (key === currentView ? ' active' : '');
+      item.setAttribute('data-view', key);
+      item.innerHTML = `
+        <span class="dropdown-item-title">${viewObj.title}</span>
+        <span class="dropdown-item-count" id="map-dropdown-count-${key}">0</span>
+      `;
+      item.addEventListener('click', () => {
+        applyPortalQuickView(key);
+        trigger.setAttribute('aria-expanded', 'false');
+        menu.classList.remove('open');
+      });
+      menu.appendChild(item);
+    });
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.classList.toggle('open');
+    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
 
   document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
-      if (container.classList.contains('active') && !container.contains(e.target)) {
-        container.classList.remove('active');
-      }
+    if (!e.target.closest('#map-quick-views-dropdown-wrapper')) {
+      menu.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
     }
   });
+}
+
+function applyPortalQuickView(viewKey) {
+  const iframe = document.getElementById('mapFrame');
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ type: 'apply-quick-view', view: viewKey }, '*');
+  }
+
+  // Update parent address bar
+  const params = new URLSearchParams(window.location.search);
+  if (viewKey && viewKey !== 'all') {
+    params.set('view', viewKey);
+    params.delete('focus');
+    params.delete('feature');
+    params.delete('search');
+    params.delete('tour');
+    params.delete('gps');
+  } else {
+    params.delete('view');
+    params.delete('focus');
+    params.delete('feature');
+    params.delete('search');
+    params.delete('tour');
+    params.delete('gps');
+  }
+  const nextSearch = params.toString() ? '?' + params.toString() : '';
+  window.history.replaceState(null, '', window.location.pathname + nextSearch);
+
+  // Update pill UI
+  const pillsContainer = document.getElementById('map-quick-views-pills');
+  if (pillsContainer) {
+    pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+      const isCurrent = btn.getAttribute('data-view') === viewKey;
+      btn.classList.toggle('active', isCurrent);
+      btn.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+    });
+  }
+
+  // Update mobile dropdown trigger
+  const triggerLabel = document.getElementById('map-dropdown-active-label');
+  const triggerCount = document.getElementById('map-dropdown-active-count');
+  if (triggerLabel && window.directoryViews && window.directoryViews[viewKey]) {
+    triggerLabel.innerText = window.directoryViews[viewKey].title;
+  }
+  const countEl = document.getElementById(`map-count-${viewKey}`);
+  if (triggerCount && countEl) {
+    triggerCount.innerText = countEl.innerText;
+  }
+
+  // Update mobile dropdown items
+  const menu = document.getElementById('map-quick-views-dropdown-menu');
+  if (menu) {
+    menu.querySelectorAll('.map-quick-views-dropdown-item').forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-view') === viewKey);
+    });
+  }
+}
+
+function updatePortalQuickViewCounts(features) {
+  if (!window.directoryViews || !features) return;
+  const counts = { all: features.length };
+  Object.keys(window.directoryViews).forEach(vk => {
+    if (vk !== 'all') counts[vk] = 0;
+  });
+
+  features.forEach(f => {
+    let featCat = null;
+    const primTag = f.properties && f.properties.primary_tag;
+    if (primTag && window.tagToCategory && window.tagToCategory[primTag]) {
+      featCat = window.tagToCategory[primTag];
+    } else if (f._source && window.tagToCategory && window.tagToCategory[f._source]) {
+      featCat = window.tagToCategory[f._source];
+    } else if (f._source) {
+      featCat = f._source;
+    }
+
+    if (!featCat) return;
+    Object.keys(window.directoryViews).forEach(vk => {
+      if (vk === 'all') return;
+      if (window.directoryViews[vk].categories.includes(featCat)) {
+        counts[vk]++;
+      }
+    });
+  });
+
+  Object.keys(counts).forEach(vk => {
+    const countEl = document.getElementById(`map-count-${vk}`);
+    if (countEl) countEl.innerText = counts[vk];
+    const dropCountEl = document.getElementById(`map-dropdown-count-${vk}`);
+    if (dropCountEl) dropCountEl.innerText = counts[vk];
+  });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const curView = urlParams.get('view') || urlParams.get('focus') || 'all';
+  const activeDropCount = document.getElementById('map-dropdown-active-count');
+  if (activeDropCount && counts[curView] !== undefined) {
+    activeDropCount.innerText = counts[curView];
+  }
+}
+
+function initPortalQuickViews() {
+  initPortalMobileViewMode();
+
+  const pillsContainer = document.getElementById('map-quick-views-pills');
+  if (pillsContainer) {
+    pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const viewKey = btn.getAttribute('data-view') || 'all';
+        applyPortalQuickView(viewKey);
+      });
+    });
+  }
 }
 
 function updateParentUrl() {
@@ -2239,6 +2389,6 @@ function initResetButton() {
 // Start fetching data
 initLayerCheckboxes();
 initMobileLayerDropdown();
-initMobileQuickViewsDropdown();
+initPortalQuickViews();
 initResetButton();
 initDirectory();
