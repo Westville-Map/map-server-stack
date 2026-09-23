@@ -518,7 +518,7 @@ try {
                   const customLayers = [
                       'satellite-layer', 'custom-parking-fill', 'parking-layer-symbols',
                       'park-layer-fill', 'custom-park-outline', 'walkingpath-outline', 'walkingpath-layer-symbol',
-                      'park-layer-symbols', 'custom-markers', 'custom-labels', 'highlight-point-layer', 'highlight-poly-layer'
+                      'park-layer-symbols', 'custom-markers', 'custom-labels', 'highlight-point-layer', 'highlight-poly-layer', 'highlight-label-layer'
                   ];
                   if (!customLayers.includes(layer.id)) {
                       const targetVisibility = shouldBasemapBeVisible ? 'visible' : 'none';
@@ -676,14 +676,21 @@ try {
           id: 'custom-parking-fill',
           type: 'fill',
           source: 'parking',
-          minzoom: 13.0,
+          minzoom: 12.0,
           filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']], // Only apply to parking features
           layout: {
               'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'fill-color': '#3b82f6', // Translucent blue
-              'fill-opacity': 0.4
+              'fill-opacity': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.25,
+                  15.0, 0.4,
+                  18.0, 0.55
+              ]
           }
       });
 
@@ -691,12 +698,19 @@ try {
           id: 'parking-layer-symbols',
           type: 'symbol',
           source: 'parking',
-          minzoom: 13.0,
+          minzoom: 12.0,
           filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'icon-image': 'images/parking.svg',
-              'icon-size': 0.15, // Scale as needed
+              'icon-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.08,
+                  15.0, 0.13,
+                  18.0, 0.18
+              ],
               'icon-allow-overlap': false,
               'icon-overlap': 'cooperative',
               'text-overlap': 'cooperative'
@@ -709,13 +723,20 @@ try {
           type: 'fill',
           source: 'recreation',
           filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
-          minzoom: 13.0,
+          minzoom: 12.0,
           layout: {
               'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
-              'fill-color': '#32a852', // Translucent blue
-              'fill-opacity': 0.4
+              'fill-color': '#32a852', // Translucent green
+              'fill-opacity': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.25,
+                  15.0, 0.4,
+                  18.0, 0.55
+              ]
           }
       });
 
@@ -724,14 +745,21 @@ try {
           id: 'custom-park-outline',
           type: 'line',
           source: 'recreation',
-          minzoom: 13.0,
+          minzoom: 12.0,
           filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'line-color': '#1f6e34',
-              'line-width': 1
+              'line-width': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.5,
+                  15.0, 1.0,
+                  18.0, 2.0
+              ]
           }
       });
       
@@ -739,14 +767,21 @@ try {
           id: 'walkingpath-outline',
           type: 'line',
           source: 'recreation',
-          minzoom: 13.0,
+          minzoom: 12.0,
           filter: ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
               'line-color': '#1f6e34',
-              'line-width': 3
+              'line-width': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 1.5,
+                  15.0, 3.0,
+                  18.0, 4.5
+              ]
           }
       });
       
@@ -754,24 +789,22 @@ try {
           id: 'walkingpath-layer-symbol',
           type: 'symbol',
           source: 'recreation',
-          minzoom: 13.0,
+          minzoom: 12.0,
           filter: ['in', 'Walking Path', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'icon-image': 'images/person-walking-icon.svg',
               'symbol-placement': 'line-center',
-              // 'icon-rotate': 180,
               'icon-keep-upright': true,
               'icon-rotation-alignment': 'map',
               'icon-size': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                13,  0.1125, // Cut in half (from 0.225)
-                15,  0.2625, // Cut in half (from 0.525)
-                18,  0.375  // Cut in half (from 0.75)
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.03,
+                  15.0, 0.05,
+                  18.0, 0.075
               ],
-
               'icon-allow-overlap': false,
               'icon-overlap': 'cooperative',
               'text-overlap': 'cooperative'
@@ -787,32 +820,39 @@ try {
           id: 'park-layer-symbols',
           type: 'symbol',
           source: 'recreation',
-          minzoom: 13.0,
+          minzoom: 12.0,
           filter: ['in', 'Park', ['coalesce', ['get', 'tags'], '']],
           layout: {
               'visibility': (layerStates['park-layer-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'icon-image': 'images/park.svg',
               'icon-size': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                12,  0.0225,  // Increased by 25% (from 0.018)
-                15,  0.0525,  // Increased by 25% (from 0.042)
-                18,  0.075   // Increased by 25% (from 0.06)
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.035,
+                  15.0, 0.055,
+                  18.0, 0.08
               ],
               'icon-allow-overlap': true,
               'icon-overlap': 'always',
               'text-overlap': 'always',
               'text-field': ['get', 'name'],
               "text-font": ["Noto Sans Regular"],
-              'text-size': 12,
+              'text-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 10.0,
+                  15.0, 11.5,
+                  18.0, 13.0
+              ],
               'text-offset': [0, 1.2],
               'text-anchor': 'top',
               "text-variable-anchor": ["top", "bottom", "left", "right"],
               'text-optional': true
           },
           paint: {
-              'text-color':'#000000', //'#1f2937',
+              'text-color':'#000000',
               'text-halo-color': '#ffffff',
               'text-halo-width': 2
           }
@@ -824,7 +864,7 @@ try {
           id: 'custom-markers',
           type: 'circle',
           source: 'establishments',
-          minzoom: 15,
+          minzoom: 12.0,
           filter: ['all', 
               ['!', ['in', 'Parking', ['coalesce', ['get', 'tags'], '']]],
               ['!', ['in', 'Park', ['coalesce', ['get', 'tags'], '']]],
@@ -834,7 +874,16 @@ try {
               'visibility': (layerStates['custom-markers'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none'
           },
           paint: {
-              'circle-radius': 8,
+              'circle-radius': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 2.0,
+                  14.0, 3.5,
+                  15.5, 5.5,
+                  17.5, 8.0,
+                  19.0, 11.0
+              ],
               'circle-color': [
                   'match',
                   ['coalesce', ['get', 'primary_tag'], ''],
@@ -853,7 +902,14 @@ try {
                   ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat', 'boating & marine'], '#0284c7',
                   '#888888' // Default Gray
               ],
-              'circle-stroke-width': 1,
+              'circle-stroke-width': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.5,
+                  15.0, 1.0,
+                  18.0, 1.5
+              ],
               'circle-stroke-color': '#ffffff'
           }
       });
@@ -863,6 +919,7 @@ try {
           id: 'custom-labels',
           type: 'symbol',
           source: 'establishments',
+          minzoom: 14.5,
           filter: ['all',
               ['!', ['in', 'Parking', ['coalesce', ['get', 'tags'], '']]],
               ['!', ['in', 'Park', ['coalesce', ['get', 'tags'], '']]],
@@ -872,14 +929,21 @@ try {
               'visibility': (layerStates['custom-markers'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
               'text-field': ['get', 'name'],
               "text-font": ["Noto Sans Regular"],
-              'text-size': 12,
+              'text-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  14.5, 10.0,
+                  16.5, 12.0,
+                  18.5, 14.0
+              ],
               'text-offset': [0, 1.2],
               'text-anchor': 'top',
               "text-variable-anchor": ["top", "bottom", "left", "right"],
               'text-optional': true
           },
           paint: {
-              'text-color':'#000000', //'#1f2937',
+              'text-color':'#000000',
               'text-halo-color': '#ffffff',
               'text-halo-width': 2
           }
@@ -910,18 +974,14 @@ try {
           searchInput.value = props.name;
           searchResults.classList.remove('active');
           
-          // Clear previous highlights
-          map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-          map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
-
-           if (feature.geometry.type === 'Point') {
-               map.getSource('highlight-point-source').setData(feature);
+          if (feature.geometry.type === 'Point') {
+               setHighlights(feature, []);
                // Auto-pan point so popup fits beautifully above feature
                const verticalOffset = isMobileDevice() ? 90 : 130;
                const offsetCenter = getOffsetCenter(coordinates, verticalOffset);
                map.flyTo({ center: offsetCenter });
           } else {
-              map.getSource('highlight-poly-source').setData(feature);
+              setHighlights([], feature);
               // Auto-pan bounding box with asymmetric padding (leaves space at top)
               const bounds = getFeaturesBounds([feature]);
               if (bounds) {
@@ -1040,25 +1100,146 @@ try {
       map.addSource('highlight-poly-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 
       map.addLayer({
-          id: 'highlight-point-layer',
-          type: 'circle',
-          source: 'highlight-point-source',
-          paint: {
-              'circle-radius': 9,
-              'circle-color': 'transparent',
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#ffcc00'
-          }
-      });
-      map.addLayer({
           id: 'highlight-poly-layer',
           type: 'line',
           source: 'highlight-poly-source',
           paint: {
-              'line-width': 4,
+              'line-width': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 2.0,
+                  15.0, 4.0,
+                  18.0, 6.0
+              ],
               'line-color': '#ffcc00'
           }
       });
+
+      map.addLayer({
+          id: 'highlight-point-layer',
+          type: 'circle',
+          source: 'highlight-point-source',
+          minzoom: 12.0,
+          paint: {
+              'circle-radius': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 4.5,
+                  14.0, 6.5,
+                  15.5, 8.5,
+                  17.5, 11.0,
+                  19.0, 14.5
+              ],
+              'circle-color': 'transparent',
+              'circle-stroke-width': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 1.5,
+                  15.0, 2.0,
+                  18.0, 3.0
+              ],
+              'circle-stroke-color': '#ffcc00'
+          }
+      });
+
+      map.addLayer({
+          id: 'highlight-label-layer',
+          type: 'symbol',
+          source: 'highlight-point-source',
+          minzoom: 12.0,
+          layout: {
+              'text-field': ['get', 'name'],
+              'text-font': ['Noto Sans Regular'],
+              'text-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 10.5,
+                  15.0, 12.0,
+                  18.0, 14.0
+              ],
+              'text-offset': [0, 1.3],
+              'text-anchor': 'top',
+              'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+              'text-allow-overlap': true,
+              'text-ignore-placement': true
+          },
+          paint: {
+              'text-color': '#000000',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 3
+          }
+      });
+
+      function setHighlightDimming(dim) {
+          if (!map) return;
+          try {
+              if (map.getLayer('custom-markers')) {
+                  map.setPaintProperty('custom-markers', 'circle-opacity', dim ? 0.35 : 1.0);
+                  map.setPaintProperty('custom-markers', 'circle-stroke-opacity', dim ? 0.35 : 1.0);
+              }
+              if (map.getLayer('custom-labels')) {
+                  map.setPaintProperty('custom-labels', 'text-opacity', dim ? 0.25 : 1.0);
+              }
+              if (map.getLayer('custom-parking-fill')) {
+                  map.setPaintProperty('custom-parking-fill', 'fill-opacity', dim ? 0.15 : [
+                      'interpolate', ['linear'], ['zoom'],
+                      12.0, 0.25,
+                      15.0, 0.4,
+                      18.0, 0.55
+                  ]);
+              }
+              if (map.getLayer('park-layer-fill')) {
+                  map.setPaintProperty('park-layer-fill', 'fill-opacity', dim ? 0.15 : [
+                      'interpolate', ['linear'], ['zoom'],
+                      12.0, 0.25,
+                      15.0, 0.4,
+                      18.0, 0.55
+                  ]);
+              }
+              if (map.getLayer('parking-layer-symbols')) {
+                  map.setPaintProperty('parking-layer-symbols', 'icon-opacity', dim ? 0.25 : 1.0);
+              }
+              if (map.getLayer('park-layer-symbols')) {
+                  map.setPaintProperty('park-layer-symbols', 'icon-opacity', dim ? 0.25 : 1.0);
+                  map.setPaintProperty('park-layer-symbols', 'text-opacity', dim ? 0.25 : 1.0);
+              }
+              if (map.getLayer('walkingpath-layer-symbol')) {
+                  map.setPaintProperty('walkingpath-layer-symbol', 'icon-opacity', dim ? 0.25 : 1.0);
+              }
+              if (map.getLayer('walkingpath-outline')) {
+                  map.setPaintProperty('walkingpath-outline', 'line-opacity', dim ? 0.25 : 1.0);
+              }
+              if (map.getLayer('custom-park-outline')) {
+                  map.setPaintProperty('custom-park-outline', 'line-opacity', dim ? 0.25 : 1.0);
+              }
+          } catch (e) {
+              console.warn('Could not update layer dimming', e);
+          }
+      }
+
+      function clearHighlights() {
+          const ptSource = map.getSource('highlight-point-source');
+          const polySource = map.getSource('highlight-poly-source');
+          if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
+          if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+          setHighlightDimming(false);
+      }
+
+      function setHighlights(pointFeatures, polyFeatures) {
+          const pts = Array.isArray(pointFeatures) ? pointFeatures : (pointFeatures ? [pointFeatures] : []);
+          const polys = Array.isArray(polyFeatures) ? polyFeatures : (polyFeatures ? [polyFeatures] : []);
+          
+          const ptSource = map.getSource('highlight-point-source');
+          const polySource = map.getSource('highlight-poly-source');
+          if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: pts });
+          if (polySource) polySource.setData({ type: 'FeatureCollection', features: polys });
+          
+          setHighlightDimming(pts.length > 0 || polys.length > 0);
+      }
       const layerControl = new LayerControl({
           collapsed: (isMobileDevice() || window.self !== window.top), //true,
           showStyleEditor: false,
@@ -1191,8 +1372,7 @@ try {
 
           if (term.length === 0 && !hasFilter) {
               searchResults.classList.remove('active');
-              map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-              map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+              clearHighlights();
               dismissActivePopup();
               updateUrlParams();
               return;
@@ -1244,8 +1424,7 @@ try {
               const pointFeatures = results.filter(f => f.geometry.type === 'Point');
               const polyFeatures = results.filter(f => f.geometry.type !== 'Point');
               
-              map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: pointFeatures });
-              map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: polyFeatures });
+              setHighlights(pointFeatures, polyFeatures);
               dismissActivePopup();
               
               const bounds = getFeaturesBounds(results);
@@ -1258,8 +1437,7 @@ try {
               }
           } else if (!selectedFeatureName) {
               // Clear highlights if no specific feature is selected
-              map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-              map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+              clearHighlights();
           }
 
           updateUrlParams();
@@ -1301,10 +1479,7 @@ try {
           activeQuickView = (cleanView === 'all') ? null : cleanView;
 
           if (cleanView === 'all') {
-              const ptSource = map.getSource('highlight-point-source');
-              const polySource = map.getSource('highlight-poly-source');
-              if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
-              if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+              clearHighlights();
               dismissActivePopup();
 
               if (smoothFit) {
@@ -1322,10 +1497,7 @@ try {
               const ptFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type === 'Point');
               const polyFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type !== 'Point');
 
-              const ptSource = map.getSource('highlight-point-source');
-              const polySource = map.getSource('highlight-poly-source');
-              if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
-              if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+              setHighlights(ptFeatures, polyFeatures);
 
               if (parkingFeatures.length > 0 && smoothFit) {
                   const bounds = getFeaturesBounds(parkingFeatures);
@@ -1347,10 +1519,7 @@ try {
           const ptFeatures = matched.filter(f => f.geometry && f.geometry.type === 'Point');
           const polyFeatures = matched.filter(f => f.geometry && f.geometry.type !== 'Point');
 
-          const ptSource = map.getSource('highlight-point-source');
-          const polySource = map.getSource('highlight-poly-source');
-          if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
-          if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+          setHighlights(ptFeatures, polyFeatures);
 
           dismissActivePopup();
 
@@ -1438,12 +1607,8 @@ try {
           // Clear any active popup with a smooth fade-out before starting transitions
           dismissActivePopup();
           
-          // Clear previous highlights
-          map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-          map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
-
           if (f.geometry.type === 'Point') {
-               map.getSource('highlight-point-source').setData(f);
+               setHighlights(f, []);
                // Shift center upward in screen space to fit popup above feature (responsive zoom/offset)
                const targetZoom = isMobileDevice() ? 17 : 18;
                const verticalOffset = isMobileDevice() ? 90 : 130;
@@ -1465,7 +1630,7 @@ try {
                    }
                });
           } else {
-              map.getSource('highlight-poly-source').setData(f);
+              setHighlights([], f);
               const bounds = getFeaturesBounds([f]);
               if (bounds) {
                   // Asymmetric bounds padding leaves ample space on top for popups
@@ -1596,8 +1761,7 @@ try {
               if (selectedFeatureName === props.name) {
                   selectedFeatureName = '';
                   searchInput.value = '';
-                  map.getSource('highlight-point-source').setData({ type: 'FeatureCollection', features: [] });
-                  map.getSource('highlight-poly-source').setData({ type: 'FeatureCollection', features: [] });
+                  clearHighlights();
                   updateUrlParams();
               }
           });
@@ -1784,6 +1948,10 @@ try {
           if (item) item.style.display = 'none';
       });
       waitForElement('.layer-control-name[title="highlight-poly-layer"]').then(el => {
+          const item = el.closest('.layer-control-item');
+          if (item) item.style.display = 'none';
+      });
+      waitForElement('.layer-control-name[title="highlight-label-layer"]').then(el => {
           const item = el.closest('.layer-control-item');
           if (item) item.style.display = 'none';
       });
@@ -2004,10 +2172,7 @@ try {
           }
 
           if (event.data && event.data.type === 'clear-highlight') {
-              const ptSource = map.getSource('highlight-point-source');
-              const polySource = map.getSource('highlight-poly-source');
-              if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
-              if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+              clearHighlights();
               dismissActivePopup();
               
               selectedFeatureName = null;
@@ -2030,9 +2195,6 @@ try {
               const results = event.data.features || [];
               const isUnfiltered = event.data.isUnfiltered;
 
-              const ptSource = map.getSource('highlight-point-source');
-              const polySource = map.getSource('highlight-poly-source');
-
               // Clear map's own search and filter inputs to avoid UI confusion
               if (searchInput) searchInput.value = '';
               if (searchResults) {
@@ -2054,8 +2216,7 @@ try {
               }
 
               if (isUnfiltered) {
-                  if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
-                  if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+                  clearHighlights();
                   dismissActivePopup();
                   map.fitBounds([
                       [-75.145165, 39.856238],
@@ -2068,8 +2229,7 @@ try {
                   const pointFeatures = results.filter(f => f.geometry && f.geometry.type === 'Point');
                   const polyFeatures = results.filter(f => f.geometry && f.geometry.type !== 'Point');
 
-                  if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: pointFeatures });
-                  if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+                  setHighlights(pointFeatures, polyFeatures);
 
                   dismissActivePopup();
 
@@ -2083,8 +2243,7 @@ try {
                           }
                       }
                   } else {
-                      if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
-                      if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+                      clearHighlights();
                   }
               }
           }
