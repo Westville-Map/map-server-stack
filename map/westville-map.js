@@ -187,71 +187,7 @@ function getFeatureCategory(f) {
   return f._source || null;
 }
 
-function applyQuickView(viewKey, smoothFit = true) {
-  const cleanView = (viewKey || 'all').toLowerCase().trim();
-  activeQuickView = (cleanView === 'all') ? null : cleanView;
-
-  if (cleanView === 'all') {
-    const ptSource = map.getSource('highlight-point-source');
-    const polySource = map.getSource('highlight-poly-source');
-    if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
-    if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
-    dismissActivePopup();
-
-    if (smoothFit) {
-      map.fitBounds([
-        [-75.145165, 39.856238],
-        [-75.112685, 39.887555]
-      ], { padding: 10, duration: 800 });
-    }
-    return;
-  }
-
-  if (cleanView === 'parking') {
-    dismissActivePopup();
-    const parkingFeatures = allFeatures.filter(f => f._source === 'parking');
-    const ptFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type === 'Point');
-    const polyFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type !== 'Point');
-
-    const ptSource = map.getSource('highlight-point-source');
-    const polySource = map.getSource('highlight-poly-source');
-    if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
-    if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
-
-    if (parkingFeatures.length > 0 && smoothFit) {
-      const bounds = getFeaturesBounds(parkingFeatures);
-      if (bounds) {
-        map.fitBounds(bounds, { padding: 40, maxZoom: 18, duration: 800 });
-      }
-    }
-    return;
-  }
-
-  const viewObj = DIRECTORY_VIEWS[cleanView];
-  const allowedCategories = viewObj ? viewObj.categories : [];
-
-  const matched = allFeatures.filter(f => {
-    const cat = getFeatureCategory(f);
-    return cat && allowedCategories.includes(cat);
-  });
-
-  const ptFeatures = matched.filter(f => f.geometry && f.geometry.type === 'Point');
-  const polyFeatures = matched.filter(f => f.geometry && f.geometry.type !== 'Point');
-
-  const ptSource = map.getSource('highlight-point-source');
-  const polySource = map.getSource('highlight-poly-source');
-  if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
-  if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
-
-  dismissActivePopup();
-
-  if (matched.length > 0 && smoothFit) {
-    const bounds = getFeaturesBounds(matched);
-    if (bounds) {
-      map.fitBounds(bounds, { padding: 50, maxZoom: 18, duration: 800 });
-    }
-  }
-}
+let applyQuickView = () => {};
 
 const LAYER_ID_MAP = {
   'parking': 'custom-parking-fill',
@@ -1359,6 +1295,72 @@ try {
           if (minLng === Infinity) return null;
           return [[minLng, minLat], [maxLng, maxLat]];
       }
+
+      applyQuickView = function(viewKey, smoothFit = true) {
+          const cleanView = (viewKey || 'all').toLowerCase().trim();
+          activeQuickView = (cleanView === 'all') ? null : cleanView;
+
+          if (cleanView === 'all') {
+              const ptSource = map.getSource('highlight-point-source');
+              const polySource = map.getSource('highlight-poly-source');
+              if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
+              if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
+              dismissActivePopup();
+
+              if (smoothFit) {
+                  map.fitBounds([
+                      [-75.145165, 39.856238],
+                      [-75.112685, 39.887555]
+                  ], { padding: 10, duration: 800 });
+              }
+              return;
+          }
+
+          if (cleanView === 'parking') {
+              dismissActivePopup();
+              const parkingFeatures = allFeatures.filter(f => f._source === 'parking');
+              const ptFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type === 'Point');
+              const polyFeatures = parkingFeatures.filter(f => f.geometry && f.geometry.type !== 'Point');
+
+              const ptSource = map.getSource('highlight-point-source');
+              const polySource = map.getSource('highlight-poly-source');
+              if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
+              if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+
+              if (parkingFeatures.length > 0 && smoothFit) {
+                  const bounds = getFeaturesBounds(parkingFeatures);
+                  if (bounds) {
+                      map.fitBounds(bounds, { padding: 40, maxZoom: 18, duration: 800 });
+                  }
+              }
+              return;
+          }
+
+          const viewObj = DIRECTORY_VIEWS[cleanView];
+          const allowedCategories = viewObj ? viewObj.categories : [];
+
+          const matched = allFeatures.filter(f => {
+              const cat = getFeatureCategory(f);
+              return cat && allowedCategories.includes(cat);
+          });
+
+          const ptFeatures = matched.filter(f => f.geometry && f.geometry.type === 'Point');
+          const polyFeatures = matched.filter(f => f.geometry && f.geometry.type !== 'Point');
+
+          const ptSource = map.getSource('highlight-point-source');
+          const polySource = map.getSource('highlight-poly-source');
+          if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: ptFeatures });
+          if (polySource) polySource.setData({ type: 'FeatureCollection', features: polyFeatures });
+
+          dismissActivePopup();
+
+          if (matched.length > 0 && smoothFit) {
+              const bounds = getFeaturesBounds(matched);
+              if (bounds) {
+                  map.fitBounds(bounds, { padding: 50, maxZoom: 18, duration: 800 });
+              }
+          }
+      };
 
       // Helper to compute a geographic coordinate offset by pixels in screen space
       function getOffsetCenter(coordinates, yOffsetPixels, targetZoom) {
