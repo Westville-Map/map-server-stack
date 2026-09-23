@@ -1044,9 +1044,9 @@ try {
           type: 'circle',
           source: 'highlight-point-source',
           paint: {
-              'circle-radius': 12,
+              'circle-radius': 9,
               'circle-color': 'transparent',
-              'circle-stroke-width': 4,
+              'circle-stroke-width': 2,
               'circle-stroke-color': '#ffcc00'
           }
       });
