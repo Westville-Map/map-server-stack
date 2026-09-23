@@ -93,50 +93,37 @@
         <!-- Map Header Area -->
         <div class="map-header">
           <div class="map-header-left">
-            <div class="map-quick-filters" id="portal-quick-views" role="toolbar" aria-label="Quick map views">
+            <collapsible-pill-tray id="map-quick-views-tray" class="map-quick-filters" tray-title="Quick Views" active-label="All Listings" active-count="0">
               <span class="quick-filters-label">Quick Views:</span>
-
-              <!-- TEMPORARY: Dropdown trigger for mobile A/B testing (?mobile_view=dropdown) -->
-              <div class="quick-views-dropdown-wrapper" id="map-quick-views-dropdown-wrapper">
-                <button type="button" class="quick-views-dropdown-trigger" id="map-quick-views-dropdown-trigger" aria-haspopup="listbox" aria-expanded="false">
-                  <span class="dropdown-trigger-label" id="map-dropdown-active-label">All Listings</span>
-                  <span class="dropdown-trigger-count" id="map-dropdown-active-count">0</span>
-                  <span class="dropdown-trigger-arrow">▼</span>
-                </button>
-                <div class="quick-views-dropdown-menu" id="map-quick-views-dropdown-menu" role="listbox"></div>
-              </div>
-
-              <div class="quick-views-pills map-quick-views-pills" id="map-quick-views-pills">
-                <button type="button" class="quick-view-pill active" data-view="all" aria-pressed="true" title="Show all listings">
-                  <span class="quick-view-title">All Listings</span>
-                  <span class="quick-view-count" id="map-count-all">0</span>
-                </button>
-                <button type="button" class="quick-view-pill" data-view="walkup" aria-pressed="false" title="Filter for Walk-Up &amp; Retail">
-                  <span class="quick-view-title">Walk-Up &amp; Retail</span>
-                  <span class="quick-view-count" id="map-count-walkup">0</span>
-                </button>
-                <button type="button" class="quick-view-pill" data-view="industrial" aria-pressed="false" title="Filter for Industrial &amp; Trade">
-                  <span class="quick-view-title">Industrial &amp; Trade</span>
-                  <span class="quick-view-count" id="map-count-industrial">0</span>
-                </button>
-                <button type="button" class="quick-view-pill" data-view="services" aria-pressed="false" title="Filter for Services &amp; Pro">
-                  <span class="quick-view-title">Services &amp; Pro</span>
-                  <span class="quick-view-count" id="map-count-services">0</span>
-                </button>
-                <button type="button" class="quick-view-pill" data-view="public" aria-pressed="false" title="Filter for Parks &amp; Public">
-                  <span class="quick-view-title">Parks &amp; Public</span>
-                  <span class="quick-view-count" id="map-count-public">0</span>
-                </button>
-                <button type="button" class="quick-view-pill" data-view="automarine" aria-pressed="false" title="Filter for Auto &amp; Marine">
-                  <span class="quick-view-title">Auto &amp; Marine</span>
-                  <span class="quick-view-count" id="map-count-automarine">0</span>
-                </button>
-                <button type="button" class="quick-view-pill" data-view="parking" aria-pressed="false" title="Filter for Parking">
-                  <span class="quick-view-title">Parking</span>
-                  <span class="quick-view-count" id="map-count-parking">0</span>
-                </button>
-              </div>
-            </div>
+              <button type="button" class="quick-view-pill active" data-view="all" aria-pressed="true" title="Show all listings">
+                <span class="quick-view-title">All Listings</span>
+                <span class="quick-view-count" id="map-count-all">0</span>
+              </button>
+              <button type="button" class="quick-view-pill" data-view="walkup" aria-pressed="false" title="Filter for Walk-Up &amp; Retail">
+                <span class="quick-view-title">Walk-Up &amp; Retail</span>
+                <span class="quick-view-count" id="map-count-walkup">0</span>
+              </button>
+              <button type="button" class="quick-view-pill" data-view="industrial" aria-pressed="false" title="Filter for Industrial &amp; Trade">
+                <span class="quick-view-title">Industrial &amp; Trade</span>
+                <span class="quick-view-count" id="map-count-industrial">0</span>
+              </button>
+              <button type="button" class="quick-view-pill" data-view="services" aria-pressed="false" title="Filter for Services &amp; Pro">
+                <span class="quick-view-title">Services &amp; Pro</span>
+                <span class="quick-view-count" id="map-count-services">0</span>
+              </button>
+              <button type="button" class="quick-view-pill" data-view="public" aria-pressed="false" title="Filter for Parks &amp; Public">
+                <span class="quick-view-title">Parks &amp; Public</span>
+                <span class="quick-view-count" id="map-count-public">0</span>
+              </button>
+              <button type="button" class="quick-view-pill" data-view="automarine" aria-pressed="false" title="Filter for Auto &amp; Marine">
+                <span class="quick-view-title">Auto &amp; Marine</span>
+                <span class="quick-view-count" id="map-count-automarine">0</span>
+              </button>
+              <button type="button" class="quick-view-pill" data-view="parking" aria-pressed="false" title="Filter for Parking">
+                <span class="quick-view-title">Parking</span>
+                <span class="quick-view-count" id="map-count-parking">0</span>
+              </button>
+            </collapsible-pill-tray>
             <div id="map-transient-tags" class="map-transient-tags"></div>
           </div>
 
@@ -226,8 +213,8 @@
 
         <!-- Map Footer Area (Toggle Layers moved to the footer) -->
         <div class="map-footer">
-          <div class="map-layer-toggles">
-            <h3>Toggle Layers</h3>
+          <collapsible-pill-tray id="map-layer-toggles-tray" class="map-layer-toggles" tray-title="Toggle Layers" active-label="All Active" active-count="5">
+            <span class="quick-filters-label">Toggle Layers:</span>
             <label class="map-tag interactive-tag" for="layer-parking">
               <input type="checkbox" id="layer-parking" data-layer="parking" class="tag-checkbox" checked>
               <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/parking.svg" alt=""> Parking</span>
@@ -254,7 +241,7 @@
                 <span>Labels</span>
               </label>
             </div>
-          </div>
+          </collapsible-pill-tray>
         </div>
       </div>
     </section>

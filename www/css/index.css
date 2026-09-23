@@ -344,11 +344,22 @@
   flex-wrap: wrap;
 }
 
-/* Quick Map Filters Header Left Section */
-.map-quick-filters {
+/* Unified Collapsible Pill Tray Component (Base & Desktop styles) */
+collapsible-pill-tray {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+}
+
+collapsible-pill-tray .pill-tray-trigger {
+  display: none;
+}
+
+collapsible-pill-tray .pill-tray-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -362,14 +373,7 @@
   white-space: nowrap;
 }
 
-.map-quick-views-pills {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.map-quick-views-pills .quick-view-pill {
+.quick-view-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -387,14 +391,14 @@
   line-height: 1.2;
 }
 
-.map-quick-views-pills .quick-view-pill:hover {
+.quick-view-pill:hover {
   background: rgba(255, 255, 255, 0.22);
   border-color: var(--accent-gold);
   color: var(--accent-gold);
   transform: translateY(-1px);
 }
 
-.map-quick-views-pills .quick-view-pill.active {
+.quick-view-pill.active {
   background: var(--accent-gold);
   border-color: var(--accent-gold);
   color: var(--primary-blue);
@@ -402,7 +406,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-.map-quick-views-pills .quick-view-count {
+.quick-view-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -417,30 +421,24 @@
   transition: all 0.2s ease;
 }
 
-.map-quick-views-pills .quick-view-pill.active .quick-view-count {
+.quick-view-pill.active .quick-view-count {
   background: var(--primary-blue);
   color: var(--accent-gold);
 }
 
-.map-quick-views-pills .quick-view-pill:hover:not(.active) .quick-view-count {
+.quick-view-pill:hover:not(.active) .quick-view-count {
   background: rgba(229, 193, 88, 0.3);
   color: var(--accent-gold);
 }
 
-/* Dropdown wrapper for map header mobile testing */
-.map-quick-filters .quick-views-dropdown-wrapper {
-  display: none;
-  position: relative;
-  width: 100%;
-}
-
-.map-quick-filters .quick-views-dropdown-trigger {
-  display: flex;
+/* Pill Tray Trigger Button Styling */
+.pill-tray-trigger {
+  display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  padding: 6px 12px;
+  padding: 6px 14px;
   background: rgba(0, 0, 0, 0.25);
   border: 1.5px solid var(--accent-gold);
   border-radius: 9999px;
@@ -450,9 +448,37 @@
   cursor: pointer;
   box-sizing: border-box;
   font-family: inherit;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
-.map-quick-filters .quick-views-dropdown-trigger .dropdown-trigger-count {
+.pill-tray-trigger:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.pill-tray-trigger:focus-visible {
+  outline: 3px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
+}
+
+.pill-tray-label-prefix {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.pill-tray-active-text {
+  color: #ffffff;
+  font-weight: 600;
+  margin-left: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill-tray-active-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -467,81 +493,69 @@
   margin-left: auto;
 }
 
-.map-quick-filters .quick-views-dropdown-trigger .dropdown-trigger-arrow {
+.pill-tray-arrow {
   font-size: 0.65rem;
   color: var(--accent-gold);
   transition: transform 0.2s ease;
+  margin-left: 2px;
 }
 
-.map-quick-filters .quick-views-dropdown-trigger[aria-expanded="true"] .dropdown-trigger-arrow {
+collapsible-pill-tray.open .pill-tray-arrow,
+.pill-tray-trigger[aria-expanded="true"] .pill-tray-arrow {
   transform: rotate(180deg);
 }
 
-.map-quick-filters .quick-views-dropdown-menu {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: var(--primary-blue);
-  border: 1.5px solid var(--accent-gold);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 100;
-  padding: 6px;
-  max-height: 280px;
-  overflow-y: auto;
+/* Light Variant (Used in White Background pages like Directory) */
+collapsible-pill-tray[variant="light"] .pill-tray-trigger {
+  background: #ffffff;
+  border: 1.5px solid var(--primary-blue);
+  color: var(--primary-blue);
+  box-shadow: 0 2px 6px rgba(26, 77, 124, 0.1);
 }
 
-.map-quick-filters .quick-views-dropdown-menu.open {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.map-quick-filters .quick-views-dropdown-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 0.15s ease;
-}
-
-.map-quick-filters .quick-views-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.map-quick-filters .quick-views-dropdown-item.active {
-  background: var(--accent-gold);
+collapsible-pill-tray[variant="light"] .pill-tray-label-prefix {
   color: var(--primary-blue);
 }
 
-.map-quick-filters .quick-views-dropdown-item .dropdown-item-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.2);
+collapsible-pill-tray[variant="light"] .pill-tray-active-text {
+  color: var(--text-dark);
+}
+
+collapsible-pill-tray[variant="light"] .pill-tray-active-count {
+  background: var(--primary-blue);
   color: #ffffff;
 }
 
-.map-quick-filters .quick-views-dropdown-item.active .dropdown-item-count {
+collapsible-pill-tray[variant="light"] .pill-tray-arrow {
+  color: var(--primary-blue);
+}
+
+collapsible-pill-tray[variant="light"] .quick-view-pill {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: var(--text-dark);
+}
+
+collapsible-pill-tray[variant="light"] .quick-view-pill:hover {
+  background: #e2e8f0;
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+collapsible-pill-tray[variant="light"] .quick-view-pill.active {
   background: var(--primary-blue);
-  color: var(--accent-gold);
+  border-color: var(--primary-blue);
+  color: var(--white);
+}
+
+collapsible-pill-tray[variant="light"] .quick-view-pill .quick-view-count {
+  background: #e2e8f0;
+  color: var(--text-dark);
+}
+
+collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count {
+  background: var(--white);
+  color: var(--primary-blue);
 }
 
 /* Map Footer styling below iframe */
@@ -1325,7 +1339,97 @@
   display: none;
 }
 
-/* Responsive - Mobile/Tablet Overrides */
+/* Responsive - Tablet / Early Collapse Breakpoint (Prevents header actions from wrapping) */
+@media (max-width: 992px) {
+  .map-header {
+    flex-direction: column;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .map-header-left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .map-header-actions {
+    width: 100%;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .explore-wrapper,
+  .share-wrapper,
+  .map-header-actions > .header-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .map-header-actions .header-btn {
+    font-size: 0.78rem;
+    height: 30px;
+    padding: 0 6px;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  collapsible-pill-tray {
+    width: 100%;
+    position: relative;
+  }
+
+  collapsible-pill-tray .pill-tray-trigger {
+    display: inline-flex;
+  }
+
+  collapsible-pill-tray .pill-tray-content {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--primary-blue);
+    border: 1.5px solid var(--accent-gold);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 1000;
+    padding: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  collapsible-pill-tray.open .pill-tray-content {
+    display: flex;
+  }
+
+  collapsible-pill-tray .pill-tray-content .quick-filters-label {
+    display: none;
+  }
+
+  .map-footer collapsible-pill-tray .pill-tray-content {
+    top: auto;
+    bottom: calc(100% + 6px);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  collapsible-pill-tray[variant="light"] .pill-tray-content {
+    background: #ffffff;
+    border: 1.5px solid var(--primary-blue);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Responsive - Mobile Overrides */
 @media (max-width: 768px) {
   .hero h2,
   .hero p {
@@ -1340,43 +1444,7 @@
     background-color: transparent;
   }
 
-  /* Compact map header actions and prevent text wrap */
-  .map-header {
-    padding: 8px 14px;
-  }
-
-  .map-header-left {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .map-header-actions {
-    width: 100%;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  .explore-wrapper,
-  .share-wrapper,
-  .map-header-actions > .header-btn {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .map-header-actions .header-btn {
-    font-size: 0.76rem;
-    height: 28px;
-    padding: 0 5px;
-    gap: 4px;
-    width: 100%;
-    justify-content: center;
-    min-width: 0;
-  }
-
-  /* Mobile Active Filters and Layer Toggles */
+  /* Mobile Active Filters */
   .map-active-filters {
     width: 100%;
     flex-direction: column;
@@ -1392,115 +1460,6 @@
   .map-transient-tags:not(:empty) {
     margin-bottom: 2px;
     width: 100%;
-  }
-
-  .map-layer-toggles {
-    width: 100%;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.15);
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-sizing: border-box;
-    transition: background-color 0.2s, border-color 0.2s;
-  }
-
-  .map-layer-toggles:hover {
-    background: rgba(0, 0, 0, 0.25);
-    border-color: rgba(255, 255, 255, 0.25);
-  }
-
-  .map-layer-toggles h3 {
-    width: 100%;
-    text-align: center;
-    padding: 2px 0;
-    cursor: pointer;
-    user-select: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 0;
-  }
-
-  .map-layer-toggles h3::after {
-    content: '▼';
-    font-size: 0.65rem;
-    display: inline-block;
-    transition: transform 0.2s ease;
-    color: var(--accent-gold);
-  }
-
-  .map-layer-toggles.active {
-    border-color: var(--accent-gold);
-    background: rgba(0, 0, 0, 0.3);
-    gap: 12px;
-  }
-
-  .map-layer-toggles.active h3::after {
-    transform: rotate(180deg);
-  }
-
-  .map-layer-toggles:not(.active) .map-tag.interactive-tag {
-    display: none;
-  }
-
-  .map-layer-toggles.active .map-tag.interactive-tag {
-    display: inline-flex;
-  }
-
-  /* TEMPORARY: A/B testing mobile_view param (chips vs dropdown) */
-  .map-quick-filters {
-    width: 100%;
-    background: transparent;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-  }
-
-  /* Mode A: Horizontal Scroll-Snap Chips (Default) */
-  .map-quick-filters.mode-chips .map-quick-views-pills,
-  .map-quick-filters:not(.mode-dropdown) .map-quick-views-pills {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-    padding: 2px 2px 4px 2px;
-    width: 100%;
-    gap: 6px;
-  }
-
-  .map-quick-filters.mode-chips .map-quick-views-pills::-webkit-scrollbar,
-  .map-quick-filters:not(.mode-dropdown) .map-quick-views-pills::-webkit-scrollbar {
-    display: none;
-  }
-
-  .map-quick-filters.mode-chips .quick-view-pill,
-  .map-quick-filters:not(.mode-dropdown) .quick-view-pill {
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    font-size: 0.78rem;
-    padding: 4px 9px;
-  }
-
-  .map-quick-filters.mode-chips .quick-filters-label,
-  .map-quick-filters:not(.mode-dropdown) .quick-filters-label {
-    display: none;
-  }
-
-  /* Mode B: Compact Dropdown */
-  .map-quick-filters.mode-dropdown .map-quick-views-pills {
-    display: none;
-  }
-
-  .map-quick-filters.mode-dropdown .quick-filters-label {
-    display: none;
-  }
-
-  .map-quick-filters.mode-dropdown .quick-views-dropdown-wrapper {
-    display: block;
   }
 
   /* Collapsible Quick Views & Shortcuts container rules */

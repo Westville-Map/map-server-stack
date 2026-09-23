@@ -354,35 +354,32 @@ function updateMapHeaderFromUrl(urlString) {
     const isCleanView = !searchParams.get('search') && !searchParams.get('feature') && !searchParams.get('gps');
     const activeViewKey = isCleanView ? currentView.toLowerCase().trim() : '';
 
-    const pillsContainer = document.getElementById('map-quick-views-pills');
-    if (pillsContainer) {
-      pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+    const quickViewsTray = document.getElementById('map-quick-views-tray');
+    if (quickViewsTray) {
+      quickViewsTray.querySelectorAll('.quick-view-pill').forEach(btn => {
         const vKey = btn.getAttribute('data-view');
         const isActive = activeViewKey ? (vKey === activeViewKey) : false;
         btn.classList.toggle('active', isActive);
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
+
+      if (typeof quickViewsTray.setActiveLabel === 'function') {
+        const title = (window.directoryViews && window.directoryViews[activeViewKey]) ? window.directoryViews[activeViewKey].title : (activeViewKey === 'all' ? 'All Listings' : 'Custom');
+        quickViewsTray.setActiveLabel(title);
+        const countEl = document.getElementById(`map-count-${activeViewKey}`);
+        if (countEl && typeof quickViewsTray.setActiveCount === 'function') {
+          quickViewsTray.setActiveCount(countEl.innerText);
+        }
+      }
     }
 
-    // Sync mobile dropdown trigger
-    const triggerLabel = document.getElementById('map-dropdown-active-label');
-    const triggerCount = document.getElementById('map-dropdown-active-count');
-    if (triggerLabel && window.directoryViews && window.directoryViews[activeViewKey]) {
-      triggerLabel.innerText = window.directoryViews[activeViewKey].title;
-    } else if (triggerLabel && activeViewKey === 'all') {
-      triggerLabel.innerText = 'All Listings';
-    }
-    const countEl = document.getElementById(`map-count-${activeViewKey}`);
-    if (triggerCount && countEl) {
-      triggerCount.innerText = countEl.innerText;
-    }
-
-    // Sync active state in mobile dropdown menu items
-    const menu = document.getElementById('map-quick-views-dropdown-menu');
-    if (menu) {
-      menu.querySelectorAll('.map-quick-views-dropdown-item').forEach(item => {
-        item.classList.toggle('active', item.getAttribute('data-view') === activeViewKey);
-      });
+    // Sync footer layer toggle tray active count and label
+    const layerTray = document.getElementById('map-layer-toggles-tray');
+    if (layerTray && typeof layerTray.setActiveCount === 'function') {
+      const activeLayers = ['parking', 'establishments', 'recreation', 'map', 'satellite'].filter(l => getLayerVisibilityFromUrl(urlString, l));
+      const activeLayersCount = activeLayers.length;
+      layerTray.setActiveCount(activeLayersCount);
+      layerTray.setActiveLabel(activeLayersCount === 5 ? 'All Active' : `${activeLayersCount} Active`);
     }
   } catch (e) {
     console.error('Error updating map header:', e);
@@ -2058,6 +2055,14 @@ function initLayerCheckboxes() {
           if (checked) label.classList.add('checked');
           else label.classList.remove('checked');
         }
+
+        // Sync footer layer toggle tray active count and label
+        const layerTray = document.getElementById('map-layer-toggles-tray');
+        if (layerTray && typeof layerTray.setActiveCount === 'function') {
+          const activeCount = document.querySelectorAll('#map-layer-toggles-tray input[type="checkbox"]:checked').length;
+          layerTray.setActiveCount(activeCount);
+          layerTray.setActiveLabel(activeCount === 5 ? 'All Active' : `${activeCount} Active`);
+        }
         
         // Post message to map iframe to toggle layer
         const iframe = document.getElementById('mapFrame');
@@ -2069,80 +2074,6 @@ function initLayerCheckboxes() {
           }, '*');
         }
       });
-    }
-  });
-}
-
-function initMobileLayerDropdown() {
-  const container = document.querySelector('.map-layer-toggles');
-  if (!container) return;
-  
-  const header = container.querySelector('h3');
-  if (!header) return;
-  
-  header.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
-      e.stopPropagation();
-      container.classList.toggle('active');
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
-      if (container.classList.contains('active') && !container.contains(e.target)) {
-        container.classList.remove('active');
-      }
-    }
-  });
-}
-
-/* TEMPORARY: A/B testing mobile_view param (chips vs dropdown). Will remove unchosen mode. */
-function initPortalMobileViewMode() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const mobileMode = urlParams.get('mobile_view'); // 'dropdown' or 'chips' (default)
-  const isDropdownMode = mobileMode === 'dropdown';
-
-  const container = document.getElementById('portal-quick-views');
-  if (container) {
-    container.classList.toggle('mode-dropdown', isDropdownMode);
-    container.classList.toggle('mode-chips', !isDropdownMode);
-  }
-
-  const trigger = document.getElementById('map-quick-views-dropdown-trigger');
-  const menu = document.getElementById('map-quick-views-dropdown-menu');
-  if (!trigger || !menu) return;
-
-  menu.innerHTML = '';
-  if (window.directoryViews) {
-    const currentView = urlParams.get('view') || urlParams.get('focus') || 'all';
-    Object.entries(window.directoryViews).forEach(([key, viewObj]) => {
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'map-quick-views-dropdown-item' + (key === currentView ? ' active' : '');
-      item.setAttribute('data-view', key);
-      item.innerHTML = `
-        <span class="dropdown-item-title">${viewObj.title}</span>
-        <span class="dropdown-item-count" id="map-dropdown-count-${key}">0</span>
-      `;
-      item.addEventListener('click', () => {
-        applyPortalQuickView(key);
-        trigger.setAttribute('aria-expanded', 'false');
-        menu.classList.remove('open');
-      });
-      menu.appendChild(item);
-    });
-  }
-
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = menu.classList.toggle('open');
-    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#map-quick-views-dropdown-wrapper')) {
-      menu.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
     }
   });
 }
@@ -2173,33 +2104,24 @@ function applyPortalQuickView(viewKey) {
   const nextSearch = params.toString() ? '?' + params.toString() : '';
   window.history.replaceState(null, '', window.location.pathname + nextSearch);
 
-  // Update pill UI
-  const pillsContainer = document.getElementById('map-quick-views-pills');
-  if (pillsContainer) {
-    pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+  // Update pill UI and collapsible tray
+  const quickViewsTray = document.getElementById('map-quick-views-tray');
+  if (quickViewsTray) {
+    quickViewsTray.querySelectorAll('.quick-view-pill').forEach(btn => {
       const isCurrent = btn.getAttribute('data-view') === viewKey;
       btn.classList.toggle('active', isCurrent);
       btn.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
     });
-  }
 
-  // Update mobile dropdown trigger
-  const triggerLabel = document.getElementById('map-dropdown-active-label');
-  const triggerCount = document.getElementById('map-dropdown-active-count');
-  if (triggerLabel && window.directoryViews && window.directoryViews[viewKey]) {
-    triggerLabel.innerText = window.directoryViews[viewKey].title;
-  }
-  const countEl = document.getElementById(`map-count-${viewKey}`);
-  if (triggerCount && countEl) {
-    triggerCount.innerText = countEl.innerText;
-  }
-
-  // Update mobile dropdown items
-  const menu = document.getElementById('map-quick-views-dropdown-menu');
-  if (menu) {
-    menu.querySelectorAll('.map-quick-views-dropdown-item').forEach(item => {
-      item.classList.toggle('active', item.getAttribute('data-view') === viewKey);
-    });
+    if (typeof quickViewsTray.setActiveLabel === 'function') {
+      const title = (window.directoryViews && window.directoryViews[viewKey]) ? window.directoryViews[viewKey].title : (viewKey === 'all' ? 'All Listings' : viewKey);
+      quickViewsTray.setActiveLabel(title);
+      const countEl = document.getElementById(`map-count-${viewKey}`);
+      if (countEl && typeof quickViewsTray.setActiveCount === 'function') {
+        quickViewsTray.setActiveCount(countEl.innerText);
+      }
+      quickViewsTray.close();
+    }
   }
 }
 
@@ -2233,24 +2155,20 @@ function updatePortalQuickViewCounts(features) {
   Object.keys(counts).forEach(vk => {
     const countEl = document.getElementById(`map-count-${vk}`);
     if (countEl) countEl.innerText = counts[vk];
-    const dropCountEl = document.getElementById(`map-dropdown-count-${vk}`);
-    if (dropCountEl) dropCountEl.innerText = counts[vk];
   });
 
   const urlParams = new URLSearchParams(window.location.search);
   const curView = urlParams.get('view') || urlParams.get('focus') || 'all';
-  const activeDropCount = document.getElementById('map-dropdown-active-count');
-  if (activeDropCount && counts[curView] !== undefined) {
-    activeDropCount.innerText = counts[curView];
+  const quickViewsTray = document.getElementById('map-quick-views-tray');
+  if (quickViewsTray && typeof quickViewsTray.setActiveCount === 'function' && counts[curView] !== undefined) {
+    quickViewsTray.setActiveCount(counts[curView]);
   }
 }
 
 function initPortalQuickViews() {
-  initPortalMobileViewMode();
-
-  const pillsContainer = document.getElementById('map-quick-views-pills');
-  if (pillsContainer) {
-    pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+  const quickViewsTray = document.getElementById('map-quick-views-tray');
+  if (quickViewsTray) {
+    quickViewsTray.querySelectorAll('.quick-view-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         const viewKey = btn.getAttribute('data-view') || 'all';
         applyPortalQuickView(viewKey);
@@ -2388,7 +2306,6 @@ function initResetButton() {
 
 // Start fetching data
 initLayerCheckboxes();
-initMobileLayerDropdown();
 initPortalQuickViews();
 initResetButton();
 initDirectory();

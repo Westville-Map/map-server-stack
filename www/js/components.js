@@ -1024,6 +1024,117 @@ window.closeDropdown = function(trigger, dropdown) {
   }
 };
 
+// Unified Collapsible Pill Tray Web Component for responsive mobile map controls
+class CollapsiblePillTray extends HTMLElement {
+  connectedCallback() {
+    if (this._initialized) return;
+    this._initialized = true;
+
+    const title = this.getAttribute('tray-title') || this.getAttribute('title') || 'Options';
+    const activeLabel = this.getAttribute('active-label') || '';
+    const activeCount = this.getAttribute('active-count') || '';
+
+    // Create trigger button
+    const triggerBtn = document.createElement('button');
+    triggerBtn.type = 'button';
+    triggerBtn.className = 'pill-tray-trigger';
+    triggerBtn.setAttribute('aria-haspopup', 'true');
+    triggerBtn.setAttribute('aria-expanded', 'false');
+    triggerBtn.innerHTML = `
+      <span class="pill-tray-label-prefix">${title}:</span>
+      <span class="pill-tray-active-text">${activeLabel}</span>
+      <span class="pill-tray-active-count" style="${(activeCount !== '' && activeCount !== null && activeCount !== undefined) ? '' : 'display: none;'}">${activeCount}</span>
+      <span class="pill-tray-arrow">▼</span>
+    `;
+
+    // Move direct children into .pill-tray-content wrapper
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'pill-tray-content';
+    contentWrapper.setAttribute('role', 'region');
+    contentWrapper.setAttribute('aria-label', title);
+
+    while (this.firstChild) {
+      contentWrapper.appendChild(this.firstChild);
+    }
+
+    this.appendChild(triggerBtn);
+    this.appendChild(contentWrapper);
+
+    // Toggle on click
+    triggerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+
+    triggerBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.toggle();
+      } else if (e.key === 'Escape') {
+        this.close();
+      }
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!this.contains(e.target)) {
+        this.close();
+      }
+    });
+
+    // Close when pressing Escape
+    this.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.close();
+        triggerBtn.focus();
+      }
+    });
+  }
+
+  setActiveLabel(text) {
+    this.setAttribute('active-label', text);
+    const labelEl = this.querySelector('.pill-tray-active-text');
+    if (labelEl) labelEl.innerText = text;
+  }
+
+  setActiveCount(count) {
+    this.setAttribute('active-count', count);
+    const countEl = this.querySelector('.pill-tray-active-count');
+    if (countEl) {
+      countEl.innerText = count;
+      countEl.style.display = (count !== '' && count !== null && count !== undefined) ? 'inline-flex' : 'none';
+    }
+  }
+
+  toggle(forceState) {
+    const shouldOpen = (typeof forceState === 'boolean') ? forceState : !this.classList.contains('open');
+    this.classList.toggle('open', shouldOpen);
+    const triggerBtn = this.querySelector('.pill-tray-trigger');
+    if (triggerBtn) {
+      triggerBtn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    }
+
+    // Close other trays if opened
+    if (shouldOpen) {
+      document.querySelectorAll('collapsible-pill-tray').forEach(tray => {
+        if (tray !== this) tray.close();
+      });
+    }
+  }
+
+  close() {
+    if (this.classList.contains('open')) {
+      this.classList.remove('open');
+      const triggerBtn = this.querySelector('.pill-tray-trigger');
+      if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+}
+
+if (!customElements.get('collapsible-pill-tray')) {
+  customElements.define('collapsible-pill-tray', CollapsiblePillTray);
+}
+
 // Register Service Worker for offline shell caching (progressive enhancement)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

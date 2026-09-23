@@ -249,73 +249,19 @@ function updateQuickViewCounts() {
   Object.keys(counts).forEach(vk => {
     const countEl = document.getElementById(`count-${vk}`);
     if (countEl) countEl.innerText = counts[vk];
-    const dropCountEl = document.getElementById(`dir-dropdown-count-${vk}`);
-    if (dropCountEl) dropCountEl.innerText = counts[vk];
   });
 
-  // Update mobile active dropdown badge
-  const activeDropCount = document.getElementById('dir-dropdown-active-count');
-  if (activeDropCount && counts[selectedView] !== undefined) {
-    activeDropCount.innerText = counts[selectedView];
+  // Update collapsible tray active badge count
+  const tray = document.getElementById('directory-quick-views');
+  if (tray && typeof tray.setActiveCount === 'function' && counts[selectedView] !== undefined) {
+    tray.setActiveCount(counts[selectedView]);
   }
-}
-
-/* TEMPORARY: A/B testing mobile_view param (chips vs dropdown). Will remove unchosen mode. */
-function initMobileViewMode() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const mobileMode = urlParams.get('mobile_view'); // 'dropdown' or 'chips' (default)
-  const isDropdownMode = mobileMode === 'dropdown';
-
-  const quickViewsContainer = document.getElementById('directory-quick-views');
-  if (quickViewsContainer) {
-    quickViewsContainer.classList.toggle('mode-dropdown', isDropdownMode);
-    quickViewsContainer.classList.toggle('mode-chips', !isDropdownMode);
-  }
-
-  const trigger = document.getElementById('dir-quick-views-dropdown-trigger');
-  const menu = document.getElementById('dir-quick-views-dropdown-menu');
-  if (!trigger || !menu) return;
-
-  // Populate dropdown menu items from window.directoryViews
-  menu.innerHTML = '';
-  if (window.directoryViews) {
-    Object.entries(window.directoryViews).forEach(([key, viewObj]) => {
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'quick-views-dropdown-item' + (key === selectedView ? ' active' : '');
-      item.setAttribute('data-view', key);
-      item.innerHTML = `
-        <span class="dropdown-item-title">${viewObj.title}</span>
-        <span class="dropdown-item-count" id="dir-dropdown-count-${key}">0</span>
-      `;
-      item.addEventListener('click', () => {
-        setActiveView(key, true);
-        trigger.setAttribute('aria-expanded', 'false');
-        menu.classList.remove('open');
-      });
-      menu.appendChild(item);
-    });
-  }
-
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = menu.classList.toggle('open');
-    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#dir-quick-views-dropdown-wrapper')) {
-      menu.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
-    }
-  });
 }
 
 function initQuickViews() {
-  initMobileViewMode();
-  const pillsContainer = document.getElementById('quick-views-pills');
-  if (!pillsContainer) return;
-  pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+  const tray = document.getElementById('directory-quick-views');
+  if (!tray) return;
+  tray.querySelectorAll('.quick-view-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       const viewKey = btn.getAttribute('data-view') || 'all';
       setActiveView(viewKey, true);
@@ -325,32 +271,23 @@ function initQuickViews() {
 
 function setActiveView(viewKey, triggerRender = true) {
   selectedView = viewKey;
-  const pillsContainer = document.getElementById('quick-views-pills');
-  if (pillsContainer) {
-    pillsContainer.querySelectorAll('.quick-view-pill').forEach(btn => {
+  const tray = document.getElementById('directory-quick-views');
+  if (tray) {
+    tray.querySelectorAll('.quick-view-pill').forEach(btn => {
       const isCurrent = btn.getAttribute('data-view') === viewKey;
       btn.classList.toggle('active', isCurrent);
       btn.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
     });
-  }
 
-  // Update mobile dropdown trigger label & count
-  const triggerLabel = document.getElementById('dir-dropdown-active-label');
-  const triggerCount = document.getElementById('dir-dropdown-active-count');
-  if (triggerLabel && window.directoryViews && window.directoryViews[viewKey]) {
-    triggerLabel.innerText = window.directoryViews[viewKey].title;
-  }
-  const countEl = document.getElementById(`count-${viewKey}`);
-  if (triggerCount && countEl) {
-    triggerCount.innerText = countEl.innerText;
-  }
-
-  // Update active state in mobile dropdown menu items
-  const menu = document.getElementById('dir-quick-views-dropdown-menu');
-  if (menu) {
-    menu.querySelectorAll('.quick-views-dropdown-item').forEach(item => {
-      item.classList.toggle('active', item.getAttribute('data-view') === viewKey);
-    });
+    if (typeof tray.setActiveLabel === 'function') {
+      const title = (window.directoryViews && window.directoryViews[viewKey]) ? window.directoryViews[viewKey].title : (viewKey === 'all' ? 'All Listings' : viewKey);
+      tray.setActiveLabel(title);
+      const countEl = document.getElementById(`count-${viewKey}`);
+      if (countEl && typeof tray.setActiveCount === 'function') {
+        tray.setActiveCount(countEl.innerText);
+      }
+      tray.close();
+    }
   }
 
   if (triggerRender) {
