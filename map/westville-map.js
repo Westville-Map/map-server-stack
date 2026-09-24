@@ -713,7 +713,27 @@ try {
               ],
               'icon-allow-overlap': false,
               'icon-overlap': 'cooperative',
-              'text-overlap': 'cooperative'
+              'text-overlap': 'cooperative',
+              'text-field': ['get', 'name'],
+              "text-font": ["Noto Sans Regular"],
+              'text-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 10.0,
+                  15.0, 11.5,
+                  18.0, 13.0
+              ],
+              'text-offset': [0, 1.2],
+              'text-anchor': 'top',
+              "text-variable-anchor": ["top", "bottom", "left", "right"],
+              'text-optional': true,
+              'symbol-sort-key': 5
+          },
+          paint: {
+              'text-color':'#000000',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2
           }
       });
 
@@ -1110,9 +1130,9 @@ try {
                   'interpolate',
                   ['linear'],
                   ['zoom'],
-                  12.0, 2.0,
-                  15.0, 4.0,
-                  18.0, 6.0
+                  12.0, 1.25,
+                  15.0, 1.75,
+                  18.0, 2.25
               ],
               'line-color': '#ffcc00'
           }
@@ -1197,6 +1217,26 @@ try {
                           0.25
                       ]);
                   }
+                  if (map.getLayer('parking-layer-symbols')) {
+                      map.setPaintProperty('parking-layer-symbols', 'icon-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.25
+                      ]);
+                      map.setPaintProperty('parking-layer-symbols', 'text-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.25
+                      ]);
+                      map.setLayoutProperty('parking-layer-symbols', 'symbol-sort-key', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          0,
+                          10
+                      ]);
+                  }
               } else if (dim) {
                   if (map.getLayer('custom-markers')) {
                       map.setPaintProperty('custom-markers', 'circle-opacity', 0.35);
@@ -1208,6 +1248,10 @@ try {
                   if (map.getLayer('park-layer-symbols')) {
                       map.setPaintProperty('park-layer-symbols', 'icon-opacity', 0.25);
                       map.setPaintProperty('park-layer-symbols', 'text-opacity', 0.25);
+                  }
+                  if (map.getLayer('parking-layer-symbols')) {
+                      map.setPaintProperty('parking-layer-symbols', 'icon-opacity', 0.25);
+                      map.setPaintProperty('parking-layer-symbols', 'text-opacity', 0.25);
                   }
               } else {
                   if (map.getLayer('custom-markers')) {
@@ -1221,6 +1265,11 @@ try {
                   if (map.getLayer('park-layer-symbols')) {
                       map.setPaintProperty('park-layer-symbols', 'icon-opacity', 1.0);
                       map.setPaintProperty('park-layer-symbols', 'text-opacity', 1.0);
+                  }
+                  if (map.getLayer('parking-layer-symbols')) {
+                      map.setPaintProperty('parking-layer-symbols', 'icon-opacity', 1.0);
+                      map.setPaintProperty('parking-layer-symbols', 'text-opacity', 1.0);
+                      map.setLayoutProperty('parking-layer-symbols', 'symbol-sort-key', 5);
                   }
               }
 
@@ -1242,9 +1291,6 @@ try {
                       15.0, 0.4,
                       18.0, 0.55
                   ]);
-              }
-              if (map.getLayer('parking-layer-symbols')) {
-                  map.setPaintProperty('parking-layer-symbols', 'icon-opacity', (dim && !hasParkingHighlighted) ? 0.25 : 1.0);
               }
               if (map.getLayer('walkingpath-layer-symbol')) {
                   map.setPaintProperty('walkingpath-layer-symbol', 'icon-opacity', (dim && !hasRecHighlighted) ? 0.25 : 1.0);
