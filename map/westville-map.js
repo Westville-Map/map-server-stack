@@ -518,7 +518,7 @@ try {
                   const customLayers = [
                       'satellite-layer', 'custom-parking-fill', 'parking-layer-symbols',
                       'park-layer-fill', 'custom-park-outline', 'walkingpath-outline', 'walkingpath-layer-symbol',
-                      'park-layer-symbols', 'custom-markers', 'custom-labels', 'highlight-point-layer', 'highlight-poly-layer', 'highlight-label-layer'
+                      'park-layer-symbols', 'custom-markers', 'custom-labels', 'highlight-point-layer', 'highlight-poly-layer'
                   ];
                   if (!customLayers.includes(layer.id)) {
                       const targetVisibility = shouldBasemapBeVisible ? 'visible' : 'none';
@@ -919,7 +919,7 @@ try {
           id: 'custom-labels',
           type: 'symbol',
           source: 'establishments',
-          minzoom: 14.5,
+          minzoom: 14.0,
           filter: ['all',
               ['!', ['in', 'Parking', ['coalesce', ['get', 'tags'], '']]],
               ['!', ['in', 'Park', ['coalesce', ['get', 'tags'], '']]],
@@ -933,14 +933,16 @@ try {
                   'interpolate',
                   ['linear'],
                   ['zoom'],
-                  14.5, 10.0,
+                  14.0, 10.0,
                   16.5, 12.0,
                   18.5, 14.0
               ],
               'text-offset': [0, 1.2],
               'text-anchor': 'top',
               "text-variable-anchor": ["top", "bottom", "left", "right"],
-              'text-optional': true
+              'text-allow-overlap': false,
+              'text-optional': true,
+              'symbol-sort-key': 5
           },
           paint: {
               'text-color':'#000000',
@@ -1126,66 +1128,107 @@ try {
                   'interpolate',
                   ['linear'],
                   ['zoom'],
-                  12.0, 4.5,
-                  14.0, 6.5,
-                  15.5, 8.5,
-                  17.5, 11.0,
-                  19.0, 14.5
+                  12.0, 3.0,
+                  14.0, 4.75,
+                  15.5, 6.75,
+                  17.5, 9.5,
+                  19.0, 12.5
               ],
               'circle-color': 'transparent',
               'circle-stroke-width': [
                   'interpolate',
                   ['linear'],
                   ['zoom'],
-                  12.0, 1.5,
-                  15.0, 2.0,
-                  18.0, 3.0
+                  12.0, 1.25,
+                  15.0, 1.75,
+                  18.0, 2.25
               ],
               'circle-stroke-color': '#ffcc00'
           }
       });
 
-      map.addLayer({
-          id: 'highlight-label-layer',
-          type: 'symbol',
-          source: 'highlight-point-source',
-          minzoom: 12.0,
-          layout: {
-              'text-field': ['get', 'name'],
-              'text-font': ['Noto Sans Regular'],
-              'text-size': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  12.0, 10.5,
-                  15.0, 12.0,
-                  18.0, 14.0
-              ],
-              'text-offset': [0, 1.3],
-              'text-anchor': 'top',
-              'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-              'text-allow-overlap': true,
-              'text-ignore-placement': true
-          },
-          paint: {
-              'text-color': '#000000',
-              'text-halo-color': '#ffffff',
-              'text-halo-width': 3
-          }
-      });
-
-      function setHighlightDimming(dim) {
+      function setHighlightDimming(dim, highlightedFeatures = []) {
           if (!map) return;
           try {
-              if (map.getLayer('custom-markers')) {
-                  map.setPaintProperty('custom-markers', 'circle-opacity', dim ? 0.35 : 1.0);
-                  map.setPaintProperty('custom-markers', 'circle-stroke-opacity', dim ? 0.35 : 1.0);
+              const highlightedNames = (highlightedFeatures || [])
+                  .map(f => f.properties && f.properties.name)
+                  .filter(Boolean);
+
+              if (dim && highlightedNames.length > 0) {
+                  if (map.getLayer('custom-markers')) {
+                      map.setPaintProperty('custom-markers', 'circle-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.35
+                      ]);
+                      map.setPaintProperty('custom-markers', 'circle-stroke-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.35
+                      ]);
+                  }
+                  if (map.getLayer('custom-labels')) {
+                      map.setPaintProperty('custom-labels', 'text-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.2
+                      ]);
+                      map.setLayoutProperty('custom-labels', 'symbol-sort-key', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          0,
+                          10
+                      ]);
+                  }
+                  if (map.getLayer('park-layer-symbols')) {
+                      map.setPaintProperty('park-layer-symbols', 'icon-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.25
+                      ]);
+                      map.setPaintProperty('park-layer-symbols', 'text-opacity', [
+                          'case',
+                          ['in', ['get', 'name'], ['literal', highlightedNames]],
+                          1.0,
+                          0.25
+                      ]);
+                  }
+              } else if (dim) {
+                  if (map.getLayer('custom-markers')) {
+                      map.setPaintProperty('custom-markers', 'circle-opacity', 0.35);
+                      map.setPaintProperty('custom-markers', 'circle-stroke-opacity', 0.35);
+                  }
+                  if (map.getLayer('custom-labels')) {
+                      map.setPaintProperty('custom-labels', 'text-opacity', 0.2);
+                  }
+                  if (map.getLayer('park-layer-symbols')) {
+                      map.setPaintProperty('park-layer-symbols', 'icon-opacity', 0.25);
+                      map.setPaintProperty('park-layer-symbols', 'text-opacity', 0.25);
+                  }
+              } else {
+                  if (map.getLayer('custom-markers')) {
+                      map.setPaintProperty('custom-markers', 'circle-opacity', 1.0);
+                      map.setPaintProperty('custom-markers', 'circle-stroke-opacity', 1.0);
+                  }
+                  if (map.getLayer('custom-labels')) {
+                      map.setPaintProperty('custom-labels', 'text-opacity', 1.0);
+                      map.setLayoutProperty('custom-labels', 'symbol-sort-key', 5);
+                  }
+                  if (map.getLayer('park-layer-symbols')) {
+                      map.setPaintProperty('park-layer-symbols', 'icon-opacity', 1.0);
+                      map.setPaintProperty('park-layer-symbols', 'text-opacity', 1.0);
+                  }
               }
-              if (map.getLayer('custom-labels')) {
-                  map.setPaintProperty('custom-labels', 'text-opacity', dim ? 0.25 : 1.0);
-              }
+
+              const hasParkingHighlighted = dim && (highlightedFeatures || []).some(f => f._source === 'parking');
+              const hasRecHighlighted = dim && (highlightedFeatures || []).some(f => f._source === 'recreation');
+
               if (map.getLayer('custom-parking-fill')) {
-                  map.setPaintProperty('custom-parking-fill', 'fill-opacity', dim ? 0.15 : [
+                  map.setPaintProperty('custom-parking-fill', 'fill-opacity', (dim && !hasParkingHighlighted) ? 0.15 : [
                       'interpolate', ['linear'], ['zoom'],
                       12.0, 0.25,
                       15.0, 0.4,
@@ -1193,7 +1236,7 @@ try {
                   ]);
               }
               if (map.getLayer('park-layer-fill')) {
-                  map.setPaintProperty('park-layer-fill', 'fill-opacity', dim ? 0.15 : [
+                  map.setPaintProperty('park-layer-fill', 'fill-opacity', (dim && !hasRecHighlighted) ? 0.15 : [
                       'interpolate', ['linear'], ['zoom'],
                       12.0, 0.25,
                       15.0, 0.4,
@@ -1201,20 +1244,16 @@ try {
                   ]);
               }
               if (map.getLayer('parking-layer-symbols')) {
-                  map.setPaintProperty('parking-layer-symbols', 'icon-opacity', dim ? 0.25 : 1.0);
-              }
-              if (map.getLayer('park-layer-symbols')) {
-                  map.setPaintProperty('park-layer-symbols', 'icon-opacity', dim ? 0.25 : 1.0);
-                  map.setPaintProperty('park-layer-symbols', 'text-opacity', dim ? 0.25 : 1.0);
+                  map.setPaintProperty('parking-layer-symbols', 'icon-opacity', (dim && !hasParkingHighlighted) ? 0.25 : 1.0);
               }
               if (map.getLayer('walkingpath-layer-symbol')) {
-                  map.setPaintProperty('walkingpath-layer-symbol', 'icon-opacity', dim ? 0.25 : 1.0);
+                  map.setPaintProperty('walkingpath-layer-symbol', 'icon-opacity', (dim && !hasRecHighlighted) ? 0.25 : 1.0);
               }
               if (map.getLayer('walkingpath-outline')) {
-                  map.setPaintProperty('walkingpath-outline', 'line-opacity', dim ? 0.25 : 1.0);
+                  map.setPaintProperty('walkingpath-outline', 'line-opacity', (dim && !hasRecHighlighted) ? 0.25 : 1.0);
               }
               if (map.getLayer('custom-park-outline')) {
-                  map.setPaintProperty('custom-park-outline', 'line-opacity', dim ? 0.25 : 1.0);
+                  map.setPaintProperty('custom-park-outline', 'line-opacity', (dim && !hasRecHighlighted) ? 0.25 : 1.0);
               }
           } catch (e) {
               console.warn('Could not update layer dimming', e);
@@ -1226,7 +1265,7 @@ try {
           const polySource = map.getSource('highlight-poly-source');
           if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: [] });
           if (polySource) polySource.setData({ type: 'FeatureCollection', features: [] });
-          setHighlightDimming(false);
+          setHighlightDimming(false, []);
       }
 
       function setHighlights(pointFeatures, polyFeatures) {
@@ -1238,7 +1277,8 @@ try {
           if (ptSource) ptSource.setData({ type: 'FeatureCollection', features: pts });
           if (polySource) polySource.setData({ type: 'FeatureCollection', features: polys });
           
-          setHighlightDimming(pts.length > 0 || polys.length > 0);
+          const allHighlighted = [...pts, ...polys];
+          setHighlightDimming(allHighlighted.length > 0, allHighlighted);
       }
       const layerControl = new LayerControl({
           collapsed: (isMobileDevice() || window.self !== window.top), //true,
@@ -1948,10 +1988,6 @@ try {
           if (item) item.style.display = 'none';
       });
       waitForElement('.layer-control-name[title="highlight-poly-layer"]').then(el => {
-          const item = el.closest('.layer-control-item');
-          if (item) item.style.display = 'none';
-      });
-      waitForElement('.layer-control-name[title="highlight-label-layer"]').then(el => {
           const item = el.closest('.layer-control-item');
           if (item) item.style.display = 'none';
       });
