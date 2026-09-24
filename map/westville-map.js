@@ -129,7 +129,7 @@ const DIRECTORY_VIEWS = {
   },
   'walkup': {
     title: 'Walk-Up & Retail',
-    categories: ['food', 'nightlife', 'shop', 'wellness']
+    categories: ['food', 'nightlife', 'shop']
   },
   'industrial': {
     title: 'Industrial & Trade',
@@ -137,7 +137,7 @@ const DIRECTORY_VIEWS = {
   },
   'services': {
     title: 'Services & Pro',
-    categories: ['services', 'home-business']
+    categories: ['services', 'home-business', 'wellness']
   },
   'public': {
     title: 'Parks & Public',
