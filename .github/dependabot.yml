@@ -3,6 +3,7 @@ updates:
   # Backend npm dependencies
   - package-ecosystem: "npm"
     directory: "/app"
+    target-branch: "testing"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -14,6 +15,7 @@ updates:
   # Docker container images (backend/Dockerfile)
   - package-ecosystem: "docker"
     directory: "/backend"
+    target-branch: "testing"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -25,6 +27,7 @@ updates:
   # Docker Compose service images (compose.yaml)
   - package-ecosystem: "docker-compose"
     directory: "/"
+    target-branch: "testing"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -32,4 +35,3 @@ updates:
     labels:
       - "dependencies"
       - "docker"
-
