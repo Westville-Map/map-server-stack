@@ -126,7 +126,7 @@ class SiteFooter extends HTMLElement {
           </div>
           <h1 style="font-size: 1.2rem;"><a href="/" style="color: var(--white); text-decoration: none;">Welcome to Westville</a></h1>
         </div>
-        <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. Not an official borough communication.</p>
+        <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. Not an official borough communication. <span id="site-footer-version"></span></p>
         <div class="footer-shortcuts">
           <a href="/credits.html" class="header-btn" ${creditsStyle}>
             <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
@@ -144,6 +144,26 @@ class SiteFooter extends HTMLElement {
         </div>
       </footer>
     `;
+
+    this.loadVersion();
+  }
+
+  async loadVersion() {
+    try {
+      const res = await fetch('/version.json');
+      if (res.ok) {
+        const data = await res.json();
+        const verEl = this.querySelector('#site-footer-version');
+        if (verEl && data && data.version) {
+          const isTest = data.channel === 'testing' || data.version.includes('test');
+          const badgeClass = isTest ? 'footer-version-badge testing' : 'footer-version-badge';
+          const title = `Version: ${data.version}\nBuilt: ${data.buildDate || 'Unknown'}\nCommit: ${data.gitCommit || ''}`;
+          verEl.innerHTML = `<span class="${badgeClass}" title="${title}">v${data.version}</span>`;
+        }
+      }
+    } catch (_) {
+      // Fallback silently
+    }
   }
 }
 

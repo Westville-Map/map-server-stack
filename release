@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REMOTE_HOST="your_remote_server_here"
+
+# 1. Check working directory status
+if ! git diff-index --quiet HEAD --; then
+  echo "❌ Error: Working tree has uncommitted changes. Please commit or stash them first." >&2
+  git status --short
+  exit 1
+fi
+
+# Load optional .env variables if present
+if [[ -f .env ]]; then
+  # Extract GH_RELEASE_USER without executing entire .env
+  CONFIG_GH_USER=$(grep -E '^GH_RELEASE_USER=' .env | cut -d '=' -f2 | tr -d '"'\'' ' || true)
+  if [[ -n "$CONFIG_GH_USER" ]]; then
+    GH_RELEASE_USER="$CONFIG_GH_USER"
+  fi
+fi
+GH_USER="${GH_RELEASE_USER:-your_github_username_here}"
+
+echo "🔄 Step 1/7: Fetching latest branches from GitHub..."
+git fetch origin
+
+# 2. Switch gh CLI account if gh is present
+if command -v gh >/dev/null 2>&1; then
+  gh auth switch --hostname github.com --user "$GH_USER" 2>/dev/null || true
+fi
+
+# 3. Checkout main and pull latest
+echo "🔄 Step 2/7: Checking out and updating 'main'..."
+git checkout main
+git pull origin main
+
+# 4. Merge testing into main
+echo "🔄 Step 3/7: Merging 'testing' branch into 'main'..."
+git merge origin/testing -m "Merge branch 'testing' into main"
+
+# 5. Compute new version tag (YYYY.MM.DD.N) in America/New_York
+DATE_TAG=$(TZ="America/New_York" date +"%Y.%m.%d")
+EXISTING_TAGS=$(git tag -l "v${DATE_TAG}.*" 2>/dev/null || true)
+
+NEXT_POINT=1
+if [[ -n "$EXISTING_TAGS" ]]; then
+  for tag in $EXISTING_TAGS; do
+    # Extract number after date
+    point_num="${tag##*.}"
+    if [[ "$point_num" =~ ^[0-9]+$ ]] && (( point_num >= NEXT_POINT )); then
+      NEXT_POINT=$(( point_num + 1 ))
+    fi
+  done
+fi
+
+VERSION="${DATE_TAG}.${NEXT_POINT}"
+TAG="v${VERSION}"
+BUILD_DATE=$(TZ="America/New_York" date +"%Y-%m-%d %H:%M:%S %Z")
+COMMIT_SHA=$(git rev-parse --short HEAD)
+
+echo "🔖 Generating Release Version: ${TAG}"
+
+# 6. Update version.json files
+cat > www/version.json <<EOF
+{
+  "version": "$VERSION",
+  "channel": "production",
+  "buildDate": "$BUILD_DATE",
+  "timezone": "America/New_York",
+  "gitCommit": "$COMMIT_SHA"
+}
+EOF
+
+cp www/version.json map/version.json
+
+git add www/version.json map/version.json
+git commit -m "chore(release): ${TAG}"
+
+# Re-read commit SHA of release commit
+FINAL_SHA=$(git rev-parse --short HEAD)
+
+# Create annotated tag
+git tag -a "${TAG}" -m "Release ${TAG}"
+
+# 7. Push main and tags
+echo "📦 Step 4/7: Pushing 'main' and '${TAG}' to GitHub..."
+git push origin main
+git push origin "${TAG}"
+
+# 8. Create GitHub Release via gh CLI if available
+echo "📝 Step 5/7: Creating GitHub Release..."
+if command -v gh >/dev/null 2>&1; then
+  if gh release create "${TAG}" --title "${TAG}" --generate-notes; then
+    echo "✅ GitHub Release created successfully for ${TAG}"
+  else
+    echo "⚠️ Note: 'gh release create' returned non-zero, but Git tag was pushed to GitHub."
+  fi
+else
+  echo "ℹ️ Note: 'gh' CLI not found. Git tag was pushed to GitHub."
+fi
+
+# 9. Deploy to production stack
+echo "🚀 Step 6/7: Deploying to production stack on ${REMOTE_HOST}..."
+ssh "$REMOTE_HOST" "cd ~/docker/westvillemap && /usr/bin/git pull && /usr/local/bin/docker compose up -d --build --remove-orphans"
+
+# 10. Switch back to testing and synchronize
+echo "🔄 Step 7/7: Syncing release back into 'testing' branch..."
+git checkout testing
+git merge main -m "Sync release ${TAG} back to testing"
+git push origin testing
+
+echo ""
+echo "🎉 ==========================================================="
+echo "🎉 RELEASE ${TAG} PUBLISHED & DEPLOYED SUCCESSFULLY!"
+echo "🎉 ==========================================================="
+echo "   Live Portal:  https://westville.app"
+echo "   Live Map:     https://map.westville.app"
+echo "   GitHub Tag:   https://github.com/Westville-Map/map-server-stack/releases/tag/${TAG}"
+echo "   Active Branch: testing (ready for next development cycle)"
+echo "🎉 ==========================================================="

@@ -123,6 +123,39 @@ graph TD
 
 ---
 
+## Branching, Staging & Release Workflow
+
+The project uses a clean two-branch workflow:
+- `testing` &mdash; Active development branch. Deployed to the staging environment (`https://testing.westville.app` and `https://testing-map.westville.app`).
+- `main` &mdash; Production stable branch. Deployed to the live public site (`https://westville.app` and `https://map.westville.app`).
+
+### 1. Working on Features (Staging)
+1. Switch to the `testing` branch:
+   ```bash
+   git checkout testing
+   ```
+2. Make your edits and verify syntax locally (`node --check ...`).
+3. Deploy to the staging server:
+   ```bash
+   ./push_and_reload
+   ```
+4. Verify changes in your browser at `https://testing.westville.app`.
+
+### 2. Releasing to Production
+When changes in `testing` are tested and ready for the public:
+1. Run the single-command release script:
+   ```bash
+   ./release
+   ```
+2. The release tool automatically:
+   - Synchronizes and merges `testing` into `main`.
+   - Generates a date-point version tag (`vYYYY.MM.DD.N`, e.g. `v2026.09.26.1`) in `America/New_York` timezone.
+   - Updates `version.json` and creates a GitHub release with automated changelog notes.
+   - Pushes to GitHub and reloads the production stack on `your_remote_server_here`.
+   - Switches back to `testing` and syncs the release commit so both branches stay unified.
+
+---
+
 ## Security & Maintenance
 
 This project follows several principles to keep data secure and the repository public-ready:

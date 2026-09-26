@@ -1,11 +1,11 @@
-map.westville.app:80, map.westville.app:80 {
+{$MAP_DOMAINS:map.westville.app:80, map.westville.app:80} {
     # Enable Gzip and Zstd compression
     encode gzip zstd
 
     # HTTP Security Headers
     header {
         X-Content-Type-Options "nosniff"
-        Content-Security-Policy "frame-ancestors 'self' https://map.westville.app https://www.westville.app https://westville.app;"
+        Content-Security-Policy "frame-ancestors 'self' {$CSP_FRAME_ANCESTORS:https://map.westville.app https://www.westville.app https://westville.app};"
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
@@ -17,14 +17,14 @@ map.westville.app:80, map.westville.app:80 {
     file_server
 }
 
-westville.app:80, www.westville.app:80 {
+{$WEB_DOMAINS:westville.app:80, www.westville.app:80} {
     # Enable Gzip and Zstd compression
     encode gzip zstd
 
     # HTTP Security Headers
     header {
         X-Content-Type-Options "nosniff"
-        Content-Security-Policy "frame-ancestors 'self' https://map.westville.app https://www.westville.app https://westville.app;"
+        Content-Security-Policy "frame-ancestors 'self' {$CSP_FRAME_ANCESTORS:https://map.westville.app https://www.westville.app https://westville.app};"
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
