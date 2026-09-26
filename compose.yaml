@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     environment:
       - WEB_DOMAINS=${WEB_DOMAINS:-westville.app:80, www.westville.app:80}
-      - MAP_DOMAINS=${MAP_DOMAINS:-map.westville.app:80, map.westville.app:80}
+      - MAP_DOMAINS=${MAP_DOMAINS:-map.westville.app:80}
       - CSP_FRAME_ANCESTORS=${CSP_FRAME_ANCESTORS:-https://map.westville.app https://www.westville.app https://westville.app}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile

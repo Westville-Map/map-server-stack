@@ -1297,7 +1297,7 @@ try {
       document.querySelector("details.maplibregl-ctrl-attrib").classList.remove('maplibregl-compact-show');
       const portalDomain = window.location.hostname.includes('testing')
         ? `${window.location.protocol}//testing.westville.app/`
-        : (window.location.hostname.includes('westville.app') ? `${window.location.protocol}//map.westville.app/` : 'https://westville.app/');
+        : 'https://westville.app/';
       document.querySelector("span.layer-control-panel-title").innerHTML = `<a href="${portalDomain}" target="_blank">Welcome to Westville</a>`;
       
       // Build a flat list of features for searching

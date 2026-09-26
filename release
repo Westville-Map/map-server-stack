@@ -1,7 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REMOTE_HOST="your_remote_server_here"
+# Helper to load config variables from local .env
+get_env_var() {
+  local var_name="$1"
+  local default_val="${2:-}"
+  if [[ -f .env ]]; then
+    local val
+    val=$(grep -E "^${var_name}=" .env | cut -d '=' -f2- | tr -d '"'\'' ' || true)
+    if [[ -n "$val" ]]; then
+      echo "$val"
+      return
+    fi
+  fi
+  echo "$default_val"
+}
+
+REMOTE_HOST=$(get_env_var "DEPLOY_HOST" "")
+GH_USER=$(get_env_var "GH_RELEASE_USER" "")
+PROD_DIR=$(get_env_var "PROD_REMOTE_DIR" "~/docker/westvillemap")
+STAGING_DIR=$(get_env_var "STAGING_REMOTE_DIR" "~/docker/westvillemap-testing")
+
+if [[ -z "$REMOTE_HOST" ]]; then
+  echo "❌ Error: DEPLOY_HOST is not set." >&2
+  echo "   Please create a .env file with DEPLOY_HOST=your_ssh_host" >&2
+  exit 1
+fi
 
 # 1. Check working directory status
 if ! git diff-index --quiet HEAD --; then
@@ -10,21 +34,11 @@ if ! git diff-index --quiet HEAD --; then
   exit 1
 fi
 
-# Load optional .env variables if present
-if [[ -f .env ]]; then
-  # Extract GH_RELEASE_USER without executing entire .env
-  CONFIG_GH_USER=$(grep -E '^GH_RELEASE_USER=' .env | cut -d '=' -f2 | tr -d '"'\'' ' || true)
-  if [[ -n "$CONFIG_GH_USER" ]]; then
-    GH_RELEASE_USER="$CONFIG_GH_USER"
-  fi
-fi
-GH_USER="${GH_RELEASE_USER:-your_github_username_here}"
-
 echo "🔄 Step 1/7: Fetching latest branches from GitHub..."
 git fetch origin
 
-# 2. Switch gh CLI account if gh is present
-if command -v gh >/dev/null 2>&1; then
+# 2. Switch gh CLI account if configured and gh is present
+if command -v gh >/dev/null 2>&1 && [[ -n "$GH_USER" ]]; then
   gh auth switch --hostname github.com --user "$GH_USER" 2>/dev/null || true
 fi
 
@@ -100,7 +114,7 @@ fi
 
 # 9. Deploy to production stack
 echo "🚀 Step 6/7: Deploying to production stack on ${REMOTE_HOST}..."
-ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ~/docker/westvillemap && git pull && docker compose up -d --build --remove-orphans"
+ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${PROD_DIR} && git pull && docker compose up -d --build --remove-orphans"
 
 # 10. Switch back to testing and synchronize
 echo "🔄 Step 7/7: Syncing release back into 'testing' branch..."

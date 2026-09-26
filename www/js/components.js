@@ -8,8 +8,6 @@ function getMapDomain() {
     return `${protocol}//testing-map.westville.app`;
   } else if (host.includes('westville.app')) {
     return `${protocol}//map.westville.app`;
-  } else if (host.includes('westville.app')) {
-    return `${protocol}//map.westville.app`;
   } else {
     return `${protocol}//testing-map.westville.app`;
   }
@@ -210,7 +208,7 @@ class SiteFooter extends HTMLElement {
             ? 'https://github.com/Westville-Map/map-server-stack/tree/testing'
             : 'https://github.com/Westville-Map/map-server-stack';
           const title = `Version: ${data.version}\nBuilt: ${data.buildDate || 'Unknown'}\nCommit: ${data.gitCommit || ''}`;
-          verEl.innerHTML = `<a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="footer-version-link" title="${title}">(v${data.version})</a> `;
+          verEl.innerHTML = `<a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="footer-version-link" title="${title}">v${data.version}</a> - `;
         }
       }
     } catch (_) {

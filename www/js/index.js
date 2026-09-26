@@ -6,8 +6,6 @@ function getMapDomain() {
     return `${protocol}//testing-map.westville.app`;
   } else if (host.includes('westville.app')) {
     return `${protocol}//map.westville.app`;
-  } else if (host.includes('westville.app')) {
-    return `${protocol}//map.westville.app`;
   } else {
     // Fallback for local development or arbitrary hosts
     return `${protocol}//testing-map.westville.app`;

@@ -96,7 +96,7 @@
             var proto = window.location.protocol;
             var domain = (host.indexOf('testing') !== -1 || host.indexOf('testing-map') !== -1)
               ? proto + '//testing-map.westville.app'
-              : (host.indexOf('westville.app') !== -1 ? proto + '//map.westville.app' : proto + '//map.westville.app');
+              : proto + '//map.westville.app';
             var f = document.getElementById('festivalMapFrame');
             if (f) f.src = domain + '/festival.html' + window.location.search;
           })();
