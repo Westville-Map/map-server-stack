@@ -11,8 +11,19 @@ updates:
       - "dependencies"
       - "backend"
 
-  # Docker container images (compose.yaml & backend/Dockerfile)
+  # Docker container images (backend/Dockerfile)
   - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # Docker Compose service images (compose.yaml)
+  - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -21,3 +32,4 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+
