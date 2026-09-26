@@ -24,8 +24,11 @@ app.set('trust proxy', 2 /* one for caddy, one for cloudflare tunnel */)
 app.use(express.json({ limit: '5mb' }));
 
 // Whitelist of allowed feature types to prevent path traversal attacks
-const ALLOWED_FEATURE_TYPES = new Set(['parks', 'roads', 'boundaries',
-'users', 'establishments', 'home-business', 'industrial', 'fall-festival', 'trash-schedule']); 
+const ALLOWED_FEATURE_TYPES = new Set([
+  'parks', 'roads', 'boundaries', 'users', 'establishments',
+  'home-business', 'industrial', 'fall-festival', 'trash-schedule',
+  'taxonomies'
+]); 
 
 const DATA_DIR = path.join(__dirname, 'data');
 
@@ -65,15 +68,25 @@ app.post('/api/map_data_save', async (req, res) => {
 
         const payload = req.body;
 
-        // GeoJSON Validation
-        if (!geojsonValidation.valid(payload)) {
-            return res.status(400).json({ 
-                status: 'error', 
-                message: 'Invalid GeoJSON payload' 
-            });
+        // Validation based on feature type
+        if (featureType === 'taxonomies') {
+            if (!payload || typeof payload !== 'object' || !payload.categories || typeof payload.categories !== 'object') {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Invalid taxonomies payload structure'
+                });
+            }
+        } else {
+            // GeoJSON Validation
+            if (!geojsonValidation.valid(payload)) {
+                return res.status(400).json({ 
+                    status: 'error', 
+                    message: 'Invalid GeoJSON payload' 
+                });
+            }
         }
 
-        const fileName = `${featureType}.geojson`;
+        const fileName = featureType === 'taxonomies' ? `${featureType}.json` : `${featureType}.geojson`;
         const tempFileName = `${featureType}.${crypto.randomBytes(4).toString('hex')}.tmp`;
         
         const FINAL_FILE_PATH = path.join(DATA_DIR, fileName);

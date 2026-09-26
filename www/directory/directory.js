@@ -587,14 +587,18 @@ function renderDirectory() {
 
     const sortIndicatorHtml = `<div class="card-sort-indicator" style="color: ${catTextColor}; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Category: ${catTitle}</div>`;
 
+    const cleanName = window.sanitizeHtml ? window.sanitizeHtml(f.properties.name || 'Unnamed') : (f.properties.name || 'Unnamed');
+    const cleanDesc = window.sanitizeHtml ? window.sanitizeHtml(f.properties.description || '') : (f.properties.description || '');
+    const cleanAddr = window.sanitizeHtml ? window.sanitizeHtml(f.properties.address || '') : (f.properties.address || '');
+
     card.innerHTML = `
       <div class="facility-header">
         ${sortIndicatorHtml}
-        <h4>${f.properties.name || 'Unnamed'}</h4>
+        <h4>${cleanName}</h4>
         <div class="facility-badges">${tagBadges}</div>
       </div>
-      <p>${f.properties.description || ''}</p>
-      <div class="facility-address">${f.properties.address || ''}</div>
+      <p>${cleanDesc}</p>
+      <div class="facility-address">${cleanAddr}</div>
       ${detailsHtml}
     `;
 

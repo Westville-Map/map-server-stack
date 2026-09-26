@@ -122,52 +122,72 @@ let updateUrlParams = () => {};
 // Quick Views state
 let activeQuickView = null;
 
-const DIRECTORY_VIEWS = {
-  'all': {
-    title: 'All Listings',
-    categories: ['safety', 'nightlife', 'food', 'wellness', 'shop', 'services', 'public', 'autos', 'recreation', 'parking', 'home-business', 'industrial', 'boating']
+function sanitizeHtml(str) {
+  if (!str || typeof str !== 'string') return '';
+  let clean = str.replace(/<\/?(script|iframe|object|embed|applet|link|form|svg|math|meta|base)[^>]*>/gi, '');
+  clean = clean.replace(/\s+on\w+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, '');
+  clean = clean.replace(/(href|src)\s*=\s*(['"])\s*(javascript|vbscript|data):/gi, '$1=$2about:invalid#');
+  return clean;
+}
+
+const DEFAULT_MAP_TAXONOMIES = {
+  categories: {
+    'safety': { tags: ['safety', 'police station', 'fire station', 'police'] },
+    'nightlife': { tags: ['brewery', 'bar', 'pub', 'nightlife', 'craft beer', 'liquor store', 'wine', 'beer', 'spirits'] },
+    'food': { tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza', 'italian', 'mexican', 'puerto rican', 'shakes', 'bowls', 'coffee', 'breakfast', 'lunch', 'dinner', 'deli', 'hoagies', 'sandwiches', 'seafood', 'juice bar', 'smoothies'] },
+    'wellness': { tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor', 'gym', 'gymnastics', 'personal training'] },
+    'shop': { tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco', 'supermarket', 'collectibles', 'bait', 'provisions', 'lottery'] },
+    'services': { tags: ['laundry', 'service', 'services', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'cloud services', 'bail bonds', 'bank', 'atm', 'home insurance', 'professional', 'photography', 'real estate', 'property management', 'hospitality', 'consulting', 'business services', 'financial', 'funeral home', 'human services', 'union', 'cleaning', 'disaster restoration', 'telecommunications'] },
+    'public': { tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public', 'daycare', 'child care'] },
+    'autos': { tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning', 'car insurance', 'automotive'] },
+    'recreation': { tags: ['park', 'recreation', 'walking path', 'walkingpath', 'entertainment'] },
+    'parking': { tags: ['parking', 'free'] },
+    'home-business': { tags: ['home-business', 'web design', 'software', 'bookkeeping', 'finance', 'crafts', 'candles', 'tutoring', 'education', 'gardening', 'landscaping', 'music', 'piano', 'voice lessons', 'pet sitting', 'dog walking'] },
+    'industrial': { tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes', 'contractors', 'carpentry', 'flooring', 'plumbing', 'fence', 'machinery', 'environmental', 'pest control', 'lawn care', 'outdoor', 'textiles', 'apparel', 'upholstery', 'medical supplies', 'custom framing'] },
+    'boating': { tags: ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat', 'boating & marine'] }
   },
-  'walkup': {
-    title: 'Walk-Up & Retail',
-    categories: ['food', 'nightlife', 'shop']
-  },
-  'industrial': {
-    title: 'Industrial & Trade',
-    categories: ['industrial']
-  },
-  'services': {
-    title: 'Services & Pro',
-    categories: ['services', 'home-business', 'wellness']
-  },
-  'public': {
-    title: 'Parks & Public',
-    categories: ['public', 'safety', 'recreation']
-  },
-  'automarine': {
-    title: 'Auto & Marine',
-    categories: ['autos', 'boating']
-  },
-  'parking': {
-    title: 'Parking',
-    categories: ['parking']
+  views: {
+    'all': { title: 'All Listings', categories: ['safety', 'nightlife', 'food', 'wellness', 'shop', 'services', 'public', 'autos', 'recreation', 'parking', 'home-business', 'industrial', 'boating'] },
+    'walkup': { title: 'Walk-Up & Retail', categories: ['food', 'nightlife', 'shop'] },
+    'industrial': { title: 'Industrial & Trade', categories: ['industrial'] },
+    'services': { title: 'Services & Pro', categories: ['services', 'home-business', 'wellness'] },
+    'public': { title: 'Parks & Public', categories: ['public', 'safety', 'recreation'] },
+    'automarine': { title: 'Auto & Marine', categories: ['autos', 'boating'] },
+    'parking': { title: 'Parking', categories: ['parking'] }
   }
 };
 
-const TAG_TO_CATEGORY_MAP = {
-  'safety': 'safety', 'police station': 'safety', 'fire station': 'safety', 'police': 'safety',
-  'brewery': 'nightlife', 'bar': 'nightlife', 'pub': 'nightlife', 'nightlife': 'nightlife', 'craft beer': 'nightlife', 'liquor store': 'nightlife', 'wine': 'nightlife', 'beer': 'nightlife', 'spirits': 'nightlife',
-  'restaurant': 'food', 'dining': 'food', 'food': 'food', 'cafe': 'food', 'banquet hall': 'food', 'event space': 'food', 'diner': 'food', 'bakery': 'food', 'sweets': 'food', 'take out': 'food', 'takeout': 'food', 'bbq': 'food', 'dessert': 'food', 'cookie cakes': 'food', 'cookies': 'food', 'pizza': 'food', 'italian': 'food', 'mexican': 'food', 'puerto rican': 'food', 'shakes': 'food', 'bowls': 'food', 'coffee': 'food', 'breakfast': 'food', 'lunch': 'food', 'dinner': 'food', 'deli': 'food', 'hoagies': 'food', 'sandwiches': 'food', 'seafood': 'food', 'juice bar': 'food', 'smoothies': 'food',
-  'wellness': 'wellness', 'fitness': 'wellness', 'yoga': 'wellness', 'tai chi': 'wellness', 'health': 'wellness', 'umaa': 'wellness', 'salon': 'wellness', 'hair styling': 'wellness', 'barber': 'wellness', 'barbershop': 'wellness', 'kickboxing': 'wellness', 'karate': 'wellness', 'jujitsu': 'wellness', 'doctor': 'wellness', 'gym': 'wellness', 'gymnastics': 'wellness', 'personal training': 'wellness',
-  'convenience store': 'shop', 'retail': 'shop', 'groceries': 'shop', 'shop': 'shop', 'appliances': 'shop', 'smoke shop': 'shop', 'tobacco': 'shop', 'supermarket': 'shop', 'collectibles': 'shop', 'bait': 'shop', 'provisions': 'shop', 'lottery': 'shop',
-  'laundry': 'services', 'service': 'services', 'services': 'services', 'laundromat': 'services', 'locksmith': 'services', 'key duplication': 'services', 'tax prep': 'services', 'bookkeeping': 'services', 'it management': 'services', 'cloud services': 'services', 'bail bonds': 'services', 'bank': 'services', 'atm': 'services', 'home insurance': 'services', 'professional': 'services', 'photography': 'services', 'real estate': 'services', 'property management': 'services', 'hospitality': 'services', 'consulting': 'services', 'business services': 'services', 'financial': 'services', 'funeral home': 'services', 'human services': 'services', 'union': 'services', 'cleaning': 'services', 'disaster restoration': 'services', 'telecommunications': 'services',
-  'borough offices': 'public', 'public resource': 'public', 'government': 'public', 'library': 'public', 'community': 'public', 'post office': 'public', 'education': 'public', 'public elementary school': 'public', 'pre-kindergarten school': 'public', 'pk-6': 'public', 'mail': 'public', 'packages': 'public', 'po boxes': 'public', 'senior center': 'public', 'public': 'public', 'daycare': 'public', 'child care': 'public',
-  'auto repair': 'autos', 'dealership': 'autos', 'mechanic': 'autos', 'mechanic service': 'autos', 'auto service': 'autos', 'oil change': 'autos', 'used cars': 'autos', 'new cars': 'autos', 'car wash': 'autos', 'detailing': 'autos', 'performance tuning': 'autos', 'car insurance': 'autos', 'automotive': 'autos',
-  'park': 'recreation', 'recreation': 'recreation', 'walking path': 'recreation', 'walkingpath': 'recreation', 'entertainment': 'recreation',
-  'parking': 'parking', 'free': 'parking',
-  'home-business': 'home-business', 'web design': 'home-business', 'software': 'home-business', 'crafts': 'home-business', 'candles': 'home-business', 'tutoring': 'home-business', 'gardening': 'home-business', 'landscaping': 'home-business', 'music': 'home-business', 'piano': 'home-business', 'voice lessons': 'home-business', 'pet sitting': 'home-business', 'dog walking': 'home-business',
-  'industrial': 'industrial', 'manufacturing': 'industrial', 'machining': 'industrial', 'metal fab': 'industrial', 'logistics': 'industrial', 'warehousing': 'industrial', 'distribution': 'industrial', 'building materials': 'industrial', 'wholesale': 'industrial', 'auto body': 'industrial', 'collision repair': 'industrial', 'commercial printing': 'industrial', 'publishing': 'industrial', 'hvac': 'industrial', 'packaging': 'industrial', 'shipping boxes': 'industrial', 'contractors': 'industrial', 'carpentry': 'industrial', 'flooring': 'industrial', 'plumbing': 'industrial', 'fence': 'industrial', 'machinery': 'industrial', 'environmental': 'industrial', 'pest control': 'industrial', 'lawn care': 'industrial', 'outdoor': 'industrial', 'textiles': 'industrial', 'apparel': 'industrial', 'upholstery': 'industrial', 'medical supplies': 'industrial', 'custom framing': 'industrial',
-  'marine': 'boating', 'boating': 'boating', 'boat sales': 'boating', 'marina': 'boating', 'boat club': 'boating', 'yacht club': 'boating', 'power boat': 'boating', 'boating & marine': 'boating'
-};
+let DIRECTORY_VIEWS = DEFAULT_MAP_TAXONOMIES.views;
+let TAG_TO_CATEGORY_MAP = {};
+
+function initMapTaxonomies(data) {
+  if (!data || !data.categories) return;
+  if (data.views) DIRECTORY_VIEWS = data.views;
+  TAG_TO_CATEGORY_MAP = {};
+  Object.entries(data.categories).forEach(([catKey, cat]) => {
+    if (cat && Array.isArray(cat.tags)) {
+      cat.tags.forEach(tag => {
+        TAG_TO_CATEGORY_MAP[tag.toLowerCase().trim()] = catKey;
+      });
+    }
+  });
+}
+
+// Initialize with defaults
+initMapTaxonomies(DEFAULT_MAP_TAXONOMIES);
+
+// Asynchronously load external taxonomies if available
+if (typeof fetch === 'function') {
+  fetch('/data/taxonomies.json')
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (data && data.categories) {
+        initMapTaxonomies(data);
+      }
+    })
+    .catch(() => {});
+}
+
 
 function getFeatureCategory(f) {
   if (!f || !f.properties) return null;
@@ -1737,23 +1757,28 @@ try {
           if (activePopup) activePopup.remove();
           //console.log(coordinates);
           const props = feature.properties;
+          const cleanName = sanitizeHtml(props.name || 'Unnamed');
+          const cleanDesc = sanitizeHtml(props.description || '');
+          const cleanAddress = sanitizeHtml(props.address || '');
+          const cleanTags = sanitizeHtml(props.tags || '');
+
           const linkedName = props.url != null ? `
-              <a class="wv-popup-title-link" target="_blank" href="${props.url}">
-                  <span>${props.name}</span>
+              <a class="wv-popup-title-link" target="_blank" href="${encodeURI(props.url)}">
+                  <span>${cleanName}</span>
                   <svg class="wv-title-link-icon" viewBox="0 0 24 24"><path d="M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3H14Z"/></svg>
-              </a>` : `${props.name}`;
+              </a>` : `${cleanName}`;
           
           // Accessible phone & address markup with SVG icons
           const phone = props.phone != null ? `
               <p class="wv-opensans wv-popup-detail">
                   <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                  <a href="tel:${props.phone.replace(/\D/g, '')}" title="Call ${props.name}">${props.phone}</a>
+                  <a href="tel:${props.phone.replace(/\D/g, '')}" title="Call ${cleanName}">${sanitizeHtml(props.phone)}</a>
               </p>` : '';
               
-          const address = props.address != null ? `
+          const address = cleanAddress ? `
               <p class="wv-opensans wv-popup-detail">
                   <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  <span>${props.address}, Westville, NJ 08093</span>
+                  <span>${cleanAddress}, Westville, NJ 08093</span>
               </p>` : '';
               
           let lat, lng;
@@ -1771,16 +1796,16 @@ try {
               .setLngLat(coordinates)
               .setHTML(`<div class="wv-map-popup">
                   <h3 class="wv-opensans">${linkedName}</h3>
-                  ${props.tags ? `
+                  ${cleanTags ? `
                   <p class="wv-opensans wv-popup-detail">
                       <svg class="wv-popup-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                      <span><strong>Tags:</strong> ${props.tags}</span>
+                      <span><strong>Tags:</strong> ${cleanTags}</span>
                   </p>` : ''}
-                  <p class="wv-opensans" style="margin-top: 8px;">${props.description || ''}</p>
+                  <p class="wv-opensans" style="margin-top: 8px;">${cleanDesc}</p>
                   <hr>
                   ${phone}
                   ${address}
-                  <a class="wv-directions-btn" target="_blank" href="${directionsUrl}" title="Google Maps Directions to ${props.name}">
+                  <a class="wv-directions-btn" target="_blank" href="${directionsUrl}" title="Google Maps Directions to ${cleanName}">
                       <svg class="wv-btn-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
                       <span>Directions</span>
                   </a>

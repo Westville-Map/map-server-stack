@@ -396,13 +396,13 @@ class SiteHelp extends HTMLElement {
             <strong>Autumn Festival Interactive Guide</strong>
           </div>
           <p class="help-item-desc">
-            The standalone <strong>Fall Festival</strong> page is an interactive guide for our annual community autumn celebration along Broadway. It is designed to help you quickly search, filter, and locate vendors, stages, and activities.
+            The standalone <strong>Fall Festival</strong> page is an interactive guide for our annual community autumn celebration along Broadway. Search, filter, and locate vendors, stages, and activities.
           </p>
           <p class="help-item-desc">
             <strong>Interactive Vendor Map</strong>: Displays exact numbered booth spaces along Broadway. Clicking any numbered space circle on the map instantly highlights their details in the list below.
           </p>
           <p class="help-item-desc">
-            <strong>Searchable Vendor Directory</strong>: Quickly find specific food items (like cider, kettle corn, or food trucks), craft providers, kids' activities, or entertainment stages using the live search bar. Filter booths dynamically by categories (food, crafts, etc.) or sort them numerically by booth number.
+            <strong>Searchable Vendor Directory</strong>: Find food items, craft providers, kids' activities, or entertainment stages using the live search bar. Filter booths dynamically by categories or sort numerically by booth number.
           </p>
         </li>
       `;
@@ -418,13 +418,13 @@ class SiteHelp extends HTMLElement {
           </svg>
         </span>
         <div slot="body">
-          <p>Welcome to the Borough of Westville Interactive Portal! Use this comprehensive help panel to learn about map navigation, the directory, printing options, and event guides. Select a quick category below to scroll directly to its instructions.</p>
+          <p>Welcome to the Borough of Westville Interactive Portal! Use this guide to learn about map navigation, directory searching, printing options, and event guides. Select a topic below to jump directly to its instructions.</p>
           
           <!-- Quick navigation pill shortcuts inside help -->
           <div class="help-nav-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;">
-            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="portal">Map &amp; Layers</button>
+            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="portal">Map &amp; Quick Views</button>
             <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="tours">Guided Tours</button>
-            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="directory">Directory</button>
+            <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="directory">Directory &amp; Filters</button>
             ${SHOW_FESTIVAL ? `<button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="festival">Fall Festival</button>` : ''}
             <button class="help-nav-pill btn-secondary" style="font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-dark); transition: all 0.15s ease;" data-target="universal">Sharing &amp; Printing</button>
           </div>
@@ -436,19 +436,19 @@ class SiteHelp extends HTMLElement {
                 <span class="help-popover-icon">
                   <img style="width:20px; height:20px;" src="/images/map-folded.svg" alt="Map icon">
                 </span>
-                <strong>Map &amp; Layers</strong>
+                <strong>Interactive Map &amp; Quick Views</strong>
               </div>
               <p class="help-item-desc">
-                Explore the Borough visually on our main page. Control visible features using the <strong>Toggle Layers</strong> checkboxes inside the Map Footer (below the map) for Parking, Establishments, and Recreation.
+                Explore the Borough visually on our main page. Use the <strong>Quick Views</strong> dropdown in the search bar or header buttons to instantly focus on curated subsets like Walk-Up &amp; Retail, Services, Industrial, or Parks.
               </p>
               <p class="help-item-desc">
-                <strong>Map &amp; Satellite Views</strong>: Switch between the standard street <strong>Map</strong> view or a high-resolution <strong>Satellite</strong> view. When Satellite is checked, you can toggle street and landmark <strong>Labels</strong>.
+                <strong>Map &amp; Satellite Views</strong>: Switch between the standard street <strong>Map</strong> view or a high-resolution <strong>Satellite</strong> view. When Satellite is active, you can toggle street and landmark <strong>Labels</strong>.
               </p>
               <p class="help-item-desc">
-                <strong>Quick Filter Tags</strong>: Click the Parking, Establishments, or Recreation tags in the header row to instantly clear any active search, reset the viewpoint, and highlight just those locations.
+                <strong>Toggle Layers</strong>: Control visible features using the layer checkboxes inside the Map Footer (below the map) for Parking, Establishments, and Recreation.
               </p>
               <p class="help-item-desc">
-                <strong>My Location (GPS)</strong>: Click the target crosshair button (below the zoom controls on the map) to center on and track your current physical position in real-time. This runs purely in-browser and protects your privacy.
+                <strong>My Location</strong>: Click the target crosshair button (below the zoom controls on the map) to center on and track your current device location in real-time. This runs purely in your browser and protects your privacy.
               </p>
               <p class="help-item-desc">
                 <strong>Interactive Directory Cards</strong>: Click any card below the map to re-center, zoom, and highlight that specific location on the map.
@@ -464,22 +464,16 @@ class SiteHelp extends HTMLElement {
                 <strong>Guided Tours &amp; Exploration</strong>
               </div>
               <p class="help-item-desc">
-                Tap the <strong>Explore</strong> button in the header actions to access custom automated guided tours:
-              </p>
-              <ul class="help-tour-list" style="margin: 4px 0 8px 1.5rem; padding: 0; color: #555; font-size: 0.9rem; line-height: 1.5; list-style-type: disc;">
-                <li><strong>Borough Tour</strong> Comprehensive tour of public parks, parking, and municipal services.</li>
-                <li><strong>Business Tour</strong> Showcase of commercial businesses and local establishments.</li>
-                <li><strong>Parks &amp; Rec Tour</strong> Highlights public parks, fields, courts, and trails.</li>
-                <li><strong>Public Services Tour</strong> Highlights municipal resources, library, schools, fire, and police.</li>
-              </ul>
-              <p class="help-item-desc">
-                <strong>How Tours Work</strong>: When a tour is active, the map camera moves using smooth, cinematic transitions to pan and zoom from location to location automatically, showing each place's details popup card before proceeding.
+                Tap the <strong>Explore</strong> button in the header to access automated guided tours. Curated tours take you on an automated, cinematic journey through Westville's community highlights, local businesses, parks, and municipal services.
               </p>
               <p class="help-item-desc">
-                <strong>Controlling the Tour</strong>: To cancel or stop an active tour, click the (X) button on the "Running" banner in the header, close the details card popup on the map, or click anywhere on the map to begin exploring freely.
+                <strong>How Tours Work</strong>: When a tour is running, the map smoothly pans and zooms between featured destinations automatically, opening each location's details card before moving to the next stop.
               </p>
               <p class="help-item-desc">
-                <strong>Open Full Map</strong>: Select the <strong>Open Full Map</strong> button at the bottom of the Explore dropdown menu to launch the full-screen interactive mapping application in a new browser tab.
+                <strong>Controlling Tours</strong>: To cancel or exit an active tour at any time, click the (X) button on the "Running" banner in the header, close the popup details card, or click anywhere on the map to resume free exploration.
+              </p>
+              <p class="help-item-desc">
+                <strong>Open Full Map</strong>: Select <strong>Open Full Map</strong> in the Explore menu to launch the full-screen interactive mapping application in a dedicated window.
               </p>
             </li>
 
@@ -489,19 +483,19 @@ class SiteHelp extends HTMLElement {
                 <span class="help-popover-icon">
                   <img style="width:20px; height:20px;" src="/images/search.svg" alt="Search icon">
                 </span>
-                <strong>Local Directory</strong>
+                <strong>Local Directory &amp; Advanced Filtering</strong>
               </div>
               <p class="help-item-desc">
-                The standalone <strong><a class="help-link" href="/directory/">Directory</a></strong> page lists all commercial, industrial, recreation, and public providers in Westville.
+                The <strong><a class="help-link" href="/directory/">Directory</a></strong> lists commercial, industrial, civic, and recreational listings across Westville.
               </p>
               <p class="help-item-desc">
-                <strong>Searching &amp; Advanced Filtering</strong>: Start typing in the search box to instantly search listings. Narrow results down by selecting specific tags or categories from the custom multi-select dropdown menus.
+                <strong>Live Search &amp; Multi-Select Filters</strong>: Type in the search box for instant results. Refine listings by selecting one or more categories and specific service tags from the multi-select dropdown menus.
               </p>
               <p class="help-item-desc">
-                <strong>Custom Sorting &amp; Quick Reset</strong>: Sort establishments alphabetically, by category, or by tags. Click the <strong>Reset</strong> button at any time to clear search text, reset selectors, and restore default A-Z lists.
+                <strong>Sorting &amp; Reset</strong>: Sort listings alphabetically (A-Z / Z-A), by category, or by tags. Click <strong>Reset</strong> at any time to clear search criteria and restore default views.
               </p>
               <p class="help-item-desc">
-                <strong>Card Actions</strong>: Use the direct call links to place a call, click Website to open their portal, or tap Directions to route to them instantly on Google Maps.
+                <strong>Direct Actions</strong>: Tap direct phone links to call, click Website to open business pages, or tap Directions to launch turnkey driving/walking navigation in your preferred maps app.
               </p>
             </li>
 
@@ -517,13 +511,13 @@ class SiteHelp extends HTMLElement {
                 <strong>Sharing Views &amp; Custom Printing</strong>
               </div>
               <p class="help-item-desc">
-                <strong>Copy &amp; Share Links</strong>: Tap the <strong>Share</strong> button in the header of any map page to copy a dynamic link. This link perfectly restores your zoom level, coordinates, toggled layer checkboxes, active search query, and highlighted cards so you share exactly what you are seeing.
+                <strong>Copy &amp; Share Links</strong>: Tap the <strong>Share</strong> button in the header of any map page to copy a dynamic link. This link perfectly restores your zoom level, coordinates, toggled layer checkboxes, active search query, and highlighted cards so others see exactly what you are viewing.
               </p>
               <p class="help-item-desc">
-                <strong>Privacy-Safe Location Sharing</strong>: Click the drop-arrow next to "Share" and click "Share my location" to generate a specialized link showing your current GPS coordinates. It disables card highlights and doesn't store any data to protect privacy. Only your current latitude and longitude coordinates are shared, no other personally-identifiable data is used, and you remain in charge of who you share the unique link with.
+                <strong>Privacy-Safe Location Sharing</strong>: Click the drop-arrow next to "Share" and choose "Share my location" to generate a specialized link showing your current device coordinates. It never stores data on servers and only shares the specific coordinates you choose to send.
               </p>
               <p class="help-item-desc">
-                <strong>High-Resolution Printing &amp; PDFs</strong>: Click the <strong>Print</strong> button to configure output. Customize portrait/landscape orientations, choose to hide or include map views, and select whether to print your filtered cards or compile a complete local directory PDF.
+                <strong>High-Resolution Printing &amp; PDFs</strong>: Click the <strong>Print</strong> button to open print options. Choose portrait or landscape layout, include or hide map views, and print your filtered view or compile a complete municipal directory PDF.
               </p>
             </li>
           </ul>
@@ -803,155 +797,197 @@ class WvSort extends HTMLElement {
 
 customElements.define('wv-sort', WvSort);
 
-// Centralized Color Groupings metadata structure (Dual-Token System for Accessibility)
-const categoryColors = {
-  'safety': {
-    title: 'Safety & Emergency',
-    colorName: 'Red',
-    fill: '#dc2626',
-    text: '#c53030',
-    tags: ['safety', 'police station', 'fire station', 'police']
+// Centralized Color Groupings and Directory Views metadata structure
+const DEFAULT_TAXONOMIES = {
+  categories: {
+    'safety': {
+      title: 'Safety & Emergency',
+      colorName: 'Red',
+      fill: '#dc2626',
+      text: '#c53030',
+      tags: ['safety', 'police station', 'fire station', 'police']
+    },
+    'nightlife': {
+      title: 'Nightlife, Bars & Breweries',
+      colorName: 'Amber',
+      fill: '#d97706',
+      text: '#b45309',
+      tags: ['brewery', 'bar', 'pub', 'nightlife', 'craft beer', 'liquor store', 'wine', 'beer', 'spirits']
+    },
+    'food': {
+      title: 'Food, Dining & Cafes',
+      colorName: 'Rose',
+      fill: '#db2777',
+      text: '#be123c',
+      tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza', 'italian', 'mexican', 'puerto rican', 'shakes', 'bowls', 'coffee', 'breakfast', 'lunch', 'dinner', 'deli', 'hoagies', 'sandwiches', 'seafood', 'juice bar', 'smoothies']
+    },
+    'wellness': {
+      title: 'Wellness, Health & Salons',
+      colorName: 'Teal',
+      fill: '#0d9488',
+      text: '#0f766e',
+      tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor', 'gym', 'gymnastics', 'personal training']
+    },
+    'shop': {
+      title: 'Shop & Retail',
+      colorName: 'Emerald',
+      fill: '#059669',
+      text: '#047857',
+      tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco', 'supermarket', 'collectibles', 'bait', 'provisions', 'lottery']
+    },
+    'services': {
+      title: 'Services & Professional',
+      colorName: 'Purple',
+      fill: '#81007F',
+      text: '#81007F',
+      tags: ['laundry', 'service', 'services', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'cloud services', 'bail bonds', 'bank', 'atm', 'home insurance', 'professional', 'photography', 'real estate', 'property management', 'hospitality', 'consulting', 'business services', 'financial', 'funeral home', 'human services', 'union', 'cleaning', 'disaster restoration', 'telecommunications']
+    },
+    'public': {
+      title: 'Public & Government Resources',
+      colorName: 'Royal Blue',
+      fill: '#2563eb',
+      text: '#1d4ed8',
+      tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public', 'daycare', 'child care']
+    },
+    'autos': {
+      title: 'Automotive',
+      colorName: 'Gold',
+      fill: '#ffd700',
+      text: '#854d0e',
+      tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning', 'car insurance', 'automotive']
+    },
+    'recreation': {
+      title: 'Parks & Recreation',
+      colorName: 'Forest Green',
+      fill: '#16a34a',
+      text: '#15803d',
+      tags: ['park', 'recreation', 'walking path', 'walkingpath', 'entertainment']
+    },
+    'parking': {
+      title: 'Parking',
+      colorName: 'Cobalt Blue',
+      fill: '#2563eb',
+      text: '#1e40af',
+      tags: ['parking', 'free']
+    },
+    'home-business': {
+      title: 'Home-Based Businesses',
+      colorName: 'Warm Terracotta',
+      fill: '#C2593F',
+      text: '#A0432C',
+      tags: ['home-business', 'web design', 'software', 'bookkeeping', 'finance', 'crafts', 'candles', 'tutoring', 'education', 'gardening', 'landscaping', 'music', 'piano', 'voice lessons', 'pet sitting', 'dog walking']
+    },
+    'industrial': {
+      title: 'Industrial, Manufacturing & Trade',
+      colorName: 'Steel Grey',
+      fill: '#5E6D75',
+      text: '#455056',
+      tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes', 'contractors', 'carpentry', 'flooring', 'plumbing', 'fence', 'machinery', 'environmental', 'pest control', 'lawn care', 'outdoor', 'textiles', 'apparel', 'upholstery', 'custom framing', 'medical supplies']
+    },
+    'boating': {
+      title: 'Boating & Marine',
+      colorName: 'Ocean Blue',
+      fill: '#0284c7',
+      text: '#0369a1',
+      tags: ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat', 'boating & marine']
+    }
   },
-  'nightlife': {
-    title: 'Nightlife, Bars & Breweries',
-    colorName: 'Amber',
-    fill: '#d97706',
-    text: '#b45309',
-    tags: ['brewery', 'bar', 'pub', 'nightlife', 'craft beer', 'liquor store', 'wine', 'beer', 'spirits']
-  },
-  'food': {
-    title: 'Food, Dining & Cafes',
-    colorName: 'Rose',
-    fill: '#db2777',
-    text: '#be123c',
-    tags: ['restaurant', 'dining', 'food', 'cafe', 'banquet hall', 'event space', 'diner', 'bakery', 'sweets', 'take out', 'takeout', 'bbq', 'dessert', 'cookie cakes', 'cookies', 'pizza', 'italian', 'mexican', 'puerto rican', 'shakes', 'bowls', 'coffee', 'breakfast', 'lunch', 'dinner', 'deli', 'hoagies', 'sandwiches', 'seafood', 'juice bar', 'smoothies']
-  },
-  'wellness': {
-    title: 'Wellness, Health & Salons',
-    colorName: 'Teal',
-    fill: '#0d9488',
-    text: '#0f766e',
-    tags: ['wellness', 'fitness', 'yoga', 'tai chi', 'health', 'umaa', 'salon', 'hair styling', 'barber', 'barbershop', 'kickboxing', 'karate', 'jujitsu', 'doctor', 'gym', 'gymnastics', 'personal training']
-  },
-  'shop': {
-    title: 'Shop & Retail',
-    colorName: 'Emerald',
-    fill: '#059669',
-    text: '#047857',
-    tags: ['convenience store', 'retail', 'groceries', 'shop', 'appliances', 'smoke shop', 'tobacco', 'supermarket', 'collectibles', 'bait', 'provisions', 'lottery']
-  },
-  'services': {
-    title: 'Services & Professional',
-    colorName: 'Purple',
-    fill: '#81007F',
-    text: '#81007F',
-    tags: ['laundry', 'service', 'services', 'laundromat', 'locksmith', 'key duplication', 'tax prep', 'bookkeeping', 'it management', 'cloud services', 'bail bonds', 'bank', 'atm', 'home insurance', 'professional', 'photography', 'real estate', 'property management', 'hospitality', 'consulting', 'business services', 'financial', 'funeral home', 'human services', 'union', 'cleaning', 'disaster restoration', 'telecommunications']
-  },
-  'public': {
-    title: 'Public & Government Resources',
-    colorName: 'Royal Blue',
-    fill: '#2563eb',
-    text: '#1d4ed8',
-    tags: ['borough offices', 'public resource', 'government', 'library', 'community', 'post office', 'education', 'public elementary school', 'pre-kindergarten school', 'pk-6', 'mail', 'packages', 'po boxes', 'senior center', 'public', 'daycare', 'child care']
-  },
-  'autos': {
-    title: 'Automotive',
-    colorName: 'Gold',
-    fill: '#ffd700',
-    text: '#854d0e',
-    tags: ['auto repair', 'dealership', 'mechanic', 'mechanic service', 'auto service', 'oil change', 'used cars', 'new cars', 'car wash', 'detailing', 'performance tuning', 'car insurance', 'automotive']
-  },
-  'recreation': {
-    title: 'Parks & Recreation',
-    colorName: 'Forest Green',
-    fill: '#16a34a',
-    text: '#15803d',
-    tags: ['park', 'recreation', 'walking path', 'walkingpath', 'entertainment']
-  },
-  'parking': {
-    title: 'Parking',
-    colorName: 'Cobalt Blue',
-    fill: '#2563eb',
-    text: '#1e40af',
-    tags: ['parking', 'free']
-  },
-  'home-business': {
-    title: 'Home-Based Businesses',
-    colorName: 'Warm Terracotta',
-    fill: '#C2593F',
-    text: '#A0432C',
-    tags: ['home-business', 'web design', 'software', 'bookkeeping', 'finance', 'crafts', 'candles', 'tutoring', 'education', 'gardening', 'landscaping', 'music', 'piano', 'voice lessons', 'pet sitting', 'dog walking']
-  },
-  'industrial': {
-    title: 'Industrial, Manufacturing & Trade',
-    colorName: 'Steel Grey',
-    fill: '#5E6D75',
-    text: '#455056',
-    tags: ['industrial', 'manufacturing', 'machining', 'metal fab', 'logistics', 'warehousing', 'distribution', 'building materials', 'wholesale', 'auto body', 'collision repair', 'commercial printing', 'publishing', 'hvac', 'packaging', 'shipping boxes', 'contractors', 'carpentry', 'flooring', 'plumbing', 'fence', 'machinery', 'environmental', 'pest control', 'lawn care', 'outdoor', 'textiles', 'apparel', 'upholstery', 'custom framing', 'medical supplies']
-  },
-  'boating': {
-    title: 'Boating & Marine',
-    colorName: 'Ocean Blue',
-    fill: '#0284c7',
-    text: '#0369a1',
-    tags: ['marine', 'boating', 'boat sales', 'marina', 'boat club', 'yacht club', 'power boat', 'boating & marine']
+  views: {
+    'all': {
+      title: 'All Listings',
+      categories: ['safety', 'nightlife', 'food', 'wellness', 'shop', 'services', 'public', 'autos', 'recreation', 'parking', 'home-business', 'industrial', 'boating']
+    },
+    'walkup': {
+      title: 'Walk-Up & Retail',
+      categories: ['food', 'nightlife', 'shop']
+    },
+    'industrial': {
+      title: 'Industrial & Trade',
+      categories: ['industrial']
+    },
+    'services': {
+      title: 'Services & Pro',
+      categories: ['services', 'home-business', 'wellness']
+    },
+    'public': {
+      title: 'Parks & Public',
+      categories: ['public', 'safety', 'recreation']
+    },
+    'automarine': {
+      title: 'Auto & Marine',
+      categories: ['autos', 'boating']
+    },
+    'parking': {
+      title: 'Parking',
+      categories: ['parking']
+    }
   }
 };
 
-// Curated Directory Views (Quick Views)
-const directoryViews = {
-  'all': {
-    title: 'All Listings',
-    categories: ['safety', 'nightlife', 'food', 'wellness', 'shop', 'services', 'public', 'autos', 'recreation', 'parking', 'home-business', 'industrial', 'boating']
-  },
-  'walkup': {
-    title: 'Walk-Up & Retail',
-    categories: ['food', 'nightlife', 'shop']
-  },
-  'industrial': {
-    title: 'Industrial & Trade',
-    categories: ['industrial']
-  },
-  'services': {
-    title: 'Services & Pro',
-    categories: ['services', 'home-business', 'wellness']
-  },
-  'public': {
-    title: 'Parks & Public',
-    categories: ['public', 'safety', 'recreation']
-  },
-  'automarine': {
-    title: 'Auto & Marine',
-    categories: ['autos', 'boating']
-  },
-  'parking': {
-    title: 'Parking',
-    categories: ['parking']
-  }
-};
-
-function getQuickViewCategories(viewKey) {
-  if (!viewKey || viewKey === 'all' || !directoryViews[viewKey]) {
-    return directoryViews['all'] ? directoryViews['all'].categories : [];
-  }
-  return directoryViews[viewKey].categories || [];
-}
-
-// Expose categoryColors and directoryViews globally
-window.categoryColors = categoryColors;
-window.directoryViews = directoryViews;
-window.getQuickViewCategories = getQuickViewCategories;
-
-// Centralized dynamic tag mapping
+window.categoryColors = {};
+window.directoryViews = {};
 window.tagColors = {};
 window.tagToCategory = {};
-Object.keys(categoryColors).forEach(catKey => {
-  const cat = categoryColors[catKey];
-  cat.tags.forEach(tag => {
-    window.tagColors[tag] = cat.fill;
-    window.tagToCategory[tag] = catKey;
+
+window.applyTaxonomies = function(data) {
+  if (!data || !data.categories) return;
+  window.categoryColors = data.categories;
+  window.directoryViews = data.views || DEFAULT_TAXONOMIES.views;
+  
+  // Clear and dynamically re-populate tag mappings
+  const newTagColors = {};
+  const newTagToCategory = {};
+  
+  Object.keys(window.categoryColors).forEach(catKey => {
+    const cat = window.categoryColors[catKey];
+    if (cat && Array.isArray(cat.tags)) {
+      cat.tags.forEach(tag => {
+        const clean = tag.toLowerCase().trim();
+        newTagColors[clean] = cat.fill;
+        newTagToCategory[clean] = catKey;
+      });
+    }
   });
-});
+
+  window.tagColors = newTagColors;
+  window.tagToCategory = newTagToCategory;
+};
+
+// Initialize synchronously with defaults for instant render
+window.applyTaxonomies(DEFAULT_TAXONOMIES);
+
+// Asynchronously load external taxonomies if available
+if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+  fetch('/data/taxonomies.json')
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (data && data.categories) {
+        window.applyTaxonomies(data);
+        window.dispatchEvent(new CustomEvent('taxonomies-updated', { detail: data }));
+      }
+    })
+    .catch(() => {
+      // Retain fallback defaults
+    });
+}
+
+function getQuickViewCategories(viewKey) {
+  if (!viewKey || viewKey === 'all' || !window.directoryViews[viewKey]) {
+    return window.directoryViews['all'] ? window.directoryViews['all'].categories : [];
+  }
+  return window.directoryViews[viewKey].categories || [];
+}
+
+window.getQuickViewCategories = getQuickViewCategories;
+
+// Safe HTML sanitizer (strips script/iframe/on* handlers, preserves safe markup & styles)
+window.sanitizeHtml = function(str) {
+  if (!str || typeof str !== 'string') return '';
+  let clean = str.replace(/<\/?(script|iframe|object|embed|applet|link|form|svg|math|meta|base)[^>]*>/gi, '');
+  clean = clean.replace(/\s+on\w+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, '');
+  clean = clean.replace(/(href|src)\s*=\s*(['"])\s*(javascript|vbscript|data):/gi, '$1=$2about:invalid#');
+  return clean;
+};
 
 // Relative Luminance and Contrast Ratio calculation helper
 window.getContrastColor = function(hexcolor) {
