@@ -17,7 +17,7 @@ console.warn = (...args) => {
     originalWarn(...args);
 };
 
-import { LayerControl } from 'https://unpkg.com/maplibre-gl-layer-control/dist/index.mjs';
+import { LayerControl } from 'https://unpkg.com/maplibre-gl-layer-control@0.17.4/dist/index.mjs';
 let map;
 
 async function fetchGeoJsonFiles(files) {
