@@ -1,7 +1,7 @@
 {
-  "version": "2026.09.26.3-test.0b6ac40",
-  "channel": "testing",
-  "buildDate": "2026-09-26 11:24:28 EDT",
+  "version": "2026.09.26.4",
+  "channel": "production",
+  "buildDate": "2026-09-26 11:24:46 EDT",
   "timezone": "America/New_York",
-  "gitCommit": "0b6ac40"
+  "gitCommit": "6b434db"
 }
