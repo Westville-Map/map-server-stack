@@ -100,7 +100,7 @@ fi
 
 # 9. Deploy to production stack
 echo "🚀 Step 6/7: Deploying to production stack on ${REMOTE_HOST}..."
-ssh "$REMOTE_HOST" "cd ~/docker/westvillemap && /usr/bin/git pull && /usr/local/bin/docker compose up -d --build --remove-orphans"
+ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ~/docker/westvillemap && git pull && docker compose up -d --build --remove-orphans"
 
 # 10. Switch back to testing and synchronize
 echo "🔄 Step 7/7: Syncing release back into 'testing' branch..."
