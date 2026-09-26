@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy package files first to leverage Docker layer caching
 COPY app/package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # --- Production Stage ---
 FROM node:24-alpine
