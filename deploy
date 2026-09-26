@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Helper to load config variables from local .env
+get_env_var() {
+  local var_name="$1"
+  local default_val="${2:-}"
+  if [[ -f .env ]]; then
+    local val
+    val=$(grep -E "^${var_name}=" .env | cut -d '=' -f2- | tr -d '"'\'' ' || true)
+    if [[ -n "$val" ]]; then
+      echo "$val"
+      return
+    fi
+  fi
+  echo "$default_val"
+}
+
+# Determine current git branch
+BRANCH=$(git branch --show-current)
+if [[ -z "$BRANCH" ]]; then
+  echo "❌ Error: Could not determine current git branch." >&2
+  exit 1
+fi
+
+REMOTE_HOST=$(get_env_var "DEPLOY_HOST" "")
+STAGING_DIR=$(get_env_var "STAGING_REMOTE_DIR" "~/docker/westvillemap-testing")
+PROD_DIR=$(get_env_var "PROD_REMOTE_DIR" "~/docker/westvillemap")
+
+if [[ -z "$REMOTE_HOST" ]]; then
+  echo "❌ Error: DEPLOY_HOST is not set." >&2
+  echo "   Please create a .env file with DEPLOY_HOST=your_ssh_host" >&2
+  exit 1
+fi
+
+# Helper to update version.json files
+update_version_file() {
+  local file="$1"
+  local ver="$2"
+  local channel="$3"
+  local bdate="$4"
+  local commit="$5"
+
+  cat > "$file" <<EOF
+{
+  "version": "$ver",
+  "channel": "$channel",
+  "buildDate": "$bdate",
+  "timezone": "America/New_York",
+  "gitCommit": "$commit"
+}
+EOF
+}
+
+if [[ "$BRANCH" == "testing" ]]; then
+  echo "🚀 Deploying testing branch to staging stack (${STAGING_DIR})..."
+
+  # Determine latest tag or base version
+  DATE_PREFIX=$(TZ="America/New_York" date +"%Y.%m.%d")
+  LATEST_TAG=$(git tag -l "v${DATE_PREFIX}.*" 2>/dev/null | sort -V | tail -n1 || true)
+  if [[ -n "$LATEST_TAG" ]]; then
+    BASE_VER="${LATEST_TAG#v}"
+  else
+    BASE_VER="${DATE_PREFIX}.1"
+  fi
+
+  SHORT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "dev")
+  TEST_VER="${BASE_VER}-test.${SHORT_SHA}"
+  BUILD_DATE=$(TZ="America/New_York" date +"%Y-%m-%d %H:%M:%S %Z")
+
+  update_version_file "www/version.json" "$TEST_VER" "testing" "$BUILD_DATE" "$SHORT_SHA"
+  update_version_file "map/version.json" "$TEST_VER" "testing" "$BUILD_DATE" "$SHORT_SHA"
+
+  # Commit version update if changed
+  if ! git diff --quiet www/version.json map/version.json; then
+    git add www/version.json map/version.json
+    git commit -m "chore: update staging version to ${TEST_VER} [skip ci]"
+  fi
+
+  echo "📦 Pushing testing branch to origin..."
+  git push origin testing
+
+  echo "🔄 Reloading staging docker stack on ${REMOTE_HOST}..."
+  ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${STAGING_DIR} && git pull && docker compose up -d --build --remove-orphans"
+
+  echo "✅ Staging deployment complete!"
+  echo "   Portal: https://testing.westville.app"
+  echo "   Map:    https://testing-map.westville.app"
+  echo "   Version: ${TEST_VER}"
+
+elif [[ "$BRANCH" == "main" ]]; then
+  echo "🚀 Deploying main branch to production stack (${PROD_DIR})..."
+  echo "📦 Pushing main branch to origin..."
+  git push origin main
+
+  echo "🔄 Reloading production docker stack on ${REMOTE_HOST}..."
+  ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${PROD_DIR} && git pull && docker compose up -d --build --remove-orphans"
+
+  echo "✅ Production deployment complete!"
+  echo "   Portal: https://westville.app / https://www.westville.app"
+  echo "   Map:    https://map.westville.app"
+
+else
+  echo "ℹ️ On branch '${BRANCH}'. Pushing to origin/${BRANCH}..."
+  git push origin "$BRANCH"
+  echo "⚠️ Note: Only 'testing' and 'main' branches auto-deploy to remote docker stacks."
+  echo "   Switch to 'testing' (git checkout testing) to deploy to staging."
+fi

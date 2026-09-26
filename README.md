@@ -137,7 +137,7 @@ The project uses a clean two-branch workflow:
 2. Make your edits and verify syntax locally (`node --check ...`).
 3. Deploy to the staging server:
    ```bash
-   ./push_and_reload
+   ./deploy
    ```
 4. Verify changes in your browser at `https://testing.westville.app`.
 
@@ -193,8 +193,8 @@ All software source code—including backend Node/Express scripts (`/app`), serv
 
 ### 2. Branding, Logos & Map Datasets (Proprietary / Restricted)
 All custom branding assets, images, logos, and custom-styled GeoJSON map datasets are **strictly proprietary** and copyrighted by the Borough of Westville. They are excluded from the open-source license:
-* **Branding and Logos**: Located in `/www/images/` and `/map/images/` (see [LICENSE](file:///Volumes/Cassidy/docker/westvillemap/www/images/LICENSE) and [LICENSE](file:///Volumes/Cassidy/docker/westvillemap/map/images/LICENSE)).
-* **Map Datasets**: Located in `/map/welcome_to_westville.json` (see [LICENSE](file:///Volumes/Cassidy/docker/westvillemap/map/welcome_to_westville.json.LICENSE)).
+* **Branding and Logos**: Located in `/www/images/` and `/map/images/` (see [LICENSE](www/images/LICENSE) and [LICENSE](map/images/LICENSE)).
+* **Map Datasets**: Located in `/map/welcome_to_westville.json` (see [LICENSE](map/welcome_to_westville.json.LICENSE)).
 
 These elements are Copyright &copy; Borough of Westville. All rights reserved. No commercial reproduction, redistribution, or reuse of these elements is permitted without prior written consent from the Borough.
 
