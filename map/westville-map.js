@@ -1295,7 +1295,10 @@ try {
 
       map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-left');
       document.querySelector("details.maplibregl-ctrl-attrib").classList.remove('maplibregl-compact-show');
-      document.querySelector("span.layer-control-panel-title").innerHTML = '<a href="https://westville.app/" target="_blank">Welcome to Westville</a>';
+      const portalDomain = window.location.hostname.includes('testing')
+        ? `${window.location.protocol}//testing.westville.app/`
+        : (window.location.hostname.includes('westville.app') ? `${window.location.protocol}//map.westville.app/` : 'https://westville.app/');
+      document.querySelector("span.layer-control-panel-title").innerHTML = `<a href="${portalDomain}" target="_blank">Welcome to Westville</a>`;
       
       // Build a flat list of features for searching
       const allFeatures = [];

@@ -2,33 +2,52 @@
 function getMapDomain() {
   const host = window.location.hostname;
   const protocol = window.location.protocol;
-  if (host.includes('westville.app')) {
+  if (host.includes('testing.westville.app') || host.includes('testing-map.westville.app')) {
+    return `${protocol}//testing-map.westville.app`;
+  } else if (host.includes('westville.app')) {
     return `${protocol}//map.westville.app`;
   } else if (host.includes('westville.app')) {
     return `${protocol}//map.westville.app`;
   } else {
     // Fallback for local development or arbitrary hosts
-    return `${protocol}//map.westville.app`;
+    return `${protocol}//testing-map.westville.app`;
   }
 }
 const MAP_DOMAIN = getMapDomain();
 
 // Dynamically rewrite all static HTML links/sources to point to the resolved map domain
 function initializeMapUrls() {
-  const elements = document.querySelectorAll('[href*="map.westville.app"], [src*="map.westville.app"]');
+  const elements = document.querySelectorAll('[href*="map.westville.app"], [src*="map.westville.app"], [href*="testing-map.westville.app"], [src*="testing-map.westville.app"]');
   elements.forEach(el => {
     if (el.tagName === 'IFRAME') {
-      el.src = el.src.replace('https://map.westville.app', MAP_DOMAIN);
+      try {
+        const url = new URL(el.src, window.location.origin);
+        const targetMap = new URL(MAP_DOMAIN);
+        if (url.hostname !== targetMap.hostname) {
+          url.hostname = targetMap.hostname;
+          url.protocol = targetMap.protocol;
+          url.port = targetMap.port;
+          el.src = url.toString();
+        }
+      } catch (_) {
+        el.src = el.src.replace(/^https?:\/\/[^\/]+/, MAP_DOMAIN);
+      }
     } else if (el.hasAttribute('href')) {
-      el.setAttribute('href', el.getAttribute('href').replace('https://map.westville.app', MAP_DOMAIN));
+      const href = el.getAttribute('href');
+      el.setAttribute('href', href.replace(/^https?:\/\/(testing-map|map)\.westville\.app/, MAP_DOMAIN));
     } else if (el.hasAttribute('src')) {
-      el.setAttribute('src', el.getAttribute('src').replace('https://map.westville.app', MAP_DOMAIN));
+      const src = el.getAttribute('src');
+      el.setAttribute('src', src.replace(/^https?:\/\/(testing-map|map)\.westville\.app/, MAP_DOMAIN));
     }
   });
 }
 
-// Execute link rewriting immediately on load
-initializeMapUrls();
+// Execute link rewriting immediately and on DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeMapUrls);
+} else {
+  initializeMapUrls();
+}
 
 // --- Share & Explore Dropdown Logic ---
 const shareBtn = document.getElementById('share-btn');

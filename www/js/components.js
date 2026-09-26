@@ -1,5 +1,55 @@
 const SHOW_FESTIVAL = false; // Set to false to manually hide the Festival page from navigation
 
+// Global Map Domain & URL Synchronization for all portal pages
+function getMapDomain() {
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  if (host.includes('testing.westville.app') || host.includes('testing-map.westville.app')) {
+    return `${protocol}//testing-map.westville.app`;
+  } else if (host.includes('westville.app')) {
+    return `${protocol}//map.westville.app`;
+  } else if (host.includes('westville.app')) {
+    return `${protocol}//map.westville.app`;
+  } else {
+    return `${protocol}//testing-map.westville.app`;
+  }
+}
+window.getMapDomain = getMapDomain;
+
+function syncPortalMapUrls() {
+  const mapDomain = getMapDomain();
+  const elements = document.querySelectorAll('[href*="map.westville.app"], [src*="map.westville.app"], [href*="testing-map.westville.app"], [src*="testing-map.westville.app"]');
+  elements.forEach(el => {
+    if (el.tagName === 'IFRAME') {
+      try {
+        const url = new URL(el.src, window.location.origin);
+        const targetMap = new URL(mapDomain);
+        if (url.hostname !== targetMap.hostname) {
+          url.hostname = targetMap.hostname;
+          url.protocol = targetMap.protocol;
+          url.port = targetMap.port;
+          el.src = url.toString();
+        }
+      } catch (_) {
+        el.src = el.src.replace(/^https?:\/\/[^\/]+/, mapDomain);
+      }
+    } else if (el.hasAttribute('href')) {
+      const href = el.getAttribute('href');
+      el.setAttribute('href', href.replace(/^https?:\/\/(testing-map|map)\.westville\.app/, mapDomain));
+    } else if (el.hasAttribute('src')) {
+      const src = el.getAttribute('src');
+      el.setAttribute('src', src.replace(/^https?:\/\/(testing-map|map)\.westville\.app/, mapDomain));
+    }
+  });
+}
+window.syncPortalMapUrls = syncPortalMapUrls;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', syncPortalMapUrls);
+} else {
+  syncPortalMapUrls();
+}
+
 class SiteHeader extends HTMLElement {
   connectedCallback() {
     const activePage = this.getAttribute('active-page') || 'portal';

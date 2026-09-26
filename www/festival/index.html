@@ -86,10 +86,21 @@
         <iframe 
           name="festivalMapFrame"
           id="festivalMapFrame"
-          src="https://map.westville.app/festival.html" 
+          src="about:blank" 
           allow="geolocation"
           title="Interactive map of Westville Fall Festival vendor spaces and attractions">
         </iframe>
+        <script>
+          (function() {
+            var host = window.location.hostname;
+            var proto = window.location.protocol;
+            var domain = (host.indexOf('testing') !== -1 || host.indexOf('testing-map') !== -1)
+              ? proto + '//testing-map.westville.app'
+              : (host.indexOf('westville.app') !== -1 ? proto + '//map.westville.app' : proto + '//map.westville.app');
+            var f = document.getElementById('festivalMapFrame');
+            if (f) f.src = domain + '/festival.html' + window.location.search;
+          })();
+        </script>
       </div>
 
       <!-- Vendor List / Directory Section -->

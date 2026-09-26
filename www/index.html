@@ -206,10 +206,21 @@
         <iframe 
           name="mapFrame"
           id="mapFrame"
-          src="https://map.westville.app" 
+          src="about:blank" 
           allow="geolocation"
           title="Interactive map of Westville facilities, parks, and parking areas">
         </iframe>
+        <script>
+          (function() {
+            var host = window.location.hostname;
+            var proto = window.location.protocol;
+            var domain = (host.indexOf('testing') !== -1 || host.indexOf('testing-map') !== -1)
+              ? proto + '//testing-map.westville.app'
+              : (host.indexOf('westville.app') !== -1 ? proto + '//map.westville.app' : proto + '//map.westville.app');
+            var f = document.getElementById('mapFrame');
+            if (f) f.src = domain + window.location.search;
+          })();
+        </script>
 
         <!-- Map Footer Area (Toggle Layers moved to the footer) -->
         <div class="map-footer">
