@@ -1,5 +1,5 @@
 # --- Build / Dependency Stage ---
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Copy package files first to leverage Docker layer caching
@@ -7,7 +7,7 @@ COPY app/package*.json ./
 RUN npm install --omit=dev
 
 # --- Production Stage ---
-FROM node:24-alpine
+FROM node:26-alpine
 WORKDIR /app
 
 # Copy production dependencies from builder stage
