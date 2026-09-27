@@ -198,18 +198,19 @@ This project follows several principles to keep data secure and the repository p
 ## Third-Party Libraries, Infrastructure & Attribution
 
 This mapping portal is powered by excellent open-source projects, infrastructure providers, and open datasets, which we fully credit and acknowledge. Key dependencies include:
-- **MapLibre GL JS** (BSD 3-Clause WebGL map engine)
-- **MapLibre GL Layer Control** (MIT interactive layer switcher)
-- **pdf-lib** (MIT client-side PDF document compiler)
-- **Node.js, Express, Helmet, Express Rate Limit** (MIT backend runtime & security)
 - **Caddy Web Server** (Apache 2.0 reverse proxy, static file server & ETag revalidation)
 - **Cloudflare & Cloudflare Tunnel** (Edge security, SSL encryption & zero-trust network tunneling)
-- **GitHub** (Open-source repository hosting, release automation & version control)
-- **unpkg** (Fastly edge CDN delivering versioned client packages)
-- **OpenFreeMap** (MIT vector tile hosting infrastructure)
-- **OpenStreetMap Contributors** (ODbL open geographic data)
 - **Esri / ArcGIS** (High-resolution aerial satellite imagery overlay)
+- **GitHub** (Open-source repository hosting, release automation & version control)
+- **MapLibre GL JS** (BSD 3-Clause WebGL map engine)
+- **MapLibre GL Layer Control** (MIT interactive layer switcher)
+- **Node.js, Express, Helmet, Express Rate Limit** (MIT backend runtime & security)
+- **OpenFreeMap** (MIT vector tile hosting infrastructure)
 - **Open Sans Typography** (SIL OFL 1.1 typeface by Steve Matteson)
+- **OpenStreetMap Contributors** (ODbL open geographic data)
+- **pdf-lib** (MIT client-side PDF document compiler)
+- **unpkg** (Fastly edge CDN delivering versioned client packages)
+- **Wiki Loves Earth** (CC BY-SA 4.0 park map marker)
 
 For a detailed breakdown of data licenses, external services, and attributions, please navigate to the `/credits.html` page of the live site.
 
