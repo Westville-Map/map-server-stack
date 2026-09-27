@@ -52,6 +52,7 @@ const shareBtn = document.getElementById('share-btn');
 const shareDropdown = document.getElementById('share-dropdown');
 const shareViewBtn = document.getElementById('share-view-btn');
 const shareLocationBtn = document.getElementById('share-location-btn');
+const shareQrBtn = document.getElementById('share-qr-btn');
 
 const exploreBtn = document.getElementById('explore-btn');
 const exploreDropdown = document.getElementById('explore-dropdown');
@@ -257,6 +258,25 @@ if (shareLocationBtn) {
       );
     } else {
       alert('Geolocation is not supported by your browser.');
+    }
+  });
+}
+
+if (shareQrBtn) {
+  shareQrBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (shareDropdown) shareDropdown.classList.remove('show');
+    if (shareBtn) shareBtn.setAttribute('aria-expanded', 'false');
+    if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
+      window.WestvilleQR.openShareModal({
+        title: getPrintHeaderTitle(),
+        subtitle: 'Westville Borough Map & Directory Portal',
+        url: window.location.href,
+        colorDark: '#1a4d7c',
+        colorLight: '#ffffff',
+        pinFill: '#4e73ac',
+        pinStroke: '#e5c158'
+      });
     }
   });
 }

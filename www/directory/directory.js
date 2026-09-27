@@ -1411,27 +1411,21 @@ function initPrintAndShare() {
     });
   }
 
-  // --- Immediate share view clipboard copying ---
+  // --- Share & QR Modal Trigger ---
   if (shareBtn) {
     shareBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      shareBtn.disabled = true;
-      const oldHtml = shareBtn.innerHTML;
-      
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        shareBtn.innerHTML = `
-          <svg style="width: 15px; height: 15px; vertical-align: middle; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>Copied!
-        `;
-        setTimeout(() => {
-          shareBtn.innerHTML = oldHtml;
-          shareBtn.disabled = false;
-        }, 2000);
-      }, (err) => {
-        alert('Could not copy link: ' + err.message);
-        shareBtn.disabled = false;
-      });
+      if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
+        window.WestvilleQR.openShareModal({
+          title: getPrintHeaderTitle(),
+          subtitle: 'Westville Borough Business Directory Portal',
+          url: window.location.href,
+          colorDark: '#1a4d7c',
+          colorLight: '#ffffff',
+          pinFill: '#4e73ac',
+          pinStroke: '#e5c158'
+        });
+      }
     });
   }
 }

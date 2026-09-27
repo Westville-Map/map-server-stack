@@ -822,6 +822,7 @@ function initPrintAndShare() {
   const shareDropdown = document.getElementById('share-dropdown');
   const shareViewBtn = document.getElementById('share-view-btn');
   const shareLocationBtn = document.getElementById('share-location-btn');
+  const shareQrBtn = document.getElementById('share-qr-btn');
 
   let previousActiveElement = null;
 
@@ -1358,6 +1359,25 @@ function initPrintAndShare() {
       } else {
         alert('Geolocation not supported by browser.');
         shareLocationBtn.disabled = false;
+      }
+    });
+  }
+
+  if (shareQrBtn) {
+    shareQrBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (shareDropdown) shareDropdown.classList.remove('show');
+      if (shareBtn) shareBtn.setAttribute('aria-expanded', 'false');
+      if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
+        window.WestvilleQR.openShareModal({
+          title: getPrintHeaderTitle(),
+          subtitle: 'Westville Fall Festival Map & Vendor Directory',
+          url: window.location.href,
+          colorDark: '#991b1b',
+          colorLight: '#ffffff',
+          pinFill: '#991b1b',
+          pinStroke: '#e5c158'
+        });
       }
     });
   }

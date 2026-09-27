@@ -998,6 +998,167 @@ wv-sort {
   }
 }
 
+/* ==========================================================================
+   Share & QR Code Modal Styles
+   ========================================================================== */
+.share-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.share-qr-hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+}
+
+.share-qr-hero-card:hover,
+.share-qr-hero-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26, 77, 124, 0.14);
+  border-color: var(--primary-blue, #1a4d7c);
+  outline: none;
+}
+
+.share-qr-hero-card:active {
+  transform: scale(0.98);
+}
+
+.share-qr-canvas-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-qr-canvas-wrapper canvas,
+.share-qr-canvas-wrapper img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 296px;
+  display: block;
+  border-radius: 6px;
+}
+
+.share-qr-hint {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.share-meta-card {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.share-meta-card:hover,
+.share-meta-card:focus-visible {
+  background-color: #f1f5f9;
+  border-color: var(--primary-blue, #1a4d7c);
+  outline: none;
+}
+
+.share-meta-card:active {
+  transform: scale(0.99);
+}
+
+.share-meta-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-blue, #1a4d7c);
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.share-meta-url {
+  font-size: 0.82rem;
+  color: #475569;
+  word-break: break-all;
+  line-height: 1.35;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.share-meta-hint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.share-modal-action-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.share-modal-action-row .btn-main {
+  flex: 1;
+}
+
+@media (max-width: 480px) {
+  .share-modal-action-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.share-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  z-index: 100000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* Touch hit target optimization for map header tag close buttons */
 .tag-close-btn,
 .tour-close-btn {

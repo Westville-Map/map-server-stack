@@ -835,11 +835,219 @@
     };
   }
 
+  let _toastTimeout = null;
+
+  function showToast(message) {
+    let toast = document.getElementById('share-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'share-toast';
+      toast.className = 'share-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span style="font-size:1.1rem;">📋</span> ${message}`;
+    toast.classList.add('show');
+    if (_toastTimeout) clearTimeout(_toastTimeout);
+    _toastTimeout = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
+  function copyTextToClipboard(text, successMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successMsg || 'Link copied to clipboard!');
+      }).catch((err) => {
+        console.warn('Clipboard writeText failed:', err);
+        fallbackCopyText(text, successMsg);
+      });
+    } else {
+      fallbackCopyText(text, successMsg);
+    }
+  }
+
+  function fallbackCopyText(text, successMsg) {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+      showToast(successMsg || 'Link copied to clipboard!');
+    } catch (e) {
+      console.error('Fallback copy failed', e);
+    }
+  }
+
+  function copyCanvasToClipboard(canvas, fallbackUrl, successMsg) {
+    if (canvas && navigator.clipboard && window.ClipboardItem && canvas.toBlob) {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          copyTextToClipboard(fallbackUrl, 'Link copied to clipboard!');
+          return;
+        }
+        try {
+          const item = new ClipboardItem({ 'image/png': blob });
+          navigator.clipboard.write([item]).then(() => {
+            showToast(successMsg || 'QR code image copied to clipboard!');
+          }).catch((err) => {
+            console.warn('Image clipboard write failed, fallback to URL:', err);
+            copyTextToClipboard(fallbackUrl, 'Link copied to clipboard!');
+          });
+        } catch (err) {
+          copyTextToClipboard(fallbackUrl, 'Link copied to clipboard!');
+        }
+      }, 'image/png');
+    } else {
+      copyTextToClipboard(fallbackUrl, 'Link copied to clipboard!');
+    }
+  }
+
+  function openShareModal(options) {
+    options = options || {};
+    const url = options.url || window.location.href;
+    const title = options.title || document.title || 'Westville';
+    const subtitle = options.subtitle || 'Westville Borough Interactive Portal';
+    const colorDark = options.colorDark || '#1a4d7c';
+    const colorLight = options.colorLight || '#ffffff';
+
+    const modal = document.getElementById('share-modal');
+    if (!modal) return;
+
+    // Update Title & Subtitle
+    const titleEl = modal.querySelector('#share-modal-title');
+    if (titleEl) titleEl.textContent = title;
+
+    const subEl = modal.querySelector('#share-modal-subtitle');
+    if (subEl) subEl.textContent = subtitle;
+
+    // Update URL text
+    const urlEl = modal.querySelector('#share-modal-url-text');
+    if (urlEl) urlEl.textContent = url;
+
+    // Render Canvas
+    const renderArea = modal.querySelector('#share-qr-render-area');
+    let activeCanvas = null;
+    if (renderArea) {
+      renderArea.innerHTML = '';
+      activeCanvas = generateQRCodeCanvas(url, {
+        size: 640,
+        colorDark: colorDark,
+        colorLight: colorLight,
+        pinFill: options.pinFill || colorDark,
+        pinStroke: options.pinStroke || '#e5c158'
+      });
+      if (activeCanvas) {
+        renderArea.appendChild(activeCanvas);
+      }
+    }
+
+    // Tap QR Box -> Copy image
+    const qrBox = modal.querySelector('#share-qr-box');
+    if (qrBox) {
+      qrBox.onclick = () => {
+        copyCanvasToClipboard(activeCanvas, url, 'QR code image copied to clipboard!');
+      };
+      qrBox.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          copyCanvasToClipboard(activeCanvas, url, 'QR code image copied to clipboard!');
+        }
+      };
+    }
+
+    // Tap Meta Card -> Copy link
+    const metaCard = modal.querySelector('#share-meta-card');
+    if (metaCard) {
+      metaCard.onclick = () => {
+        copyTextToClipboard(url, 'Link copied to clipboard!');
+      };
+      metaCard.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          copyTextToClipboard(url, 'Link copied to clipboard!');
+        }
+      };
+    }
+
+    // Copy QR Image button
+    const copyQrBtn = modal.querySelector('#share-copy-qr-btn');
+    if (copyQrBtn) {
+      copyQrBtn.onclick = () => {
+        copyCanvasToClipboard(activeCanvas, url, 'QR code image copied to clipboard!');
+      };
+    }
+
+    // Copy Link button
+    const copyLinkBtn = modal.querySelector('#share-copy-link-btn');
+    if (copyLinkBtn) {
+      copyLinkBtn.onclick = () => {
+        copyTextToClipboard(url, 'Link copied to clipboard!');
+      };
+    }
+
+    // Native Share button
+    const nativeBtn = modal.querySelector('#share-native-btn');
+    if (nativeBtn) {
+      if (navigator.share) {
+        nativeBtn.style.display = 'inline-flex';
+        nativeBtn.onclick = () => {
+          navigator.share({
+            title: title,
+            text: `${title} - ${subtitle}`,
+            url: url
+          }).catch((err) => {
+            if (err.name !== 'AbortError') console.warn('Native share failed:', err);
+          });
+        };
+      } else {
+        nativeBtn.style.display = 'none';
+      }
+    }
+
+    // Close button
+    const closeBtn = modal.querySelector('#share-modal-close-btn');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        if (typeof modal.close === 'function') {
+          modal.close();
+        } else {
+          const overlay = modal.querySelector('.wv-modal-overlay');
+          if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => { overlay.style.display = 'none'; }, 200);
+          }
+        }
+      };
+    }
+
+    // Open Modal
+    if (typeof modal.open === 'function') {
+      modal.open();
+    } else {
+      const overlay = modal.querySelector('.wv-modal-overlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+        requestAnimationFrame(() => {
+          overlay.classList.add('active');
+        });
+      }
+    }
+  }
+
   return {
     qrCodeGenerator: qrCodeGenerator,
     generateQRCodeCanvas: generateQRCodeCanvas,
     createWestvilleQR: createWestvilleQR,
     dataUrlToUint8Array: dataUrlToUint8Array,
-    drawWestvillePin: drawWestvillePin
+    drawWestvillePin: drawWestvillePin,
+    openShareModal: openShareModal,
+    showToast: showToast,
+    copyTextToClipboard: copyTextToClipboard,
+    copyCanvasToClipboard: copyCanvasToClipboard
   };
 }));

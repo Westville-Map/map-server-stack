@@ -180,6 +180,53 @@
     </div>
   </wv-modal>
 
+  <!-- Share & QR Code Modal -->
+  <wv-modal modal-id="share-modal" modal-title="Share & QR Code" title-icon="/images/share.svg">
+    <div slot="body" class="share-modal-body">
+      <!-- QR Code Display Box (Clickable to copy) -->
+      <div class="share-qr-hero-card" id="share-qr-box" title="Click to copy QR Code image" role="button" tabindex="0">
+        <div id="share-qr-render-area" class="share-qr-canvas-wrapper">
+          <!-- Canvas injected dynamically via WestvilleQR -->
+        </div>
+        <div class="share-qr-hint">
+          <span style="font-size: 0.9rem;">📋</span> Click or tap QR code to copy image
+        </div>
+      </div>
+
+      <!-- Title & URL Display Box (Clickable to copy) -->
+      <div class="share-meta-card" id="share-meta-card" title="Click to copy link" role="button" tabindex="0">
+        <div id="share-modal-title" class="share-meta-title">Westville Borough Business Directory</div>
+        <div id="share-modal-url-text" class="share-meta-url">https://westville.app/directory/</div>
+        <div class="share-meta-hint">
+          <span>🔗</span> Tap to copy link
+        </div>
+      </div>
+    </div>
+    <div slot="footer" class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+      <div class="share-modal-action-row">
+        <button type="button" id="share-copy-qr-btn" class="btn-main">
+          <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+            <img style="width:16px; height:16px;" src="/images/floppy-disk.svg" alt="">
+          </span>
+          Copy Image
+        </button>
+        <button type="button" id="share-copy-link-btn" class="btn-main font-bold">
+          <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+            <img style="width:16px; height:16px;" src="/images/share.svg" alt="">
+          </span>
+          Copy Link
+        </button>
+        <button type="button" id="share-native-btn" class="btn-main" style="display: none;">
+          <span class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+            <img style="width:16px; height:16px;" src="/images/compass.svg" alt="">
+          </span>
+          Share Link
+        </button>
+      </div>
+      <button type="button" id="share-modal-close-btn" class="btn-secondary" style="width: 100%;">Close</button>
+    </div>
+  </wv-modal>
+
   <!-- Hidden container used solely for browser native printing -->
   <div id="print-layout-container"></div>
 

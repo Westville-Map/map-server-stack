@@ -73,32 +73,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  function getTrashShareTitle() {
+    const searchVal = streetSearch?.value?.trim();
+    if (searchVal) return `Trash Schedule - "${searchVal}"`;
+    if (activeDayFilter && activeDayFilter !== 'all') {
+      const dayNames = { mon: 'Monday Zone', tue: 'Tuesday Zone', wed: 'Wednesday Zone', thu: 'Thursday Zone', fri: 'Friday Zone' };
+      return `Trash Schedule - ${dayNames[activeDayFilter] || activeDayFilter}`;
+    }
+    return 'Municipal Collection Schedule & Guidelines';
+  }
+
   // Print & Share
   if (printBtn) {
     printBtn.addEventListener('click', () => window.print());
   }
 
   if (shareBtn) {
-    shareBtn.addEventListener('click', async () => {
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Westville Trash & Recycling Schedule',
-            url: window.location.href
-          });
-        } catch (e) {
-          // Fallback clipboard
-          copyUrlToClipboard();
-        }
-      } else {
-        copyUrlToClipboard();
+    shareBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
+        window.WestvilleQR.openShareModal({
+          title: getTrashShareTitle(),
+          subtitle: 'Borough of Westville Public Works Department',
+          url: window.location.href,
+          colorDark: '#1a4d7c',
+          colorLight: '#ffffff',
+          pinFill: '#4e73ac',
+          pinStroke: '#e5c158'
+        });
       }
-    });
-  }
-
-  function copyUrlToClipboard() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert('Schedule link copied to clipboard!');
     });
   }
 
