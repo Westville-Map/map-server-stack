@@ -52,9 +52,9 @@ class SiteHeader extends HTMLElement {
   connectedCallback() {
     const activePage = this.getAttribute('active-page') || 'portal';
     
-    const homeActive = activePage === 'portal' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
-    const directoryActive = activePage === 'directory' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
-    const festivalActive = activePage === 'festival' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const homeActive = activePage === 'portal' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const directoryActive = activePage === 'directory' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const festivalActive = activePage === 'festival' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
 
     let festivalLinkHTML = '';
     if (SHOW_FESTIVAL) {
@@ -150,8 +150,8 @@ class SiteFooter extends HTMLElement {
   connectedCallback() {
     const activePage = this.getAttribute('active-page') || 'portal';
     
-    const creditsStyle = activePage === 'credits' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
-    const privacyStyle = activePage === 'privacy-tos' ? 'style="background-color: var(--white); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const creditsStyle = activePage === 'credits' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
+    const privacyStyle = activePage === 'privacy-tos' ? 'style="background-color: var(--accent-gold); color: var(--primary-blue); border-color: var(--accent-gold);"' : '';
 
     const helpHTML = `
       <button id="footer-help-btn" class="header-btn help-btn" title="How to Use the Site">

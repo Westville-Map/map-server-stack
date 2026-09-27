@@ -113,7 +113,7 @@ button.header-btn {
 }
 
 .header-btn:hover {
-  background-color: var(--accent-gold);
+  background-color: var(--white);
   color: var(--primary-blue);
   transform: translateY(-1px);
 }
@@ -156,7 +156,7 @@ button.header-btn {
 }
 
 .help-split-left-btn:hover {
-  background-color: var(--accent-gold);
+  background-color: var(--white);
   color: var(--primary-blue);
 }
 
@@ -184,7 +184,7 @@ button.header-btn {
 }
 
 .help-split-right-btn:hover {
-  background-color: var(--accent-gold);
+  background-color: var(--white);
   color: var(--primary-blue);
 }
 
