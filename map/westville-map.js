@@ -785,30 +785,6 @@ try {
       });
 
       map.addLayer({
-          id: 'parking-layer-symbols',
-          type: 'symbol',
-          source: 'parking',
-          minzoom: 12.0,
-          filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
-          layout: {
-              'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
-              'icon-image': 'images/parking.svg',
-              'icon-size': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  12.0, 0.08,
-                  15.0, 0.13,
-                  18.0, 0.18
-              ],
-              'icon-allow-overlap': false,
-              'icon-overlap': 'cooperative',
-              'text-overlap': 'cooperative'
-          }
-      });
-
-
-      map.addLayer({
           id: 'park-layer-fill',
           type: 'fill',
           source: 'recreation',
@@ -1041,6 +1017,29 @@ try {
           }
       });
 
+      map.addLayer({
+          id: 'parking-layer-symbols',
+          type: 'symbol',
+          source: 'parking',
+          minzoom: 12.0,
+          filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
+          layout: {
+              'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
+              'icon-image': 'images/parking.svg',
+              'icon-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.08,
+                  15.0, 0.13,
+                  18.0, 0.18
+              ],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-overlap': 'always',
+              'symbol-sort-key': 1
+          }
+      });
 
 
       
@@ -1048,7 +1047,7 @@ try {
       map.on('click', (e) => {
           stopTour();
           const features = map.queryRenderedFeatures(e.point, {
-              layers: ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol']
+              layers: ['custom-markers', 'custom-labels', 'custom-parking-fill', 'parking-layer-symbols', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol']
           });
 
           if (!features.length) return;
@@ -1089,7 +1088,7 @@ try {
       });
 
       // UI enhancement: change cursor to pointer on hover
-      const hoverLayers = ['custom-markers', 'custom-labels', 'custom-parking-fill', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol'];
+      const hoverLayers = ['custom-markers', 'custom-labels', 'custom-parking-fill', 'parking-layer-symbols', 'park-layer-symbols', 'park-layer-fill', 'walkingpath-outline', 'walkingpath-layer-symbol'];
       hoverLayers.forEach(layer => {
           map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
           map.on('mouseleave', layer, () => map.getCanvas().style.cursor = '');
