@@ -214,7 +214,7 @@ window.addEventListener('message', (event) => {
     });
   }
 
-  async function captureCompositeMap(mapInstance) {
+  function captureCompositeMap(mapInstance) {
     const webglCanvas = mapInstance.getCanvas();
     const mapContainer = mapInstance.getContainer();
     const containerRect = mapContainer.getBoundingClientRect();
@@ -228,98 +228,148 @@ window.addEventListener('message', (event) => {
     ctx.drawImage(webglCanvas, 0, 0);
 
     // 2. Check for active popup overlay
-    const popupEl = mapContainer.querySelector('.maplibregl-popup');
-    if (popupEl && popupEl.style.display !== 'none' && popupEl.offsetHeight > 0) {
-      const popupRect = popupEl.getBoundingClientRect();
-      const scaleX = compositeCanvas.width / containerRect.width;
-      const scaleY = compositeCanvas.height / containerRect.height;
+    const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
+    if (popupEl && popupEl.offsetHeight > 0) {
+      const contentEl = popupEl.querySelector('.maplibregl-popup-content');
+      const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
 
-      const x = (popupRect.left - containerRect.left) * scaleX;
-      const y = (popupRect.top - containerRect.top) * scaleY;
-      const w = popupRect.width * scaleX;
-      const h = popupRect.height * scaleY;
+      if (contentEl) {
+        const scaleX = compositeCanvas.width / containerRect.width;
+        const scaleY = compositeCanvas.height / containerRect.height;
+        const scale = (scaleX + scaleY) / 2;
 
-      const clone = popupEl.cloneNode(true);
-      clone.style.transform = 'none';
-      clone.style.position = 'static';
-      clone.style.left = '0';
-      clone.style.top = '0';
-      clone.style.margin = '0';
-      clone.style.maxWidth = 'none';
+        const cRect = contentEl.getBoundingClientRect();
+        const cx = (cRect.left - containerRect.left) * scaleX;
+        const cy = (cRect.top - containerRect.top) * scaleY;
+        const cw = cRect.width * scaleX;
+        const ch = cRect.height * scaleY;
 
-      // Remove interactive close button for clean print rendering
-      const closeBtn = clone.querySelector('.maplibregl-popup-close-button');
-      if (closeBtn) closeBtn.remove();
+        // Draw Drop Shadow & Bubble Background
+        ctx.save();
+        ctx.shadowColor = 'rgba(120, 53, 4, 0.25)';
+        ctx.shadowBlur = 16 * scale;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 6 * scale;
 
-      const cssStyles = `
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .maplibregl-popup {
-          font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          position: relative;
-          display: flex;
+        ctx.fillStyle = '#fdfaf7';
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = Math.max(1, 2 * scale);
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(cx, cy, cw, ch, 12 * scale);
+        } else {
+          ctx.rect(cx, cy, cw, ch);
         }
-        .maplibregl-popup-anchor-top, .maplibregl-popup-anchor-top-left, .maplibregl-popup-anchor-top-right { flex-direction: column; }
-        .maplibregl-popup-anchor-bottom, .maplibregl-popup-anchor-bottom-left, .maplibregl-popup-anchor-bottom-right { flex-direction: column-reverse; }
-        .maplibregl-popup-anchor-left { flex-direction: row; }
-        .maplibregl-popup-anchor-right { flex-direction: row-reverse; }
-        .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip { align-self: flex-start; }
-        .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { align-self: flex-end; }
-        .maplibregl-popup-anchor-top-left .maplibregl-popup-tip { align-self: flex-start; }
-        .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { align-self: flex-end; }
-        .maplibregl-popup-content {
-          background-color: #fdfaf7 !important;
-          border: 2px solid #d97706 !important;
-          border-radius: 12px !important;
-          padding: 16px 20px !important;
-          box-shadow: 0 10px 25px rgba(120, 53, 4, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08) !important;
-          color: #2d1b10 !important;
-          animation: none !important;
-          transform: none !important;
-          opacity: 1 !important;
-        }
-        .maplibregl-popup-tip {
-          width: 0; height: 0;
-          border: 10px solid transparent;
-          z-index: 1;
-          animation: none !important;
-          transform: none !important;
-          opacity: 1 !important;
-        }
-        .maplibregl-popup-anchor-top-right .maplibregl-popup-tip,
-        .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
-        .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #fdfaf7 !important; margin: 0 auto; }
-        .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
-        .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip,
-        .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #fdfaf7 !important; margin: 0 auto; }
-        .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: #fdfaf7 !important; align-self: center; }
-        .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: #fdfaf7 !important; align-self: center; }
-        h4 { margin: 0 0 6px 0; color: #451a03; font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
-        p { margin: 0 0 8px 0; font-size: 0.85rem; color: #453b36; line-height: 1.4; }
-        a { color: #c2410c; text-decoration: underline; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
-        svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
-      `;
+        ctx.fill();
+        ctx.stroke();
 
-      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${popupRect.width}" height="${popupRect.height}">` +
-        `<foreignObject width="100%" height="100%">` +
-        `<div xmlns="http://www.w3.org/1999/xhtml">` +
-        `<style>${cssStyles}</style>` +
-        clone.outerHTML +
-        `</div>` +
-        `</foreignObject>` +
-        `</svg>`;
+        // Draw Tip Pointer
+        if (tipEl) {
+          const tRect = tipEl.getBoundingClientRect();
+          const tx = (tRect.left - containerRect.left) * scaleX;
+          const ty = (tRect.top - containerRect.top) * scaleY;
+          const tw = tRect.width * scaleX;
+          const th = tRect.height * scaleY;
 
-      await new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, x, y, w, h);
-          resolve();
-        };
-        img.onerror = (err) => {
-          console.warn('Could not composite festival popup SVG into canvas:', err);
-          resolve();
-        };
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
-      });
+          ctx.fillStyle = '#fdfaf7';
+          ctx.beginPath();
+          const cls = popupEl.className;
+          if (cls.includes('anchor-bottom')) {
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx + tw, ty);
+            ctx.lineTo(tx + tw / 2, ty + th);
+          } else if (cls.includes('anchor-top')) {
+            ctx.moveTo(tx, ty + th);
+            ctx.lineTo(tx + tw, ty + th);
+            ctx.lineTo(tx + tw / 2, ty);
+          } else if (cls.includes('anchor-left')) {
+            ctx.moveTo(tx + tw, ty);
+            ctx.lineTo(tx + tw, ty + th);
+            ctx.lineTo(tx, ty + th / 2);
+          } else if (cls.includes('anchor-right')) {
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx, ty + th);
+            ctx.lineTo(tx + tw, ty + th / 2);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Render Content Inside Festival Popup
+        const paddingX = 16 * scale;
+        let curY = cy + 22 * scale;
+        const innerWidth = cw - (paddingX * 2);
+
+        // Badge / Category (e.g. "EVENT ZONE", "VENDOR SPACE")
+        const badgeEl = contentEl.firstElementChild ? contentEl.firstElementChild.firstElementChild : null;
+        if (badgeEl && badgeEl.tagName === 'DIV') {
+          ctx.fillStyle = badgeEl.style.color || '#b45309';
+          ctx.font = `bold ${Math.round(11 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          ctx.fillText(badgeEl.innerText.trim().toUpperCase(), cx + paddingX, curY);
+          curY += 16 * scale;
+        }
+
+        // Title
+        const titleEl = contentEl.querySelector('h4, h3');
+        if (titleEl) {
+          ctx.fillStyle = '#451a03';
+          ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          ctx.fillText(titleEl.innerText.trim(), cx + paddingX, curY);
+          curY += 18 * scale;
+        }
+
+        // Description
+        const descEl = contentEl.querySelector('p');
+        if (descEl && descEl.innerText.trim()) {
+          ctx.fillStyle = '#453b36';
+          ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          const words = descEl.innerText.trim().split(' ');
+          let line = '';
+          const lineHeight = 16 * scale;
+          for (let i = 0; i < words.length; i++) {
+            const testLine = line + (line ? ' ' : '') + words[i];
+            if (ctx.measureText(testLine).width > innerWidth && line) {
+              ctx.fillText(line, cx + paddingX, curY);
+              line = words[i];
+              curY += lineHeight;
+            } else {
+              line = testLine;
+            }
+          }
+          if (line) {
+            ctx.fillText(line, cx + paddingX, curY);
+            curY += lineHeight;
+          }
+        }
+
+        // Location Info
+        const locDiv = Array.from(contentEl.querySelectorAll('div')).find(el => el.innerText.includes('Location:'));
+        if (locDiv) {
+          curY += 2 * scale;
+          ctx.fillStyle = '#574742';
+          ctx.font = `italic ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          ctx.fillText(locDiv.innerText.trim(), cx + paddingX, curY);
+          curY += 16 * scale;
+        }
+
+        // Directions Link
+        const linkEl = contentEl.querySelector('a');
+        if (linkEl) {
+          curY += 4 * scale;
+          ctx.strokeStyle = '#e7e0da';
+          ctx.lineWidth = Math.max(1, 1 * scale);
+          ctx.beginPath();
+          ctx.moveTo(cx + paddingX, curY);
+          ctx.lineTo(cx + cw - paddingX, curY);
+          ctx.stroke();
+          curY += 14 * scale;
+
+          ctx.fillStyle = '#c2410c';
+          ctx.font = `bold ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          ctx.fillText('📍 Directions', cx + paddingX, curY);
+        }
+      }
     }
 
     return compositeCanvas.toDataURL('image/png');

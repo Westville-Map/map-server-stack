@@ -2549,7 +2549,7 @@ window.addEventListener('message', (event) => {
         }
     }
 
-    async function captureCompositeMap(mapInstance) {
+    function captureCompositeMap(mapInstance) {
         const webglCanvas = mapInstance.getCanvas();
         const mapContainer = mapInstance.getContainer();
         const containerRect = mapContainer.getBoundingClientRect();
@@ -2563,113 +2563,173 @@ window.addEventListener('message', (event) => {
         ctx.drawImage(webglCanvas, 0, 0);
 
         // 2. Check for active popup overlay
-        const popupEl = mapContainer.querySelector('.maplibregl-popup');
-        if (popupEl && popupEl.style.display !== 'none' && popupEl.offsetHeight > 0) {
-            const popupRect = popupEl.getBoundingClientRect();
-            const scaleX = compositeCanvas.width / containerRect.width;
-            const scaleY = compositeCanvas.height / containerRect.height;
+        const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
+        if (popupEl && popupEl.offsetHeight > 0) {
+            const contentEl = popupEl.querySelector('.maplibregl-popup-content');
+            const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
 
-            const x = (popupRect.left - containerRect.left) * scaleX;
-            const y = (popupRect.top - containerRect.top) * scaleY;
-            const w = popupRect.width * scaleX;
-            const h = popupRect.height * scaleY;
+            if (contentEl) {
+                const scaleX = compositeCanvas.width / containerRect.width;
+                const scaleY = compositeCanvas.height / containerRect.height;
+                const scale = (scaleX + scaleY) / 2;
 
-            const clone = popupEl.cloneNode(true);
-            clone.style.transform = 'none';
-            clone.style.position = 'static';
-            clone.style.left = '0';
-            clone.style.top = '0';
-            clone.style.margin = '0';
-            clone.style.maxWidth = 'none';
+                const cRect = contentEl.getBoundingClientRect();
+                const cx = (cRect.left - containerRect.left) * scaleX;
+                const cy = (cRect.top - containerRect.top) * scaleY;
+                const cw = cRect.width * scaleX;
+                const ch = cRect.height * scaleY;
 
-            // Remove interactive close button for clean print rendering
-            const closeBtn = clone.querySelector('.maplibregl-popup-close-button');
-            if (closeBtn) closeBtn.remove();
+                // Draw Drop Shadow & Bubble Background
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                ctx.shadowBlur = 16 * scale;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 6 * scale;
 
-            const cssStyles = `
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                .maplibregl-popup {
-                    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                    position: relative;
-                    display: flex;
+                ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = Math.max(1, 1 * scale);
+                ctx.beginPath();
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.roundRect(cx, cy, cw, ch, 12 * scale);
+                } else {
+                    ctx.rect(cx, cy, cw, ch);
                 }
-                .maplibregl-popup-anchor-top, .maplibregl-popup-anchor-top-left, .maplibregl-popup-anchor-top-right { flex-direction: column; }
-                .maplibregl-popup-anchor-bottom, .maplibregl-popup-anchor-bottom-left, .maplibregl-popup-anchor-bottom-right { flex-direction: column-reverse; }
-                .maplibregl-popup-anchor-left { flex-direction: row; }
-                .maplibregl-popup-anchor-right { flex-direction: row-reverse; }
-                .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip { align-self: flex-start; }
-                .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { align-self: flex-end; }
-                .maplibregl-popup-anchor-top-left .maplibregl-popup-tip { align-self: flex-start; }
-                .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { align-self: flex-end; }
-                .maplibregl-popup-content {
-                    background-color: rgba(74, 115, 172, 0.95);
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                    border-radius: 12px;
-                    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
-                    padding: 20px 24px 20px 20px;
-                    color: #ffffff;
-                    animation: none !important;
-                    transform: none !important;
-                    opacity: 1 !important;
-                }
-                .maplibregl-popup-tip {
-                    width: 0; height: 0;
-                    border: 10px solid transparent;
-                    z-index: 1;
-                    animation: none !important;
-                    transform: none !important;
-                    opacity: 1 !important;
-                }
-                .maplibregl-popup-anchor-top-right .maplibregl-popup-tip,
-                .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
-                .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: rgba(74, 115, 172, 0.95) !important; margin: 0 auto; }
-                .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
-                .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip,
-                .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: rgba(74, 115, 172, 0.95) !important; margin: 0 auto; }
-                .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: rgba(74, 115, 172, 0.95) !important; align-self: center; }
-                .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: rgba(74, 115, 172, 0.95) !important; align-self: center; }
-                .wv-opensans { font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-                h3 { font-size: 18px; font-weight: 700; color: #ffffff; line-height: 1.3; margin-bottom: 8px; }
-                p { font-size: 14px; color: rgba(255, 255, 255, 0.85); line-height: 1.5; margin: 6px 0; }
-                hr { border: none; height: 1px; background: rgba(229, 193, 88, 0.75); width: 100%; margin: 12px 0; }
-                .wv-popup-detail { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; color: rgba(255, 255, 255, 0.9); margin: 6px 0; }
-                .wv-popup-detail svg { flex-shrink: 0; margin-top: 3px; stroke: currentColor; fill: none; opacity: 0.85; color: #ffffff; }
-                .wv-popup-detail span, .wv-popup-detail a { color: rgba(255, 255, 255, 0.95); }
-                .wv-popup-title-link { color: #ffffff; text-decoration: none; font-weight: 700; }
-                .wv-title-link-icon { fill: currentColor; width: 16px; height: 16px; display: inline-block; vertical-align: -2px; margin-left: 6px; }
-                .wv-directions-btn {
-                    display: inline-flex; align-items: center; justify-content: center;
-                    background-color: #E5C158; color: #333333 !important;
-                    font-weight: 700; font-size: 14px; padding: 10px 18px;
-                    border-radius: 20px; text-decoration: none !important;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    width: 100%; margin-top: 12px;
-                }
-                .wv-directions-btn svg { stroke: currentColor; fill: none; margin-right: 8px; }
-                a { color: inherit; text-decoration: none; }
-            `;
+                ctx.fill();
+                ctx.stroke();
 
-            const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${popupRect.width}" height="${popupRect.height}">` +
-                `<foreignObject width="100%" height="100%">` +
-                `<div xmlns="http://www.w3.org/1999/xhtml">` +
-                `<style>${cssStyles}</style>` +
-                clone.outerHTML +
-                `</div>` +
-                `</foreignObject>` +
-                `</svg>`;
+                // Draw Tip Pointer
+                if (tipEl) {
+                    const tRect = tipEl.getBoundingClientRect();
+                    const tx = (tRect.left - containerRect.left) * scaleX;
+                    const ty = (tRect.top - containerRect.top) * scaleY;
+                    const tw = tRect.width * scaleX;
+                    const th = tRect.height * scaleY;
 
-            await new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    ctx.drawImage(img, x, y, w, h);
-                    resolve();
-                };
-                img.onerror = (err) => {
-                    console.warn('Could not composite popup SVG into canvas:', err);
-                    resolve();
-                };
-                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
-            });
+                    ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
+                    ctx.beginPath();
+                    const cls = popupEl.className;
+                    if (cls.includes('anchor-bottom')) {
+                        ctx.moveTo(tx, ty);
+                        ctx.lineTo(tx + tw, ty);
+                        ctx.lineTo(tx + tw / 2, ty + th);
+                    } else if (cls.includes('anchor-top')) {
+                        ctx.moveTo(tx, ty + th);
+                        ctx.lineTo(tx + tw, ty + th);
+                        ctx.lineTo(tx + tw / 2, ty);
+                    } else if (cls.includes('anchor-left')) {
+                        ctx.moveTo(tx + tw, ty);
+                        ctx.lineTo(tx + tw, ty + th);
+                        ctx.lineTo(tx, ty + th / 2);
+                    } else if (cls.includes('anchor-right')) {
+                        ctx.moveTo(tx, ty);
+                        ctx.lineTo(tx, ty + th);
+                        ctx.lineTo(tx + tw, ty + th / 2);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // Render Content Inside Popup
+                const paddingX = 20 * scale;
+                let curY = cy + 26 * scale;
+                const innerWidth = cw - (paddingX * 2);
+
+                // Title
+                const titleEl = contentEl.querySelector('h3');
+                if (titleEl) {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = `bold ${Math.round(17 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.fillText(titleEl.innerText.trim(), cx + paddingX, curY);
+                    curY += 18 * scale;
+                }
+
+                // Tags / Details above divider
+                const tagDetailEl = Array.from(contentEl.querySelectorAll('.wv-popup-detail')).find(el => el.innerText.includes('Tags:'));
+                if (tagDetailEl) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.fillText(tagDetailEl.innerText.trim(), cx + paddingX, curY);
+                    curY += 16 * scale;
+                }
+
+                // Description
+                const descEl = contentEl.querySelector('p:not(.wv-popup-detail)');
+                if (descEl && descEl.innerText.trim()) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.font = `${Math.round(13.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    const words = descEl.innerText.trim().split(' ');
+                    let line = '';
+                    const lineHeight = 17 * scale;
+                    for (let i = 0; i < words.length; i++) {
+                        const testLine = line + (line ? ' ' : '') + words[i];
+                        if (ctx.measureText(testLine).width > innerWidth && line) {
+                            ctx.fillText(line, cx + paddingX, curY);
+                            line = words[i];
+                            curY += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    if (line) {
+                        ctx.fillText(line, cx + paddingX, curY);
+                        curY += lineHeight;
+                    }
+                }
+
+                // Divider (hr)
+                const hrEl = contentEl.querySelector('hr');
+                if (hrEl) {
+                    curY += 4 * scale;
+                    ctx.strokeStyle = 'rgba(229, 193, 88, 0.75)';
+                    ctx.lineWidth = Math.max(1, 1 * scale);
+                    ctx.beginPath();
+                    ctx.moveTo(cx + paddingX, curY);
+                    ctx.lineTo(cx + cw - paddingX, curY);
+                    ctx.stroke();
+                    curY += 16 * scale;
+                }
+
+                // Phone & Address Details
+                const otherDetails = contentEl.querySelectorAll('.wv-popup-detail');
+                otherDetails.forEach(detailEl => {
+                    if (detailEl === tagDetailEl) return;
+                    const text = detailEl.innerText.trim();
+                    if (!text) return;
+                    
+                    ctx.fillStyle = '#E5C158';
+                    ctx.beginPath();
+                    ctx.arc(cx + paddingX + 4 * scale, curY - 4 * scale, 3 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.fillText(text, cx + paddingX + 14 * scale, curY);
+                    curY += 18 * scale;
+                });
+
+                // Directions Button
+                const dirBtn = contentEl.querySelector('.wv-directions-btn');
+                if (dirBtn) {
+                    curY += 6 * scale;
+                    const btnH = 32 * scale;
+                    ctx.fillStyle = '#E5C158';
+                    ctx.beginPath();
+                    if (typeof ctx.roundRect === 'function') {
+                        ctx.roundRect(cx + paddingX, curY, innerWidth, btnH, 16 * scale);
+                    } else {
+                        ctx.rect(cx + paddingX, curY, innerWidth, btnH);
+                    }
+                    ctx.fill();
+
+                    ctx.fillStyle = '#1E3D60';
+                    ctx.font = `bold ${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Directions', cx + paddingX + innerWidth / 2, curY + btnH / 2 + 4.5 * scale);
+                    ctx.textAlign = 'left';
+                }
+            }
         }
 
         return compositeCanvas.toDataURL('image/png');
