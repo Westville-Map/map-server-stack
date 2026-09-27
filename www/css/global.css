@@ -1016,14 +1016,14 @@ wv-sort {
   align-items: center;
   justify-content: center;
   background: #ffffff;
-  padding: 12px;
+  padding: 10px;
   border-radius: 14px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   width: 100%;
-  max-width: 320px;
+  max-width: 280px;
   box-sizing: border-box;
 }
 
@@ -1051,14 +1051,14 @@ wv-sort {
 .share-qr-canvas-wrapper img {
   width: 100% !important;
   height: auto !important;
-  max-width: 296px;
+  max-width: 256px;
   display: block;
   border-radius: 6px;
 }
 
 .share-qr-hint {
-  margin-top: 8px;
-  font-size: 0.8rem;
+  margin-top: 6px;
+  font-size: 0.78rem;
   font-weight: 600;
   color: #64748b;
   display: flex;
@@ -1125,10 +1125,60 @@ wv-sort {
   flex: 1;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 480px), (max-height: 700px) {
+  #share-modal .wv-modal-card {
+    max-height: 92vh;
+    width: 94%;
+  }
+
+  .share-modal-body {
+    padding: 0.75rem 1rem !important;
+    gap: 8px;
+  }
+
+  .share-qr-hero-card {
+    max-width: min(220px, 58vw);
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .share-qr-canvas-wrapper canvas,
+  .share-qr-canvas-wrapper img {
+    max-width: 204px;
+  }
+
+  .share-qr-hint {
+    margin-top: 4px;
+    font-size: 0.72rem;
+  }
+
+  .share-meta-card {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+
+  .share-meta-title {
+    font-size: 0.92rem;
+    margin-bottom: 2px;
+  }
+
+  .share-meta-url {
+    font-size: 0.75rem;
+  }
+
+  .share-meta-hint {
+    margin-top: 3px;
+    font-size: 0.68rem;
+  }
+
   .share-modal-action-row {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .share-modal-action-row button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
   }
 }
 

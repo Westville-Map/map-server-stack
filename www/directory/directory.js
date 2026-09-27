@@ -863,40 +863,6 @@ function getPrintHeaderTitle() {
   return "Westville Business Directory - " + selections.join(', ');
 }
 
-// Compile selections for Share QR modal
-function getShareSelectionName() {
-  const url = new URL(window.location.href);
-  const searchParams = url.searchParams;
-  const selections = [];
-
-  const view = searchParams.get('view');
-  if (view && window.directoryViews && window.directoryViews[view] && view !== 'all') {
-    selections.push(window.directoryViews[view].title);
-  }
-  
-  const filter = searchParams.get('filter');
-  if (filter) {
-    filter.split(',').forEach(f => {
-      const clean = f.trim().toLowerCase();
-      if (categoryColors[clean]) {
-        selections.push(categoryColors[clean].title);
-      } else {
-        const label = clean.charAt(0).toUpperCase() + clean.slice(1);
-        selections.push(label);
-      }
-    });
-  }
-  
-  const search = searchParams.get('search');
-  if (search) selections.push(`Search: "${search}"`);
-  
-  if (selections.length === 0) {
-    return "Directory Overview";
-  }
-  
-  return selections.join(', ');
-}
-
 // Draw professional border cards within PDF pages
 function drawPdfCard(pdfDoc, page, helvetica, helveticaBold, x, y, width, f) {
   const props = f.properties || {};
@@ -1097,8 +1063,6 @@ function initPrintAndShare() {
   const printPdfBtn = document.getElementById('print-pdf-btn');
   const printExecuteBtn = document.getElementById('print-execute-btn');
   const printLayoutContainer = document.getElementById('print-layout-container');
-
-  const shareBtn = document.getElementById('share-btn');
 
   let previousActiveElement = null;
 
@@ -1441,24 +1405,6 @@ function initPrintAndShare() {
         console.error("Failed to export PDF:", err);
         alert("Error generating PDF: " + err.message);
         if (printLoadingMsg) printLoadingMsg.style.display = 'none';
-      }
-    });
-  }
-
-  // --- Share & QR Modal Trigger ---
-  if (shareBtn) {
-    shareBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
-        window.WestvilleQR.openShareModal({
-          featureName: typeof getShareSelectionName === 'function' ? getShareSelectionName() : 'Directory Overview',
-          subtitle: 'Westville Borough Business Directory Portal',
-          url: window.location.href,
-          colorDark: '#1a4d7c',
-          colorLight: '#ffffff',
-          pinFill: '#4e73ac',
-          pinStroke: '#e5c158'
-        });
       }
     });
   }
