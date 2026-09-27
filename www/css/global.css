@@ -274,9 +274,12 @@ button.header-btn {
   border-bottom: 1.5px solid rgba(229, 193, 88, 0.3);
 }
 
-.help-dropdown-item:hover {
+.help-dropdown-item:hover,
+.help-dropdown-item:focus,
+.help-dropdown-item:focus-visible {
   background-color: var(--accent-gold);
   color: var(--primary-blue);
+  outline: none;
 }
 a.help-link{
 color: var(--primary-blue);
@@ -1075,8 +1078,9 @@ wv-sort {
   transition: background-color 0.1s;
 }
 
-.multiselect-option:hover {
-  background-color: #f5f5f5;
+.multiselect-option:hover,
+.multiselect-option:focus-within {
+  background-color: #f1f5f9;
 }
 
 .multiselect-option.active {
@@ -1089,6 +1093,11 @@ wv-sort {
   width: 16px;
   height: 16px;
   accent-color: var(--primary-blue);
+}
+
+.multiselect-option input[type="checkbox"]:focus-visible {
+  outline: 2.5px solid var(--primary-blue) !important;
+  outline-offset: 2px !important;
 }
 
 .multiselect-option-label {

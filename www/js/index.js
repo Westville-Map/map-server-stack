@@ -68,7 +68,15 @@ if (shareBtn && shareDropdown) {
   });
 
   shareBtn.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      if (!shareDropdown.classList.contains('show')) {
+        shareDropdown.classList.add('show');
+        shareBtn.setAttribute('aria-expanded', 'true');
+      }
+      const firstBtn = shareDropdown.querySelector('button');
+      if (firstBtn) firstBtn.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       if (shareDropdown.classList.contains('show')) {
         e.preventDefault();
         shareDropdown.classList.remove('show');
@@ -79,7 +87,24 @@ if (shareBtn && shareDropdown) {
   });
 
   shareDropdown.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    const buttons = Array.from(shareDropdown.querySelectorAll('button:not(:disabled)'));
+    const currentIndex = buttons.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % buttons.length;
+      buttons[nextIndex]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+      buttons[prevIndex]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      buttons[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      buttons[buttons.length - 1]?.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       e.preventDefault();
       shareDropdown.classList.remove('show');
       shareBtn.setAttribute('aria-expanded', 'false');
@@ -100,7 +125,15 @@ if (exploreBtn && exploreDropdown) {
   });
 
   exploreBtn.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      if (!exploreDropdown.classList.contains('show')) {
+        exploreDropdown.classList.add('show');
+        exploreBtn.setAttribute('aria-expanded', 'true');
+      }
+      const firstBtn = exploreDropdown.querySelector('button, a');
+      if (firstBtn) firstBtn.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       if (exploreDropdown.classList.contains('show')) {
         e.preventDefault();
         exploreDropdown.classList.remove('show');
@@ -111,7 +144,24 @@ if (exploreBtn && exploreDropdown) {
   });
 
   exploreDropdown.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    const items = Array.from(exploreDropdown.querySelectorAll('button:not(:disabled), a'));
+    const currentIndex = items.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % items.length;
+      items[nextIndex]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + items.length) % items.length;
+      items[prevIndex]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      items[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      items[items.length - 1]?.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       e.preventDefault();
       exploreDropdown.classList.remove('show');
       exploreBtn.setAttribute('aria-expanded', 'false');
@@ -656,7 +706,24 @@ if (dirFilterDropdown) {
     e.stopPropagation();
   });
   dirFilterDropdown.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    const inputs = Array.from(dirFilterDropdown.querySelectorAll('input'));
+    const currentIndex = inputs.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % inputs.length;
+      inputs[nextIndex]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + inputs.length) % inputs.length;
+      inputs[prevIndex]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      inputs[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      inputs[inputs.length - 1]?.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       e.preventDefault();
       dirFilterContainer.classList.remove('active');
       dirFilterTrigger.setAttribute('aria-expanded', 'false');
@@ -670,7 +737,24 @@ if (dirCategoryDropdown) {
     e.stopPropagation();
   });
   dirCategoryDropdown.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    const inputs = Array.from(dirCategoryDropdown.querySelectorAll('input'));
+    const currentIndex = inputs.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % inputs.length;
+      inputs[nextIndex]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + inputs.length) % inputs.length;
+      inputs[prevIndex]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      inputs[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      inputs[inputs.length - 1]?.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       e.preventDefault();
       dirCategoryContainer.classList.remove('active');
       dirCategoryTrigger.setAttribute('aria-expanded', 'false');

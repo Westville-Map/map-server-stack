@@ -137,7 +137,15 @@ class SiteHeader extends HTMLElement {
       });
 
       toggleBtn.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
+        if (e.key === 'ArrowDown' || e.key === 'Down') {
+          e.preventDefault();
+          if (!dropdownMenu.classList.contains('show')) {
+            dropdownMenu.classList.add('show');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+          }
+          const firstItem = dropdownMenu.querySelector('a, button');
+          if (firstItem) firstItem.focus();
+        } else if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
           e.stopPropagation();
           dropdownMenu.classList.remove('show');
           toggleBtn.setAttribute('aria-expanded', 'false');
@@ -146,7 +154,24 @@ class SiteHeader extends HTMLElement {
       });
       
       dropdownMenu.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        const items = Array.from(dropdownMenu.querySelectorAll('a, button'));
+        const currentIndex = items.indexOf(document.activeElement);
+
+        if (e.key === 'ArrowDown' || e.key === 'Down') {
+          e.preventDefault();
+          const nextIndex = (currentIndex + 1) % items.length;
+          items[nextIndex]?.focus();
+        } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+          e.preventDefault();
+          const prevIndex = (currentIndex - 1 + items.length) % items.length;
+          items[prevIndex]?.focus();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          items[0]?.focus();
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          items[items.length - 1]?.focus();
+        } else if (e.key === 'Escape') {
           e.stopPropagation();
           dropdownMenu.classList.remove('show');
           toggleBtn.setAttribute('aria-expanded', 'false');
@@ -1149,7 +1174,24 @@ window.setupDropdownTrigger = function(trigger, dropdown) {
   });
 
   dropdown.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
+    const inputs = Array.from(dropdown.querySelectorAll('input, [tabindex="0"]'));
+    const currentIndex = inputs.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % inputs.length;
+      inputs[nextIndex]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+      e.preventDefault();
+      const prevIndex = (currentIndex - 1 + inputs.length) % inputs.length;
+      inputs[prevIndex]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      inputs[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      inputs[inputs.length - 1]?.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
       e.preventDefault();
       window.closeDropdown(trigger, dropdown);
       trigger.focus();

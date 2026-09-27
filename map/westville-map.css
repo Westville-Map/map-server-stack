@@ -395,8 +395,9 @@ body { margin: 0; padding: 0; font-family: "Open Sans", sans-serif; }
   transition: background-color 0.1s;
 }
 
-.wv-multiselect-option:hover {
-  background-color: #f5f5f5;
+.wv-multiselect-option:hover,
+.wv-multiselect-option:focus-within {
+  background-color: #f1f5f9;
 }
 
 .wv-multiselect-option input[type="checkbox"] {
@@ -404,6 +405,11 @@ body { margin: 0; padding: 0; font-family: "Open Sans", sans-serif; }
   width: 14px;
   height: 14px;
   accent-color: var(--primary-blue);
+}
+
+.wv-multiselect-option input[type="checkbox"]:focus-visible {
+  outline: 2.5px solid var(--primary-blue) !important;
+  outline-offset: 2px !important;
 }
 
 .wv-multiselect-option-label {

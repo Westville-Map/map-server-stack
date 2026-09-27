@@ -1109,7 +1109,24 @@ try {
       });
 
       searchFilterDropdown.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' || e.key === 'Esc') {
+          const inputs = Array.from(searchFilterDropdown.querySelectorAll('input'));
+          const currentIndex = inputs.indexOf(document.activeElement);
+
+          if (e.key === 'ArrowDown' || e.key === 'Down') {
+              e.preventDefault();
+              const nextIndex = (currentIndex + 1) % inputs.length;
+              inputs[nextIndex]?.focus();
+          } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+              e.preventDefault();
+              const prevIndex = (currentIndex - 1 + inputs.length) % inputs.length;
+              inputs[prevIndex]?.focus();
+          } else if (e.key === 'Home') {
+              e.preventDefault();
+              inputs[0]?.focus();
+          } else if (e.key === 'End') {
+              e.preventDefault();
+              inputs[inputs.length - 1]?.focus();
+          } else if (e.key === 'Escape' || e.key === 'Esc') {
               e.preventDefault();
               searchFilterContainer.classList.remove('active');
               searchFilterTrigger.setAttribute('aria-expanded', 'false');

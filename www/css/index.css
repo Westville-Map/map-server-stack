@@ -398,6 +398,12 @@ collapsible-pill-tray .pill-tray-content {
   transform: translateY(-1px);
 }
 
+.quick-view-pill:focus-visible {
+  outline: 3px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(229, 193, 88, 0.35) !important;
+}
+
 .quick-view-pill.active {
   background: var(--accent-gold);
   border-color: var(--accent-gold);
@@ -542,6 +548,12 @@ collapsible-pill-tray[variant="light"] .quick-view-pill:hover {
   color: var(--primary-blue);
 }
 
+collapsible-pill-tray[variant="light"] .quick-view-pill:focus-visible {
+  outline: 3px solid var(--primary-blue) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(43, 101, 159, 0.35) !important;
+}
+
 collapsible-pill-tray[variant="light"] .quick-view-pill.active {
   background: var(--primary-blue);
   border-color: var(--primary-blue);
@@ -623,9 +635,12 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   border-bottom: 1.5px solid rgba(229, 193, 88, 0.3);
 }
 
-.share-dropdown-btn:hover {
+.share-dropdown-btn:hover,
+.share-dropdown-btn:focus,
+.share-dropdown-btn:focus-visible {
   background-color: var(--accent-gold);
   color: var(--primary-blue);
+  outline: none;
 }
 
 .share-dropdown-btn:disabled {
@@ -694,9 +709,12 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   background-color: rgba(229, 193, 88, 0.05);
 }
 
-.explore-dropdown-btn:hover {
+.explore-dropdown-btn:hover,
+.explore-dropdown-btn:focus,
+.explore-dropdown-btn:focus-visible {
   background-color: var(--accent-gold);
   color: #1b436c;
+  outline: none;
 }
 
 .explore-dropdown-btn.active {
@@ -704,9 +722,12 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   color: #ffffff;
 }
 
-.explore-dropdown-btn.active:hover {
+.explore-dropdown-btn.active:hover,
+.explore-dropdown-btn.active:focus,
+.explore-dropdown-btn.active:focus-visible {
   background-color: var(--accent-gold);
   color: #1b436c;
+  outline: none;
 }
 
 .dropdown-divider {
