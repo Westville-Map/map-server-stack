@@ -103,6 +103,7 @@ function isMobileDevice() {
 
 const params = new URLSearchParams(window.location.search);
 const showParams = params.get('show') ? params.get('show').toLowerCase().split(',') : [];
+const hideParams = params.get('hide') ? params.get('hide').toLowerCase().split(',') : [];
 let imageryProvider = (params.get('imagery') || 'njgin').toLowerCase();
 if (imageryProvider !== 'esri' && imageryProvider !== 'njgin') {
     imageryProvider = 'njgin';
