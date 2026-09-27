@@ -1,6 +1,8 @@
 /**
- * Standalone, zero-dependency QR Code Generator with Custom Styling and Centered Westville Pin
- * Error Correction: Level H (~30% recovery) to guarantee scannability with center logo overlay.
+ * Westville QR Code Generator
+ * Core QR Engine: qrcode-generator (c) Kazuhiko Arase (MIT License)
+ * Renderer: High-contrast canvas with vector Westville Pin logo overlay
+ * Error Correction: Level H (High: 30% error recovery)
  */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
@@ -12,442 +14,692 @@
   }
 }(typeof self !== 'undefined' ? self : this, function () {
 
-  // --- Galois Field GF(256) Math for Reed-Solomon ECC ---
-  const EXP_TABLE = new Uint8Array(512);
-  const LOG_TABLE = new Uint8Array(256);
+  // --- qrcode-generator Core by Kazuhiko Arase (MIT License) ---
+  function qrCodeGenerator(typeNumber, errorCorrectionLevel) {
+    const PAD0 = 0xEC;
+    const PAD1 = 0x11;
 
-  (function initGalois() {
-    let x = 1;
-    for (let i = 0; i < 255; i++) {
-      EXP_TABLE[i] = x;
-      LOG_TABLE[x] = i;
-      x <<= 1;
-      if (x & 0x100) {
-        x ^= 0x11d; // Primitive polynomial x^8 + x^4 + x^3 + x^2 + 1
-      }
-    }
-    for (let i = 255; i < 512; i++) {
-      EXP_TABLE[i] = EXP_TABLE[i - 255];
-    }
-  })();
+    let _typeNumber = typeNumber;
+    let _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    let _modules = null;
+    let _moduleCount = 0;
+    let _dataCache = null;
+    const _dataList = [];
 
-  function gfMul(x, y) {
-    if (x === 0 || y === 0) return 0;
-    return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]];
-  }
+    const _this = {};
 
-  function rsGeneratorPoly(numEcBytes) {
-    let poly = [1];
-    for (let i = 0; i < numEcBytes; i++) {
-      const root = EXP_TABLE[i];
-      const next = new Array(poly.length + 1).fill(0);
-      for (let j = 0; j < poly.length; j++) {
-        next[j] ^= gfMul(poly[j], root);
-        next[j + 1] ^= poly[j];
-      }
-      poly = next;
-    }
-    return poly;
-  }
-
-  function rsCompute(dataBytes, numEcBytes) {
-    const gen = rsGeneratorPoly(numEcBytes);
-    const remainder = new Array(numEcBytes).fill(0);
-    for (let i = 0; i < dataBytes.length; i++) {
-      const factor = dataBytes[i] ^ remainder.shift();
-      remainder.push(0);
-      if (factor !== 0) {
-        for (let j = 0; j < numEcBytes; j++) {
-          remainder[j] ^= gfMul(gen[j], factor);
-        }
-      }
-    }
-    return remainder;
-  }
-
-  // --- QR Code Specs for Error Correction Level H (High: 30%) ---
-  // Table per version (1 to 14): [totalBytes, ecBytesPerBlock, numBlocksGroup1, dataBytesPerBlockGroup1, numBlocksGroup2, dataBytesPerBlockGroup2]
-  const TABLE_H = [
-    null,
-    [26, 17, 1, 9, 0, 0],      // V1: 9 data bytes
-    [44, 28, 1, 16, 0, 0],     // V2: 16 data bytes
-    [70, 22, 2, 13, 0, 0],     // V3: 26 data bytes
-    [100, 16, 4, 9, 0, 0],     // V4: 36 data bytes
-    [134, 22, 2, 11, 2, 12],   // V5: 46 data bytes
-    [172, 28, 4, 15, 0, 0],    // V6: 60 data bytes
-    [196, 26, 4, 13, 1, 14],   // V7: 66 data bytes
-    [242, 26, 4, 14, 2, 15],   // V8: 86 data bytes
-    [292, 24, 4, 12, 4, 13],   // V9: 100 data bytes
-    [346, 28, 6, 15, 2, 16],   // V10: 122 data bytes
-    [404, 24, 4, 22, 4, 23],   // V11: 180 data bytes
-    [466, 28, 6, 20, 2, 21],   // V12: 162 data bytes
-    [532, 22, 8, 20, 4, 21],   // V13: 244 data bytes
-    [581, 24, 10, 18, 2, 19]   // V14: 218 data bytes
-  ];
-
-  // Alignment pattern table locations
-  const ALIGNMENT_PATTERN_POS = [
-    [],
-    [],
-    [6, 18],
-    [6, 22],
-    [6, 26],
-    [6, 30],
-    [6, 34],
-    [6, 22, 38],
-    [6, 24, 42],
-    [6, 26, 46],
-    [6, 28, 50],
-    [6, 30, 54],
-    [6, 32, 58],
-    [6, 34, 62],
-    [6, 26, 46, 66]
-  ];
-
-  // Format info bits for Level H (Mask 0 to 7)
-  const FORMAT_INFO_H = [
-    0x1689, 0x13be, 0x1ce7, 0x19d0, 0x0762, 0x0255, 0x0d0c, 0x083b
-  ];
-
-  // Encode UTF-8 string to byte array
-  function utf8Encode(str) {
-    if (typeof TextEncoder !== 'undefined') {
-      return new TextEncoder().encode(str);
-    }
-    const bytes = [];
-    for (let i = 0; i < str.length; i++) {
-      let c = str.charCodeAt(i);
-      if (c < 0x80) {
-        bytes.push(c);
-      } else if (c < 0x800) {
-        bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
-      } else if (c < 0xd800 || c >= 0xe000) {
-        bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
-      } else {
-        i++;
-        c = 0x10000 + (((c & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
-        bytes.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 0x3f), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
-      }
-    }
-    return new Uint8Array(bytes);
-  }
-
-  // Pick smallest QR version supporting data length at Level H
-  function chooseVersion(dataLen) {
-    for (let v = 1; v < TABLE_H.length; v++) {
-      const [totalBytes, ecBytes, g1Blocks, g1Data, g2Blocks, g2Data] = TABLE_H[v];
-      const maxData = (g1Blocks * g1Data) + (g2Blocks * g2Data);
-      const charCountBits = (v <= 9) ? 8 : 16;
-      const headerBits = 4 + charCountBits; // 4 bit mode indicator + length
-      const requiredBytes = Math.ceil((headerBits + dataLen * 8) / 8);
-      if (requiredBytes <= maxData) {
-        return v;
-      }
-    }
-    throw new Error('Data string too long for Level H QR Code generation.');
-  }
-
-  // Bit Buffer helper
-  class BitBuffer {
-    constructor() {
-      this.buffer = [];
-      this.length = 0;
-    }
-    put(num, length) {
-      for (let i = length - 1; i >= 0; i--) {
-        this.buffer.push((num >>> i) & 1);
-        this.length++;
-      }
-    }
-    getBytes() {
-      const bytes = [];
-      for (let i = 0; i < this.buffer.length; i += 8) {
-        let b = 0;
-        for (let j = 0; j < 8 && i + j < this.buffer.length; j++) {
-          b = (b << 1) | this.buffer[i + j];
-        }
-        bytes.push(b);
-      }
-      return bytes;
-    }
-  }
-
-  function buildQrMatrix(text) {
-    const dataBytes = utf8Encode(text);
-    const version = chooseVersion(dataBytes.length);
-    const [totalBytes, ecBytesPerBlock, g1Blocks, g1Data, g2Blocks, g2Data] = TABLE_H[version];
-    const totalDataCapacity = (g1Blocks * g1Data) + (g2Blocks * g2Data);
-
-    const bb = new BitBuffer();
-    // 1. Mode indicator: Byte mode (0100)
-    bb.put(0x4, 4);
-    // 2. Character count indicator
-    const charCountBits = (version <= 9) ? 8 : 16;
-    bb.put(dataBytes.length, charCountBits);
-    // 3. Data bytes
-    for (let i = 0; i < dataBytes.length; i++) {
-      bb.put(dataBytes[i], 8);
-    }
-    // 4. Terminator
-    const remainingBits = (totalDataCapacity * 8) - bb.length;
-    const termLen = Math.min(4, remainingBits);
-    bb.put(0x0, termLen);
-    // 5. Pad to byte boundary
-    while (bb.length % 8 !== 0) {
-      bb.put(0, 1);
-    }
-    // 6. Pad bytes 0xEC, 0x11
-    const padBytes = [0xEC, 0x11];
-    let padIdx = 0;
-    while (bb.length < totalDataCapacity * 8) {
-      bb.put(padBytes[padIdx % 2], 8);
-      padIdx++;
-    }
-
-    const allData = bb.getBytes();
-
-    // 7. Divide into blocks and compute Reed-Solomon error correction
-    const dataBlocks = [];
-    const ecBlocks = [];
-    let offset = 0;
-
-    for (let i = 0; i < g1Blocks; i++) {
-      const block = allData.slice(offset, offset + g1Data);
-      offset += g1Data;
-      dataBlocks.push(block);
-      ecBlocks.push(rsCompute(block, ecBytesPerBlock));
-    }
-    for (let i = 0; i < g2Blocks; i++) {
-      const block = allData.slice(offset, offset + g2Data);
-      offset += g2Data;
-      dataBlocks.push(block);
-      ecBlocks.push(rsCompute(block, ecBytesPerBlock));
-    }
-
-    // 8. Interleave data bytes and EC bytes
-    const finalCodewords = [];
-    const maxDataLen = Math.max(g1Data, g2Data);
-    for (let j = 0; j < maxDataLen; j++) {
-      for (let i = 0; i < dataBlocks.length; i++) {
-        if (j < dataBlocks[i].length) {
-          finalCodewords.push(dataBlocks[i][j]);
-        }
-      }
-    }
-    for (let j = 0; j < ecBytesPerBlock; j++) {
-      for (let i = 0; i < ecBlocks.length; i++) {
-        finalCodewords.push(ecBlocks[i][j]);
-      }
-    }
-
-    // 9. Create module matrix
-    const size = version * 4 + 17;
-    const matrix = Array.from({ length: size }, () => new Array(size).fill(null));
-    const isFunction = Array.from({ length: size }, () => new Array(size).fill(false));
-
-    function setFunctionModule(r, c, val) {
-      matrix[r][c] = val ? 1 : 0;
-      isFunction[r][c] = true;
-    }
-
-    // Finder patterns
-    function placeFinder(topR, topC) {
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 7; c++) {
-          const isBlack = (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
-          setFunctionModule(topR + r, topC + c, isBlack);
-        }
-      }
-    }
-    placeFinder(0, 0);
-    placeFinder(0, size - 7);
-    placeFinder(size - 7, 0);
-
-    // Separators
-    for (let i = 0; i < 8; i++) {
-      // Top-left
-      if (i < size) {
-        setFunctionModule(7, i, false);
-        setFunctionModule(i, 7, false);
-      }
-      // Top-right
-      if (size - 8 + i < size) {
-        setFunctionModule(7, size - 8 + i, false);
-        setFunctionModule(i, size - 8, false);
-      }
-      // Bottom-left
-      if (size - 8 + i < size) {
-        setFunctionModule(size - 8, i, false);
-        setFunctionModule(size - 8 + i, 7, false);
-      }
-    }
-
-    // Alignment patterns
-    const alignPos = ALIGNMENT_PATTERN_POS[version];
-    for (let i = 0; i < alignPos.length; i++) {
-      for (let j = 0; j < alignPos.length; j++) {
-        const r = alignPos[i];
-        const c = alignPos[j];
-        if (isFunction[r][c]) continue; // Skip finders
-        for (let dr = -2; dr <= 2; dr++) {
-          for (let dc = -2; dc <= 2; dc++) {
-            const isBlack = (Math.abs(dr) === 2 || Math.abs(dc) === 2 || (dr === 0 && dc === 0));
-            setFunctionModule(r + dr, c + dc, isBlack);
-          }
-        }
-      }
-    }
-
-    // Timing patterns
-    for (let i = 8; i < size - 8; i++) {
-      if (!isFunction[6][i]) setFunctionModule(6, i, i % 2 === 0);
-      if (!isFunction[i][6]) setFunctionModule(i, 6, i % 2 === 0);
-    }
-
-    // Dark module
-    setFunctionModule(4 * version + 9, 8, true);
-
-    // Reserve Format Info Area
-    for (let i = 0; i < 9; i++) {
-      if (!isFunction[8][i]) isFunction[8][i] = true;
-      if (!isFunction[i][8]) isFunction[i][8] = true;
-    }
-    for (let i = 0; i < 8; i++) {
-      if (!isFunction[8][size - 1 - i]) isFunction[8][size - 1 - i] = true;
-      if (!isFunction[size - 1 - i][8]) isFunction[size - 1 - i] = true;
-    }
-
-    // 10. Place Data Codewords (Zigzag)
-    let codewordBits = [];
-    for (let i = 0; i < finalCodewords.length; i++) {
-      for (let b = 7; b >= 0; b--) {
-        codewordBits.push((finalCodewords[i] >>> b) & 1);
-      }
-    }
-
-    let bitIdx = 0;
-    let upwards = true;
-    for (let right = size - 1; right > 0; right -= 2) {
-      if (right === 6) right--; // Skip vertical timing pattern
-      const rows = upwards ? Array.from({ length: size }, (_, i) => size - 1 - i) : Array.from({ length: size }, (_, i) => i);
-      for (let r of rows) {
-        for (let colOffset = 0; colOffset < 2; colOffset++) {
-          const c = right - colOffset;
-          if (!isFunction[r][c]) {
-            matrix[r][c] = (bitIdx < codewordBits.length) ? codewordBits[bitIdx] : 0;
-            bitIdx++;
-          }
-        }
-      }
-      upwards = !upwards;
-    }
-
-    // 11. Mask Evaluation (Pick mask pattern 0-7 with lowest penalty)
-    function getMaskBit(mask, r, c) {
-      switch (mask) {
-        case 0: return (r + c) % 2 === 0;
-        case 1: return r % 2 === 0;
-        case 2: return c % 3 === 0;
-        case 3: return (r + c) % 3 === 0;
-        case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
-        case 5: return ((r * c) % 2) + ((r * c) % 3) === 0;
-        case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
-        case 7: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
-      }
-      return false;
-    }
-
-    function evaluatePenalty(testMatrix) {
-      let penalty = 0;
-      // Rule 1: 5+ consecutive modules of same color
-      for (let r = 0; r < size; r++) {
-        let runColor = -1, runLen = 0;
-        for (let c = 0; c < size; c++) {
-          if (testMatrix[r][c] === runColor) {
-            runLen++;
-            if (runLen === 5) penalty += 3;
-            else if (runLen > 5) penalty += 1;
-          } else {
-            runColor = testMatrix[r][c];
-            runLen = 1;
-          }
-        }
-      }
-      for (let c = 0; c < size; c++) {
-        let runColor = -1, runLen = 0;
-        for (let r = 0; r < size; r++) {
-          if (testMatrix[r][c] === runColor) {
-            runLen++;
-            if (runLen === 5) penalty += 3;
-            else if (runLen > 5) penalty += 1;
-          } else {
-            runColor = testMatrix[r][c];
-            runLen = 1;
-          }
-        }
-      }
-      // Rule 2: 2x2 blocks of same color
-      for (let r = 0; r < size - 1; r++) {
-        for (let c = 0; c < size - 1; c++) {
-          const val = testMatrix[r][c];
-          if (val === testMatrix[r + 1][c] && val === testMatrix[r][c + 1] && val === testMatrix[r + 1][c + 1]) {
-            penalty += 3;
-          }
-        }
-      }
-      return penalty;
-    }
-
-    let bestMask = 0;
-    let minPenalty = Infinity;
-    let bestMatrix = null;
-
-    for (let mask = 0; mask < 8; mask++) {
-      const masked = matrix.map((row, r) =>
-        row.map((val, c) => {
-          if (isFunction[r][c]) return val;
-          return val ^ (getMaskBit(mask, r, c) ? 1 : 0);
-        })
-      );
-
-      // Write format info bits for this mask
-      const formatBits = FORMAT_INFO_H[mask];
-      // Place 15 format bits
-      for (let i = 0; i < 15; i++) {
-        const bit = (formatBits >>> (14 - i)) & 1;
-        // Top-left
-        if (i < 6) masked[8][i] = bit;
-        else if (i === 6) masked[8][7] = bit;
-        else if (i === 7) masked[8][8] = bit;
-        else if (i === 8) masked[7][8] = bit;
-        else masked[14 - i][8] = bit;
-
-        // Split around bottom-left & top-right
-        if (i < 8) masked[size - 1 - i][8] = bit;
-        else masked[8][size - 15 + i] = bit;
-      }
-
-      const p = evaluatePenalty(masked);
-      if (p < minPenalty) {
-        minPenalty = p;
-        bestMask = mask;
-        bestMatrix = masked;
-      }
-    }
-
-    return {
-      size,
-      version,
-      matrix: bestMatrix
+    _this.addData = function(data) {
+      const newData = qr8BitByte(data);
+      _dataList.push(newData);
+      _dataCache = null;
     };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw new Error(row + "," + col);
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        let typeNumber = 1;
+        for (typeNumber = 1; typeNumber < 40; typeNumber++) {
+          const rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          const buffer = qrBitBuffer();
+          let totalDataCount = 0;
+          for (let i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+          for (let i = 0; i < _dataList.length; i++) {
+            const data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber));
+            data.write(buffer);
+          }
+          if (buffer.getLengthInBits() <= totalDataCount * 8) break;
+        }
+        _typeNumber = typeNumber;
+      }
+      makeImpl(false, getBestMaskPattern());
+    };
+
+    function makeImpl(test, maskPattern) {
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = new Array(_moduleCount);
+      for (let row = 0; row < _moduleCount; row++) {
+        _modules[row] = new Array(_moduleCount);
+        for (let col = 0; col < _moduleCount; col++) {
+          _modules[row][col] = null;
+        }
+      }
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+      mapData(_dataCache, maskPattern);
+    }
+
+    function setupPositionProbePattern(row, col) {
+      for (let r = -1; r <= 7; r++) {
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+        for (let c = -1; c <= 7; c++) {
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+          if ((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
+              (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
+              (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    }
+
+    function getBestMaskPattern() {
+      let minLostPoint = 0;
+      let pattern = 0;
+      for (let i = 0; i < 8; i++) {
+        makeImpl(true, i);
+        const lostPoint = QRUtil.getLostPoint(_this);
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+      return pattern;
+    }
+
+    function setupTimingPattern() {
+      for (let r = 8; r < _moduleCount - 8; r++) {
+        if (_modules[r][6] != null) continue;
+        _modules[r][6] = (r % 2 == 0);
+      }
+      for (let c = 8; c < _moduleCount - 8; c++) {
+        if (_modules[6][c] != null) continue;
+        _modules[6][c] = (c % 2 == 0);
+      }
+    }
+
+    function setupPositionAdjustPattern() {
+      const pos = QRUtil.getPatternPosition(_typeNumber);
+      for (let i = 0; i < pos.length; i++) {
+        for (let j = 0; j < pos.length; j++) {
+          const row = pos[i];
+          const col = pos[j];
+          if (_modules[row][col] != null) continue;
+          for (let r = -2; r <= 2; r++) {
+            for (let c = -2; c <= 2; c++) {
+              if (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0)) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function setupTypeNumber(test) {
+      const bits = QRUtil.getBCHTypeNumber(_typeNumber);
+      for (let i = 0; i < 18; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+      for (let i = 0; i < 18; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    }
+
+    function setupTypeInfo(test, maskPattern) {
+      const data = (_errorCorrectionLevel << 3) | maskPattern;
+      const bits = QRUtil.getBCHTypeInfo(data);
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) == 1);
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i == 8) {
+          _modules[8][15 - i] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+      _modules[_moduleCount - 8][8] = !test;
+    }
+
+    function mapData(data, maskPattern) {
+      let inc = -1;
+      let row = _moduleCount - 1;
+      let bitIndex = 7;
+      let byteIndex = 0;
+      const maskFunction = QRUtil.getMaskFunction(maskPattern);
+
+      for (let col = _moduleCount - 1; col > 0; col -= 2) {
+        if (col == 6) col--;
+        while (true) {
+          for (let c = 0; c < 2; c++) {
+            if (_modules[row][col - c] == null) {
+              let dark = false;
+              if (byteIndex < data.length) {
+                dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+              const mask = maskFunction(row, col - c);
+              if (mask) {
+                dark = !dark;
+              }
+              _modules[row][col - c] = dark;
+              bitIndex--;
+              if (bitIndex == -1) {
+                byteIndex++;
+                bitIndex = 7;
+              }
+            }
+          }
+          row += inc;
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    }
+
+    function createData(typeNumber, errorCorrectionLevel, dataList) {
+      const rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+      const buffer = qrBitBuffer();
+      for (let i = 0; i < dataList.length; i++) {
+        const data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber));
+        data.write(buffer);
+      }
+      let totalDataCount = 0;
+      for (let i = 0; i < rsBlocks.length; i++) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw new Error("code length overflow. (" + buffer.getLengthInBits() + ">" + totalDataCount * 8 + ")");
+      }
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+      while (true) {
+        if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(PAD0, 8);
+        if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(PAD1, 8);
+      }
+      return createBytes(buffer, rsBlocks);
+    }
+
+    function createBytes(buffer, rsBlocks) {
+      let offset = 0;
+      let maxDcCount = 0;
+      let maxEcCount = 0;
+      const dcdata = new Array(rsBlocks.length);
+      const ecdata = new Array(rsBlocks.length);
+
+      for (let r = 0; r < rsBlocks.length; r++) {
+        const dcCount = rsBlocks[r].dataCount;
+        const ecCount = rsBlocks[r].totalCount - dcCount;
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+        dcdata[r] = new Array(dcCount);
+        for (let i = 0; i < dcdata[r].length; i++) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+        const rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        const rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+        const modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (let i = 0; i < ecdata[r].length; i++) {
+          const modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+        }
+      }
+
+      let totalCodeCount = 0;
+      for (let i = 0; i < rsBlocks.length; i++) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+      const data = new Array(totalCodeCount);
+      let index = 0;
+      for (let i = 0; i < maxDcCount; i++) {
+        for (let r = 0; r < rsBlocks.length; r++) {
+          if (i < dcdata[r].length) {
+            data[index++] = dcdata[r][i];
+          }
+        }
+      }
+      for (let i = 0; i < maxEcCount; i++) {
+        for (let r = 0; r < rsBlocks.length; r++) {
+          if (i < ecdata[r].length) {
+            data[index++] = ecdata[r][i];
+          }
+        }
+      }
+      return data;
+    }
+
+    return _this;
   }
 
-  // --- HTML5 Canvas & Vector Pin Rendering ---
+  // --- Constants & Utilities ---
+  const QRErrorCorrectionLevel = { L: 1, M: 0, Q: 3, H: 2 };
+  const QRMode = { MODE_NUMBER: 1 << 0, MODE_ALPHA_NUM: 1 << 1, MODE_8BIT_BYTE: 1 << 2, MODE_KANJI: 1 << 3 };
+  const QRMaskPattern = { PATTERN000: 0, PATTERN001: 1, PATTERN010: 2, PATTERN011: 3, PATTERN100: 4, PATTERN101: 5, PATTERN110: 6, PATTERN111: 7 };
+
+  const QRUtil = {
+    PATTERN_POSITION_TABLE: [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ],
+    G15: (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18: (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK: (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1),
+
+    getBCHTypeInfo: function(data) {
+      let d = data << 10;
+      while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+        d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15)));
+      }
+      return ((data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+
+    getBCHTypeNumber: function(data) {
+      let d = data << 12;
+      while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+        d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18)));
+      }
+      return (data << 12) | d;
+    },
+
+    getBCHDigit: function(data) {
+      let digit = 0;
+      while (data != 0) {
+        digit++;
+        data >>>= 1;
+      }
+      return digit;
+    },
+
+    getPatternPosition: function(typeNumber) {
+      return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1] || [];
+    },
+
+    getMaskFunction: function(maskPattern) {
+      switch (maskPattern) {
+        case QRMaskPattern.PATTERN000: return function(i, j) { return (i + j) % 2 == 0; };
+        case QRMaskPattern.PATTERN001: return function(i, j) { return i % 2 == 0; };
+        case QRMaskPattern.PATTERN010: return function(i, j) { return j % 3 == 0; };
+        case QRMaskPattern.PATTERN011: return function(i, j) { return (i + j) % 3 == 0; };
+        case QRMaskPattern.PATTERN100: return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 == 0; };
+        case QRMaskPattern.PATTERN101: return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+        case QRMaskPattern.PATTERN110: return function(i, j) { return ((i * j) % 2 + (i * j) % 3) % 2 == 0; };
+        case QRMaskPattern.PATTERN111: return function(i, j) { return ((i * j) % 3 + (i + j) % 2) % 2 == 0; };
+        default: throw new Error("bad maskPattern:" + maskPattern);
+      }
+    },
+
+    getErrorCorrectPolynomial: function(errorCorrectLength) {
+      let a = qrPolynomial([1], 0);
+      for (let i = 0; i < errorCorrectLength; i++) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0));
+      }
+      return a;
+    },
+
+    getLengthInBits: function(mode, type) {
+      if (1 <= type && type < 10) {
+        switch (mode) {
+          case QRMode.MODE_NUMBER: return 10;
+          case QRMode.MODE_ALPHA_NUM: return 9;
+          case QRMode.MODE_8BIT_BYTE: return 8;
+          case QRMode.MODE_KANJI: return 8;
+          default: throw new Error("mode:" + mode);
+        }
+      } else if (type < 27) {
+        switch (mode) {
+          case QRMode.MODE_NUMBER: return 12;
+          case QRMode.MODE_ALPHA_NUM: return 11;
+          case QRMode.MODE_8BIT_BYTE: return 16;
+          case QRMode.MODE_KANJI: return 10;
+          default: throw new Error("mode:" + mode);
+        }
+      } else if (type < 41) {
+        switch (mode) {
+          case QRMode.MODE_NUMBER: return 14;
+          case QRMode.MODE_ALPHA_NUM: return 13;
+          case QRMode.MODE_8BIT_BYTE: return 16;
+          case QRMode.MODE_KANJI: return 12;
+          default: throw new Error("mode:" + mode);
+        }
+      } else {
+        throw new Error("type:" + type);
+      }
+    },
+
+    getLostPoint: function(qrCode) {
+      const moduleCount = qrCode.getModuleCount();
+      let lostPoint = 0;
+
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          let sameCount = 0;
+          const dark = qrCode.isDark(row, col);
+          for (let r = -1; r <= 1; r++) {
+            if (row + r < 0 || moduleCount <= row + r) continue;
+            for (let c = -1; c <= 1; c++) {
+              if (col + c < 0 || moduleCount <= col + c) continue;
+              if (r == 0 && c == 0) continue;
+              if (dark == qrCode.isDark(row + r, col + c)) {
+                sameCount++;
+              }
+            }
+          }
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      }
+
+      for (let row = 0; row < moduleCount - 1; row++) {
+        for (let col = 0; col < moduleCount - 1; col++) {
+          let count = 0;
+          if (qrCode.isDark(row, col)) count++;
+          if (qrCode.isDark(row + 1, col)) count++;
+          if (qrCode.isDark(row, col + 1)) count++;
+          if (qrCode.isDark(row + 1, col + 1)) count++;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount - 6; col++) {
+          if (qrCode.isDark(row, col) &&
+              !qrCode.isDark(row, col + 1) &&
+              qrCode.isDark(row, col + 2) &&
+              qrCode.isDark(row, col + 3) &&
+              qrCode.isDark(row, col + 4) &&
+              !qrCode.isDark(row, col + 5) &&
+              qrCode.isDark(row, col + 6)) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (let col = 0; col < moduleCount; col++) {
+        for (let row = 0; row < moduleCount - 6; row++) {
+          if (qrCode.isDark(row, col) &&
+              !qrCode.isDark(row + 1, col) &&
+              qrCode.isDark(row + 2, col) &&
+              qrCode.isDark(row + 3, col) &&
+              qrCode.isDark(row + 4, col) &&
+              !qrCode.isDark(row + 5, col) &&
+              qrCode.isDark(row + 6, col)) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      let darkCount = 0;
+      for (let col = 0; col < moduleCount; col++) {
+        for (let row = 0; row < moduleCount; row++) {
+          if (qrCode.isDark(row, col)) darkCount++;
+        }
+      }
+      const ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    }
+  };
+
+  // --- Galois Field Math ---
+  const QRMath = {
+    glog: function(n) {
+      if (n < 1) throw new Error("glog(" + n + ")");
+      return QRMath.LOG_TABLE[n];
+    },
+    gexp: function(n) {
+      while (n < 0) n += 255;
+      while (n >= 256) n -= 255;
+      return QRMath.EXP_TABLE[n];
+    },
+    EXP_TABLE: new Array(256),
+    LOG_TABLE: new Array(256)
+  };
+
+  for (let i = 0; i < 8; i++) QRMath.EXP_TABLE[i] = 1 << i;
+  for (let i = 8; i < 256; i++) QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4] ^ QRMath.EXP_TABLE[i - 5] ^ QRMath.EXP_TABLE[i - 6] ^ QRMath.EXP_TABLE[i - 8];
+  for (let i = 0; i < 255; i++) QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]] = i;
+
+  function qrPolynomial(num, shift) {
+    if (num.length == undefined) throw new Error(num.length + "/" + shift);
+    let offset = 0;
+    while (offset < num.length && num[offset] == 0) offset++;
+    const _num = new Array(num.length - offset + shift);
+    for (let i = 0; i < num.length - offset; i++) _num[i] = num[i + offset];
+
+    const _this = {};
+    _this.get = function(index) { return _num[index]; };
+    _this.getLength = function() { return _num.length; };
+    _this.multiply = function(e) {
+      const num = new Array(_this.getLength() + e.getLength() - 1);
+      for (let i = 0; i < _this.getLength(); i++) {
+        for (let j = 0; j < e.getLength(); j++) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.get(i)) + QRMath.glog(e.get(j)));
+        }
+      }
+      return qrPolynomial(num, 0);
+    };
+    _this.mod = function(e) {
+      if (_this.getLength() - e.getLength() < 0) return _this;
+      const ratio = QRMath.glog(_this.get(0)) - QRMath.glog(e.get(0));
+      const num = new Array(_this.getLength());
+      for (let i = 0; i < _this.getLength(); i++) num[i] = _this.get(i);
+      for (let i = 0; i < e.getLength(); i++) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+      }
+      return qrPolynomial(num, 0).mod(e);
+    };
+    return _this;
+  }
+
+  function QRRSBlock(totalCount, dataCount) {
+    const _this = {};
+    _this.totalCount = totalCount;
+    _this.dataCount = dataCount;
+    return _this;
+  }
+
+  QRRSBlock.RS_BLOCK_TABLE = [
+    // 1-5
+    [1, 26, 19], [1, 26, 16], [1, 26, 13], [1, 26, 9],
+    [1, 44, 34], [1, 44, 28], [1, 44, 22], [1, 44, 16],
+    [1, 70, 55], [1, 70, 44], [2, 35, 17], [2, 35, 13],
+    [1, 100, 80], [2, 50, 32], [2, 50, 24], [4, 25, 9],
+    [1, 134, 108], [2, 67, 43], [2, 33, 15, 2, 34, 16], [2, 33, 11, 2, 34, 12],
+    // 6-10
+    [2, 86, 68], [4, 43, 27], [4, 43, 19], [4, 43, 15],
+    [2, 98, 78], [4, 49, 31], [2, 32, 14, 4, 33, 15], [4, 39, 13, 1, 40, 14],
+    [2, 121, 97], [2, 60, 38, 2, 61, 39], [4, 40, 18, 2, 41, 19], [4, 40, 14, 2, 41, 15],
+    [2, 146, 116], [3, 58, 36, 2, 59, 37], [4, 36, 16, 4, 37, 17], [4, 36, 12, 4, 37, 13],
+    [2, 86, 68, 2, 87, 69], [4, 69, 43, 1, 70, 44], [6, 43, 19, 2, 44, 20], [6, 43, 15, 2, 44, 16],
+    // 11-15
+    [4, 101, 81], [1, 80, 50, 4, 81, 51], [4, 50, 22, 4, 51, 23], [3, 36, 12, 8, 37, 13],
+    [2, 116, 92, 2, 117, 93], [6, 58, 36, 2, 59, 37], [4, 46, 20, 6, 47, 21], [7, 42, 14, 4, 43, 15],
+    [4, 133, 107], [8, 59, 37, 1, 60, 38], [8, 44, 20, 4, 45, 21], [12, 33, 11, 4, 34, 12],
+    [3, 145, 115, 1, 146, 116], [4, 64, 40, 5, 65, 41], [11, 36, 16, 5, 37, 17], [11, 36, 12, 5, 37, 13],
+    [5, 109, 87, 1, 110, 88], [5, 65, 41, 5, 66, 42], [5, 54, 24, 7, 55, 25], [11, 36, 12, 7, 37, 13]
+  ];
+
+  QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+    const rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectionLevel);
+    if (rsBlock == undefined) throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectionLevel:" + errorCorrectionLevel);
+    const length = rsBlock.length / 3;
+    const list = [];
+    for (let i = 0; i < length; i++) {
+      const count = rsBlock[i * 3 + 0];
+      const totalCount = rsBlock[i * 3 + 1];
+      const dataCount = rsBlock[i * 3 + 2];
+      for (let j = 0; j < count; j++) {
+        list.push(QRRSBlock(totalCount, dataCount));
+      }
+    }
+    return list;
+  };
+
+  QRRSBlock.getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+    switch (errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default: return undefined;
+    }
+  };
+
+  function qrBitBuffer() {
+    const _buffer = [];
+    let _length = 0;
+    const _this = {};
+    _this.getBuffer = function() { return _buffer; };
+    _this.get = function(index) {
+      const bufIndex = Math.floor(index / 8);
+      return ((_buffer[bufIndex] >>> (7 - index % 8)) & 1) == 1;
+    };
+    _this.put = function(num, length) {
+      for (let i = 0; i < length; i++) {
+        _this.putBit(((num >>> (length - i - 1)) & 1) == 1);
+      }
+    };
+    _this.getLengthInBits = function() { return _length; };
+    _this.putBit = function(bit) {
+      const bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) _buffer.push(0);
+      if (bit) _buffer[bufIndex] |= (0x80 >>> (_length % 8));
+      _length++;
+    };
+    return _this;
+  }
+
+  function qr8BitByte(data) {
+    const _mode = QRMode.MODE_8BIT_BYTE;
+    const _data = data;
+    const _parsedData = [];
+
+    // UTF-8 encode string
+    for (let i = 0; i < _data.length; i++) {
+      const byteArray = [];
+      const code = _data.charCodeAt(i);
+      if (code > 0x10000) {
+        byteArray[0] = 0xF0 | ((code & 0x1C0000) >>> 18);
+        byteArray[1] = 0x80 | ((code & 0x3F000) >>> 12);
+        byteArray[2] = 0x80 | ((code & 0xFC0) >>> 6);
+        byteArray[3] = 0x80 | (code & 0x3F);
+      } else if (code > 0x800) {
+        byteArray[0] = 0xE0 | ((code & 0xF000) >>> 12);
+        byteArray[1] = 0x80 | ((code & 0xFC0) >>> 6);
+        byteArray[2] = 0x80 | (code & 0x3F);
+      } else if (code > 0x80) {
+        byteArray[0] = 0xC0 | ((code & 0x7C0) >>> 6);
+        byteArray[1] = 0x80 | (code & 0x3F);
+      } else {
+        byteArray[0] = code;
+      }
+      for (let j = 0; j < byteArray.length; j++) {
+        _parsedData.push(byteArray[j]);
+      }
+    }
+
+    const _this = {};
+    _this.getMode = function() { return _mode; };
+    _this.getLength = function(buffer) { return _parsedData.length; };
+    _this.write = function(buffer) {
+      for (let i = 0; i < _parsedData.length; i++) {
+        buffer.put(_parsedData[i], 8);
+      }
+    };
+    return _this;
+  }
+
+  // --- High Contrast Canvas & Westville Pin Vector Overlay ---
 
   /**
    * Render Westville Pin Vector directly on 2D Canvas
    */
-  function drawWestvillePin(ctx, cx, cy, pinW, pinH, options = {}) {
+  function drawWestvillePin(ctx, cx, cy, pinW, pinH, options) {
+    options = options || {};
     const primaryColor = options.pinFill || '#4e73ac';
     const goldColor = options.pinStroke || '#e5c158';
 
@@ -490,27 +742,28 @@
   }
 
   /**
-   * Generate a styled QR Code Canvas with rounded dots and centered Westville Pin
+   * Generate High-Contrast Branded QR Code Canvas
    */
-  function generateQRCodeCanvas(text, options = {}) {
-    const qr = buildQrMatrix(text);
-    const size = qr.size;
+  function generateQRCodeCanvas(text, options) {
+    options = options || {};
+    // Auto-detect typeNumber with Level H (High: 30% error recovery)
+    const qr = qrCodeGenerator(0, 'H');
+    qr.addData(text);
+    qr.make();
 
+    const moduleCount = qr.getModuleCount();
     const canvasSize = options.size || 400;
-    const quietZone = options.quietZone !== undefined ? options.quietZone : 4;
-    const totalModules = size + quietZone * 2;
+    const margin = options.margin !== undefined ? options.margin : 4; // 4 module quiet zone
+    const totalModules = moduleCount + margin * 2;
     const moduleSize = canvasSize / totalModules;
 
-    const moduleColor = options.colorDark || '#1a4d7c';   // Westville Navy / Blue
+    const moduleColor = options.colorDark || '#1a4d7c';   // High-contrast Navy / Blue
     const bgColor = options.colorLight || '#ffffff';       // Option B: Crisp White
-    const eyeOuterColor = options.eyeOuterColor || moduleColor;
-    const eyeInnerColor = options.eyeInnerColor || moduleColor;
 
     let canvas;
     if (typeof document !== 'undefined') {
       canvas = document.createElement('canvas');
     } else {
-      // For testing in node if canvas shim provided
       return null;
     }
 
@@ -518,102 +771,38 @@
     canvas.height = canvasSize;
     const ctx = canvas.getContext('2d');
 
-    // 1. Draw Background
+    // 1. Draw solid background
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Helper: Is cell in any of the 3 finder pattern areas (including 1 cell quiet border)
-    function isFinder(r, c) {
-      if (r < 8 && c < 8) return true; // Top-Left
-      if (r < 8 && c >= size - 8) return true; // Top-Right
-      if (r >= size - 8 && c < 8) return true; // Bottom-Left
-      return false;
-    }
-
-    // Helper: Draw rounded rectangle
-    function roundRect(ctx, x, y, w, h, r) {
-      if (w < 2 * r) r = w / 2;
-      if (h < 2 * r) r = h / 2;
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-    }
-
-    // 2. Draw Finder Patterns (Corner Eyes) with rounded elegant styling
-    function drawFinderEye(r, c) {
-      const x = (c + quietZone) * moduleSize;
-      const y = (r + quietZone) * moduleSize;
-      const w = 7 * moduleSize;
-      const cornerR = moduleSize * 1.8;
-
-      // Outer Ring
-      ctx.fillStyle = eyeOuterColor;
-      roundRect(ctx, x, y, w, w, cornerR);
-      ctx.fill();
-
-      // Inner White Cutout
-      ctx.fillStyle = bgColor;
-      const cutW = 5 * moduleSize;
-      roundRect(ctx, x + moduleSize, y + moduleSize, cutW, cutW, cornerR * 0.7);
-      ctx.fill();
-
-      // Inner Center Eye
-      ctx.fillStyle = eyeInnerColor;
-      const eyeW = 3 * moduleSize;
-      roundRect(ctx, x + 2 * moduleSize, y + 2 * moduleSize, eyeW, eyeW, cornerR * 0.5);
-      ctx.fill();
-    }
-
-    drawFinderEye(0, 0);
-    drawFinderEye(0, size - 7);
-    drawFinderEye(size - 7, 0);
-
-    // 3. Define Center Logo Exclusion Zone (Center ~22% of matrix)
-    const centerRadiusMod = Math.floor(size * 0.16); // Modules around center to shield
-    const centerModule = Math.floor(size / 2);
-    const minCenterMod = centerModule - centerRadiusMod;
-    const maxCenterMod = centerModule + centerRadiusMod;
-
-    // 4. Draw Standard Data Modules
+    // 2. Draw 100% Solid High-Contrast Data Modules
     ctx.fillStyle = moduleColor;
-    const dotRadius = moduleSize * 0.35; // Soft rounded dots
-
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (isFinder(r, c)) continue;
-        if (qr.matrix[r][c] === 1) {
-          // Check if module falls inside center logo zone
-          if (r >= minCenterMod && r <= maxCenterMod && c >= minCenterMod && c <= maxCenterMod) {
-            continue; // Keep logo area clear for 100% scan decoding
-          }
-          const x = (c + quietZone) * moduleSize;
-          const y = (r + quietZone) * moduleSize;
-
-          // Draw rounded module
-          ctx.beginPath();
-          ctx.arc(x + moduleSize / 2, y + moduleSize / 2, dotRadius, 0, Math.PI * 2);
-          ctx.fill();
+    for (let r = 0; r < moduleCount; r++) {
+      for (let c = 0; c < moduleCount; c++) {
+        if (qr.isDark(r, c)) {
+          const x = (c + margin) * moduleSize;
+          const y = (r + margin) * moduleSize;
+          // Fill full module square to ensure crisp scanner thresholding
+          ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(moduleSize), Math.ceil(moduleSize));
         }
       }
     }
 
-    // 5. Draw Center Logo Shield & Westville Pin
+    // 3. Draw Centered Westville Pin Logo with Clean White Halo Shield
+    // Logo radius occupies ~18% of total width (well within Level H 30% recovery margin)
     const centerPx = canvasSize / 2;
-    const logoAreaW = (maxCenterMod - minCenterMod + 1.2) * moduleSize;
-    const logoAreaH = logoAreaW * 1.15;
+    const logoW = canvasSize * 0.19;
+    const logoH = logoW * 1.2;
+    const haloRadius = logoW * 0.65;
 
-    // Clear background circle/shield behind pin
+    // Draw circular white background halo to isolate the logo from dark modules
     ctx.fillStyle = bgColor;
     ctx.beginPath();
-    ctx.arc(centerPx, centerPx, logoAreaW * 0.58, 0, Math.PI * 2);
+    ctx.arc(centerPx, centerPx - 1, haloRadius, 0, Math.PI * 2);
     ctx.fill();
 
     // Draw Westville Pin
-    drawWestvillePin(ctx, centerPx, centerPx - 2, logoAreaW * 0.85, logoAreaH * 0.85, options);
+    drawWestvillePin(ctx, centerPx, centerPx - 2, logoW, logoH, options);
 
     return canvas;
   }
@@ -635,22 +824,22 @@
   /**
    * High level API: generate QR Data URL and PNG bytes
    */
-  function createWestvilleQR(text, options = {}) {
+  function createWestvilleQR(text, options) {
     const canvas = generateQRCodeCanvas(text, options);
     if (!canvas) return null;
     const dataUrl = canvas.toDataURL('image/png');
     return {
-      canvas,
-      dataUrl,
-      getBytes: () => dataUrlToUint8Array(dataUrl)
+      canvas: canvas,
+      dataUrl: dataUrl,
+      getBytes: function() { return dataUrlToUint8Array(dataUrl); }
     };
   }
 
   return {
-    buildQrMatrix,
-    generateQRCodeCanvas,
-    createWestvilleQR,
-    dataUrlToUint8Array,
-    drawWestvillePin
+    qrCodeGenerator: qrCodeGenerator,
+    generateQRCodeCanvas: generateQRCodeCanvas,
+    createWestvilleQR: createWestvilleQR,
+    dataUrlToUint8Array: dataUrlToUint8Array,
+    drawWestvillePin: drawWestvillePin
   };
 }));
