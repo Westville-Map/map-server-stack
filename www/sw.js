@@ -1,10 +1,11 @@
-const CACHE_NAME = 'westville-portal-v3';
+const CACHE_NAME = 'westville-portal-v4';
 
 // Static core assets to pre-cache for offline shell
 const PRECACHE_ASSETS = [
   '/',
   '/css/global.css',
   '/css/index.css',
+  '/js/qr-generator.js',
   '/js/components.js',
   '/js/index.js',
   '/images/w-pin.svg',

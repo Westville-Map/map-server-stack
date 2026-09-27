@@ -768,15 +768,35 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
     `;
   }
   
+  let qrHtml = '';
+  if (window.WestvilleQR) {
+    try {
+      const qr = window.WestvilleQR.createWestvilleQR(window.location.href, {
+        colorDark: '#991b1b',
+        colorLight: '#ffffff',
+        pinFill: '#991b1b',
+        pinStroke: '#e5c158'
+      });
+      if (qr && qr.dataUrl) {
+        qrHtml = `<div class="print-header-qr"><img src="${qr.dataUrl}" alt="Westville Fall Festival QR Code" /></div>`;
+      }
+    } catch (qrErr) {
+      console.warn("Could not generate festival print header QR code:", qrErr);
+    }
+  }
+
   container.innerHTML = `
     <div class="print-header">
-      <h1 style="color: var(--autumn-crimson);">${title}</h1>
-      <div class="print-meta">
-        <div>Date: ${dateStr}</div>
-        <div>URL: ${window.location.origin + window.location.pathname}</div>
+      <div class="print-header-main">
+        <h1 style="color: var(--autumn-crimson);">${title}</h1>
+        <div class="print-subheader">Westville Fall Festival Map & Vendor Directory</div>
+        <div class="print-meta">
+          <div>Date: ${dateStr}</div>
+          <div>URL: ${window.location.href}</div>
+        </div>
       </div>
+      ${qrHtml}
     </div>
-    <div class="print-subheader">Westville Fall Festival Map & Vendor Directory</div>
     ${mapHtml}
     ${selectedVendorHtml}
     ${cardsHtml}
@@ -963,7 +983,7 @@ function initPrintAndShare() {
           color: rgb(0.3, 0.3, 0.3),
         });
         
-        const metaText = `Generated on: ${dateStr}  |  URL: ${window.location.origin + window.location.pathname}`;
+        const metaText = `Generated on: ${dateStr}  |  URL: ${window.location.href}`;
         page1.drawText(metaText, {
           x: 50,
           y: pageHeight - 70,
@@ -971,6 +991,31 @@ function initPrintAndShare() {
           font: helvetica,
           color: rgb(0.4, 0.4, 0.4),
         });
+
+        // Draw QR Code in Top Right Header
+        if (window.WestvilleQR) {
+          try {
+            const qr = window.WestvilleQR.createWestvilleQR(window.location.href, {
+              colorDark: '#991b1b',
+              colorLight: '#ffffff',
+              pinFill: '#991b1b',
+              pinStroke: '#e5c158'
+            });
+            if (qr) {
+              const qrBytes = qr.getBytes();
+              const qrImgEmbed = await pdfDoc.embedPng(qrBytes);
+              const qrSize = 46;
+              page1.drawImage(qrImgEmbed, {
+                x: pageWidth - 50 - qrSize,
+                y: pageHeight - 72,
+                width: qrSize,
+                height: qrSize,
+              });
+            }
+          } catch (qrErr) {
+            console.warn("Failed to embed QR code in PDF:", qrErr);
+          }
+        }
         
         page1.drawLine({
           start: { x: 50, y: pageHeight - 76 },
