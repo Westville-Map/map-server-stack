@@ -422,6 +422,7 @@ function updateMapHeaderFromUrl(urlString) {
 
     if (transientContainer) {
       transientContainer.innerHTML = tags.join('');
+      transientContainer.classList.toggle('has-tags', tags.length > 0);
     }
 
     // Sync checkboxes to URL state

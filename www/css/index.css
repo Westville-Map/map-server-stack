@@ -330,18 +330,21 @@
   background: var(--primary-blue);
   padding: 12px 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   border-bottom: 1.5px solid var(--accent-gold);
   flex-wrap: wrap;
   gap: 12px;
+  transition: min-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .map-header-left {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 /* Unified Collapsible Pill Tray Component (Base & Desktop styles) */
@@ -762,6 +765,39 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease,
+              margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.map-transient-tags:not(:empty),
+.map-transient-tags.has-tags {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 8px;
+  pointer-events: auto;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  .map-transient-tags:not(:empty),
+  .map-transient-tags.has-tags {
+    max-height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-header,
+  .map-transient-tags {
+    transition: none !important;
+  }
 }
 
 .map-layer-toggles {
@@ -1591,7 +1627,9 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
     width: 100%;
   }
 
-  .map-transient-tags:not(:empty) {
+  .map-transient-tags:not(:empty),
+  .map-transient-tags.has-tags {
+    margin-top: 6px;
     margin-bottom: 2px;
     width: 100%;
   }
