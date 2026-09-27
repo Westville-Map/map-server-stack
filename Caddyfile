@@ -50,6 +50,7 @@
     # 2. Revalidate HTML, GeoJSON data, and JS/CSS via ETag
     @revalidate {
         path *.html *.geojson *.json *.js *.css /
+        not path /sw.js
     }
     header @revalidate Cache-Control "no-cache, must-revalidate"
 

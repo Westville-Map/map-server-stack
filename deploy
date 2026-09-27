@@ -81,7 +81,7 @@ if [[ "$BRANCH" == "testing" ]]; then
   git push origin testing
 
   echo "🔄 Reloading staging docker stack on ${REMOTE_HOST}..."
-  ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${STAGING_DIR} && git pull && docker compose up -d --build --remove-orphans"
+  ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${STAGING_DIR} && git pull && docker compose up -d --build --remove-orphans && docker compose restart wvmap_webserver"
 
   echo "✅ Staging deployment complete!"
   echo "   Portal: https://testing.westville.app"
@@ -94,7 +94,7 @@ elif [[ "$BRANCH" == "main" ]]; then
   git push origin main
 
   echo "🔄 Reloading production docker stack on ${REMOTE_HOST}..."
-  ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${PROD_DIR} && git pull && docker compose up -d --build --remove-orphans"
+  ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${PROD_DIR} && git pull && docker compose up -d --build --remove-orphans && docker compose restart wvmap_webserver"
 
   echo "✅ Production deployment complete!"
   echo "   Portal: https://westville.app / https://www.westville.app"
