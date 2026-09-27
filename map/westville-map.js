@@ -1912,9 +1912,6 @@ try {
 
       updateUrlParams = function() {
           const newParams = new URLSearchParams();
-          if (useNjgin) {
-              newParams.set('njgin', 'true');
-          }
           
           // Synchronize layerStates from layer control checkboxes if rendered
           const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
