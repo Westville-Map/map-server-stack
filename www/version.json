@@ -1,7 +1,7 @@
 {
-  "version": "2026.09.27.2",
-  "channel": "production",
-  "buildDate": "2026-09-27 18:12:36 EDT",
+  "version": "2026.09.27.2-test.fcbb30c",
+  "channel": "testing",
+  "buildDate": "2026-09-27 18:29:53 EDT",
   "timezone": "America/New_York",
-  "gitCommit": "2060ef7"
+  "gitCommit": "fcbb30c"
 }
