@@ -104,6 +104,7 @@ function isMobileDevice() {
 const params = new URLSearchParams(window.location.search);
 const showParams = params.get('show') ? params.get('show').toLowerCase().split(',') : [];
 const hideParams = params.get('hide') ? params.get('hide').toLowerCase().split(',') : [];
+const useNjgin = params.get('njgin') ? params.get('njgin').toLowerCase() === 'true' : false;
 //console.log(showParams);
 //console.log(hideParams);
 
@@ -314,10 +315,9 @@ try {
   ];
 
   // If booting directly into Satellite-only view, apply high-contrast white labels with black halos
-  const initialZoom = isMobileDevice() ? 12 : 14.25;
   const initialMapVisible = layerStates['Background'].visible;
   const initialSatelliteVisible = layerStates['satellite-layer'].visible;
-  const initialUseSatelliteContrastLabels = initialSatelliteVisible && !initialMapVisible && initialZoom < 18.5;
+  const initialUseSatelliteContrastLabels = initialSatelliteVisible && !initialMapVisible;
 
   if (initialUseSatelliteContrastLabels && style.layers) {
       const labelContrastConfigs = {
@@ -358,16 +358,6 @@ try {
       preserveDrawingBuffer: true
   });
 
-  let lastZoomIsGreaterOrEqual = null;
-  map.on('zoom', () => {
-      const currentZoom = map.getZoom();
-      const isGreaterOrEqual = (currentZoom >= 18.5);
-      if (lastZoomIsGreaterOrEqual === null || isGreaterOrEqual !== lastZoomIsGreaterOrEqual) {
-          lastZoomIsGreaterOrEqual = isGreaterOrEqual;
-          syncMapStyleState();
-      }
-  });
-
   // Bind to setLayoutProperty in order to toggle fill and symbols simultaneously in layer control widget
   const originalSetLayoutProperty = map.setLayoutProperty.bind(map);
   // Override the method to watch for changes
@@ -390,8 +380,7 @@ try {
       const satelliteVisible = satelliteCheckbox ? satelliteCheckbox.checked : layerStates['satellite-layer'].visible;
       const labelsVisible = (layerId === 'map-labels' && value !== undefined) ? (value === 'visible') : (labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible);
 
-      const currentZoom = map ? map.getZoom() : 14.25;
-      const shouldBasemapBeVisible = mapVisible || (satelliteVisible && currentZoom >= 18.5);
+      const shouldBasemapBeVisible = mapVisible;
 
       if (layerId === 'map-labels') {
           if (name === 'visibility') {
@@ -507,7 +496,6 @@ try {
 
   function syncMapStyleState() {
       if (!map) return;
-      const currentZoom = map.getZoom();
 
       // Dynamically read checked states from the DOM if available, falling back to layerStates
       const mapCheckbox = document.querySelector('span.layer-control-name[title="Background"], span.layer-control-name[title="Map"]')?.closest('.layer-control-item')?.querySelector('input[type="checkbox"]');
@@ -519,7 +507,7 @@ try {
       const labelsVisible = labelsCheckbox ? labelsCheckbox.checked : layerStates['map-labels'].visible;
 
       // 1. Determine if the basemap style layers (non-labels) should be visible
-      const shouldBasemapBeVisible = mapVisible || (satelliteVisible && currentZoom >= 18.5);
+      const shouldBasemapBeVisible = mapVisible;
 
       const layers = (style && style.layers) ? style.layers : (map.getStyle() ? map.getStyle().layers : []);
       if (layers && layers.length > 0) {
@@ -588,7 +576,7 @@ try {
       }
 
       // 2. Apply contrast paint overrides for labels in satellite mode
-      const shouldUseSatelliteContrastLabels = satelliteVisible && !mapVisible && currentZoom < 18.5;
+      const shouldUseSatelliteContrastLabels = satelliteVisible && !mapVisible;
 
       const labelContrastConfigs = {
           'highway-name-major': {
@@ -616,9 +604,6 @@ try {
               });
           }
       });
-
-      // Synchronize lastZoomIsGreaterOrEqual to current zoom state
-      lastZoomIsGreaterOrEqual = (currentZoom >= 18.5);
   }
 
   if(!isMobileDevice() && window.self === window.top) map.addControl(new maplibregl.FullscreenControl(), 'top-left');
@@ -656,11 +641,24 @@ try {
       const parkingicon_image = await map.loadImage('images/parking.png');
       map.addImage('parking-icon', parkingicon_image.data);
 
-      map.addSource('satellite-source', {
-          type: 'raster',
+      const satelliteConfig = useNjgin ? {
+          tiles: ['https://maps.nj.gov/arcgis/rest/services/Basemap/Orthos_Natural_2020_NJ_WM/MapServer/tile/{z}/{y}/{x}'],
+          tileSize: 256,
+          maxzoom: 20,
+          attribution: 'NJ Office of GIS &mdash; NJGIN'
+      } : {
           tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
           tileSize: 256,
+          maxzoom: 18,
           attribution: 'Esri, Maxar, Earthstar Geographics, USDA FSA, USGS, Aerogrid, IGN, IGP, and the GIS User Community'
+      };
+
+      map.addSource('satellite-source', {
+          type: 'raster',
+          tiles: satelliteConfig.tiles,
+          tileSize: satelliteConfig.tileSize,
+          maxzoom: satelliteConfig.maxzoom,
+          attribution: satelliteConfig.attribution
       });
       
       map.addSource('establishments', {
@@ -683,7 +681,6 @@ try {
           id: 'satellite-layer',
           type: 'raster',
           source: 'satellite-source',
-          maxzoom: 18.5,
           layout: {
               'visibility': layerStates['satellite-layer'].visible ? 'visible' : 'none'
           },
@@ -1890,6 +1887,9 @@ try {
 
       updateUrlParams = function() {
           const newParams = new URLSearchParams();
+          if (useNjgin) {
+              newParams.set('njgin', 'true');
+          }
           
           // Synchronize layerStates from layer control checkboxes if rendered
           const layerCheckboxes = document.querySelectorAll('.layer-control-item input[type="checkbox"]');
