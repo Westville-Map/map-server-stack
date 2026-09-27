@@ -121,6 +121,8 @@ let tourIndex = 0;
 let tourIntervalId = null;
 
 let updateUrlParams = () => {};
+let syncMapStyleState = () => {};
+let setImageryProvider = () => {};
 
 // Quick Views state
 let activeQuickView = null;
@@ -496,7 +498,7 @@ try {
       }
   };
 
-  function syncMapStyleState() {
+  syncMapStyleState = function() {
       if (!map) return;
 
       // Dynamically read checked states from the DOM if available, falling back to layerStates
@@ -526,7 +528,7 @@ try {
               } else {
                   // For other base style layers, visibility is controlled by shouldBasemapBeVisible
                   const customLayers = [
-                      'satellite-layer', 'satellite-esri-layer', 'custom-parking-fill', 'parking-layer-symbols',
+                      'satellite-layer', 'custom-parking-fill', 'parking-layer-symbols',
                       'park-layer-fill', 'custom-park-outline', 'walkingpath-outline', 'walkingpath-layer-symbol',
                       'park-layer-symbols', 'custom-markers', 'custom-labels', 'highlight-point-layer', 'highlight-poly-layer'
                   ];
@@ -543,15 +545,12 @@ try {
           });
       }
 
-      // 2. Synchronize satellite layers based on satelliteVisible and imageryProvider
-      const satVisible = satelliteVisible;
-      const njginVis = (satVisible && imageryProvider === 'njgin') ? 'visible' : 'none';
-      const esriVis = (satVisible && imageryProvider === 'esri') ? 'visible' : 'none';
-      if (map.getLayer('satellite-layer') && map.getLayoutProperty('satellite-layer', 'visibility') !== njginVis) {
-          originalSetLayoutProperty('satellite-layer', 'visibility', njginVis);
-      }
-      if (map.getLayer('satellite-esri-layer') && map.getLayoutProperty('satellite-esri-layer', 'visibility') !== esriVis) {
-          originalSetLayoutProperty('satellite-esri-layer', 'visibility', esriVis);
+      // 2. Synchronize satellite layer visibility
+      if (map.getLayer('satellite-layer')) {
+          const targetVis = satelliteVisible ? 'visible' : 'none';
+          if (map.getLayoutProperty('satellite-layer', 'visibility') !== targetVis) {
+              originalSetLayoutProperty('satellite-layer', 'visibility', targetVis);
+          }
       }
 
       // 3. Synchronize thematic overlay layers with userOverlayPreferences and labelsVisible state
@@ -654,20 +653,29 @@ try {
       const parkingicon_image = await map.loadImage('images/parking.png');
       map.addImage('parking-icon', parkingicon_image.data);
 
-      map.addSource('satellite-njgin-source', {
-          type: 'raster',
-          tiles: ['https://maps.nj.gov/arcgis/rest/services/Basemap/Orthos_Natural_2020_NJ_WM/MapServer/tile/{z}/{y}/{x}'],
-          tileSize: 256,
-          maxzoom: 20,
-          attribution: '<a href="https://njogis-newjersey.opendata.arcgis.com/" target="_blank" rel="noopener">NJ Office of GIS</a> &mdash; NJGIN (Spring 2020 Leaf-Off, 1ft)'
-      });
+      const IMAGERY_CONFIGS = {
+          'njgin': {
+              tiles: ['https://maps.nj.gov/arcgis/rest/services/Basemap/Orthos_Natural_2020_NJ_WM/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              maxzoom: 20,
+              attribution: '<a href="https://njogis-newjersey.opendata.arcgis.com/" target="_blank" rel="noopener">NJ Office of GIS</a> &mdash; NJGIN (Spring 2020 Leaf-Off, 1ft)'
+          },
+          'esri': {
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+              tileSize: 256,
+              maxzoom: 18,
+              attribution: '<a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Vantor (Aug 2025 WorldView-2, 0.5m), USDA FSA, USGS, GIS User Community'
+          }
+      };
 
-      map.addSource('satellite-esri-source', {
+      const initialImageryConfig = IMAGERY_CONFIGS[imageryProvider] || IMAGERY_CONFIGS['njgin'];
+
+      map.addSource('satellite-source', {
           type: 'raster',
-          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-          tileSize: 256,
-          maxzoom: 18,
-          attribution: '<a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Vantor (Aug 2025 WorldView-2, 0.5m), USDA FSA, USGS, GIS User Community'
+          tiles: initialImageryConfig.tiles,
+          tileSize: initialImageryConfig.tileSize,
+          maxzoom: initialImageryConfig.maxzoom,
+          attribution: initialImageryConfig.attribution
       });
       
       map.addSource('establishments', {
@@ -688,31 +696,71 @@ try {
       const initialSatVisible = layerStates['satellite-layer'].visible;
       const initialOpacity = layerStates['Background'].visible ? 0.3 : 1.0;
 
-      // Add NJGIN Satellite Map below waterway line label layer
+      // Add Satellite Map below waterway line label layer
       map.addLayer({
           id: 'satellite-layer',
           type: 'raster',
-          source: 'satellite-njgin-source',
+          source: 'satellite-source',
           layout: {
-              'visibility': (initialSatVisible && imageryProvider === 'njgin') ? 'visible' : 'none'
+              'visibility': initialSatVisible ? 'visible' : 'none'
           },
           paint: {
               'raster-opacity': initialOpacity
           }
-      }, 'waterway_line_label'); 
+      }, 'waterway_line_label');
 
-      // Add Esri Satellite Map below waterway line label layer
-      map.addLayer({
-          id: 'satellite-esri-layer',
-          type: 'raster',
-          source: 'satellite-esri-source',
-          layout: {
-              'visibility': (initialSatVisible && imageryProvider === 'esri') ? 'visible' : 'none'
-          },
-          paint: {
-              'raster-opacity': initialOpacity
+      setImageryProvider = function(provider) {
+          const prov = (provider || '').toLowerCase();
+          if (!IMAGERY_CONFIGS[prov]) return;
+          imageryProvider = prov;
+
+          if (map) {
+              const currentOpacity = (map.getLayer('satellite-layer') && map.getPaintProperty('satellite-layer', 'raster-opacity') !== undefined)
+                  ? map.getPaintProperty('satellite-layer', 'raster-opacity')
+                  : (layerStates['Background'].visible ? 0.3 : 1.0);
+              const isVisible = layerStates['satellite-layer'].visible;
+
+              if (map.getLayer('satellite-layer')) {
+                  map.removeLayer('satellite-layer');
+              }
+              if (map.getSource('satellite-source')) {
+                  map.removeSource('satellite-source');
+              }
+
+              const config = IMAGERY_CONFIGS[prov];
+              map.addSource('satellite-source', {
+                  type: 'raster',
+                  tiles: config.tiles,
+                  tileSize: config.tileSize,
+                  maxzoom: config.maxzoom,
+                  attribution: config.attribution
+              });
+
+              const beforeLayer = map.getLayer('waterway_line_label') ? 'waterway_line_label' : (map.getLayer('custom-parking-fill') ? 'custom-parking-fill' : undefined);
+              map.addLayer({
+                  id: 'satellite-layer',
+                  type: 'raster',
+                  source: 'satellite-source',
+                  layout: {
+                      'visibility': isVisible ? 'visible' : 'none'
+                  },
+                  paint: {
+                      'raster-opacity': currentOpacity
+                  }
+              }, beforeLayer);
           }
-      }, 'waterway_line_label'); 
+
+          // Update UI buttons in LayerControl if present
+          const subControl = document.querySelector('.imagery-sub-control');
+          if (subControl) {
+              subControl.querySelectorAll('.imagery-sub-btn').forEach(b => {
+                  b.classList.toggle('active', b.getAttribute('data-imagery') === imageryProvider);
+              });
+          }
+
+          syncMapStyleState();
+          updateUrlParams();
+      }; 
       
       map.addLayer({
           id: 'custom-parking-fill',
@@ -2121,17 +2169,11 @@ try {
                   const newProvider = btn.getAttribute('data-imagery');
                   if (newProvider && newProvider !== imageryProvider) {
                       hasInteracted = true;
-                      imageryProvider = newProvider;
-                      subControl.querySelectorAll('.imagery-sub-btn').forEach(b => {
-                          b.classList.toggle('active', b.getAttribute('data-imagery') === imageryProvider);
-                      });
+                      setImageryProvider(newProvider);
                       
                       const satCb = item.querySelector('input[type="checkbox"]');
                       if (satCb && !satCb.checked) {
                           satCb.click();
-                      } else {
-                          syncMapStyleState();
-                          updateUrlParams();
                       }
                   }
               });
@@ -2455,16 +2497,7 @@ window.addEventListener('message', (event) => {
         const provider = (event.data.imagery || '').toLowerCase();
         if (provider === 'njgin' || provider === 'esri') {
             hasInteracted = true;
-            imageryProvider = provider;
-            
-            const subControl = document.querySelector('.imagery-sub-control');
-            if (subControl) {
-                subControl.querySelectorAll('.imagery-sub-btn').forEach(b => {
-                    b.classList.toggle('active', b.getAttribute('data-imagery') === imageryProvider);
-                });
-            }
-            syncMapStyleState();
-            updateUrlParams();
+            setImageryProvider(provider);
         }
     }
 

@@ -969,30 +969,37 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
 .satellite-split-btn {
   position: relative;
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
+  height: 34px;
 }
 
 .satellite-split-btn .map-tag[for="layer-satellite"] {
+  height: 34px !important;
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
   border-right: none !important;
+  margin: 0;
 }
 
 .satellite-split-right {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-left: 1px solid rgba(255, 255, 255, 0.15);
-  border-top-right-radius: 9999px;
-  border-bottom-right-radius: 9999px;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
   color: var(--white);
-  height: 32px;
-  padding: 0 8px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 10px;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   box-sizing: border-box;
+  opacity: 0.6;
 }
 
 .satellite-split-btn:has(#layer-satellite:checked) .satellite-split-right,
@@ -1000,11 +1007,13 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   background-color: rgba(168, 85, 247, 0.2);
   border-color: #a855f7;
   border-left-color: rgba(168, 85, 247, 0.4);
+  opacity: 1;
 }
 
 .satellite-split-right:hover,
 .satellite-split-right:focus-visible {
   background-color: rgba(255, 255, 255, 0.25) !important;
+  opacity: 0.9;
   outline: none;
 }
 
@@ -1023,16 +1032,16 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Dropdown Menu for Satellite Imagery Sources */
+/* Dropup Menu for Satellite Imagery Sources (Opens Upward) */
 .satellite-dropdown-menu {
   position: absolute;
-  top: 100%;
+  bottom: calc(100% + 8px);
+  top: auto;
   left: 0;
-  margin-top: 6px;
   background-color: var(--primary-blue, #2B659F);
   border: 1.5px solid var(--accent-gold, #E5C158);
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
   z-index: 1000;
   display: none;
   min-width: 230px;
