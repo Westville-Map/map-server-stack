@@ -1082,6 +1082,20 @@ try {
           if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               toggleMapDropdown(e);
+          } else if (e.key === 'ArrowDown' || e.key === 'Down') {
+              e.preventDefault();
+              if (!searchFilterContainer.classList.contains('active')) {
+                  toggleMapDropdown(e);
+              }
+              const firstInput = searchFilterDropdown.querySelector('input');
+              if (firstInput) firstInput.focus();
+          } else if (e.key === 'Escape' || e.key === 'Esc') {
+              if (searchFilterContainer.classList.contains('active')) {
+                  e.preventDefault();
+                  searchFilterContainer.classList.remove('active');
+                  searchFilterTrigger.setAttribute('aria-expanded', 'false');
+                  searchFilterTrigger.focus();
+              }
           }
       });
 
@@ -1092,6 +1106,25 @@ try {
 
       searchFilterDropdown.addEventListener('click', (e) => {
           e.stopPropagation();
+      });
+
+      searchFilterDropdown.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' || e.key === 'Esc') {
+              e.preventDefault();
+              searchFilterContainer.classList.remove('active');
+              searchFilterTrigger.setAttribute('aria-expanded', 'false');
+              searchFilterTrigger.focus();
+          }
+      });
+
+      // Global Escape handler to dismiss active map popups (WCAG 2.1.1)
+      window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' || e.key === 'Esc') {
+              if (activePopup) {
+                  e.preventDefault();
+                  dismissActivePopup();
+              }
+          }
       });
 
       function updateFilterTriggerText() {

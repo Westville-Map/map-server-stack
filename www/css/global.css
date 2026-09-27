@@ -75,6 +75,43 @@ header h1 {
   font-size: 1.2rem;
 }
 
+/* Skip link for keyboard bypass blocks (WCAG 2.4.1) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: var(--accent-gold);
+  color: var(--primary-blue);
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 0 0 8px 8px;
+  z-index: 10000;
+  text-decoration: none;
+  transition: top 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--white);
+  outline-offset: 2px;
+}
+
+/* Global Focus Visible System (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+header :focus-visible, 
+footer :focus-visible, 
+.map-header :focus-visible, 
+.map-footer :focus-visible {
+  outline: 3px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
 .header-shortcuts {
   display: flex;
   gap: 12px;
@@ -91,21 +128,22 @@ header h1 {
   border: 1.5px solid var(--accent-gold);
   border-radius: 20px;
   color: var(--white);
-  height: 34px; /* Explicit height */
-  padding: 0 14px; /* Left/right padding only */
+  min-height: 34px;
+  height: auto;
+  padding: 6px 14px;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, transform 0.1s;
   white-space: nowrap;
-  box-sizing: border-box; /* Crucial for explicit height */
-  line-height: 1; /* Normalize text height */
+  box-sizing: border-box;
+  line-height: 1.2;
 }
 
 button.header-btn {
   font-family: inherit;
-  line-height: inherit;
+  line-height: 1.2;
   margin: 0;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -125,7 +163,8 @@ button.header-btn {
   align-items: center;
   border: 1.5px solid var(--accent-gold);
   border-radius: 20px;
-  height: 34px;
+  min-height: 34px;
+  height: auto;
   box-sizing: border-box;
   background-color: transparent;
   transition: transform 0.1s;
@@ -144,15 +183,16 @@ button.header-btn {
   border: none;
   border-radius: 18px 0 0 18px;
   color: var(--white);
+  min-height: 34px;
   height: 100%;
-  padding: 0 10px 0 14px;
+  padding: 6px 10px 6px 14px;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
   box-sizing: border-box;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .help-split-left-btn:hover {
@@ -176,8 +216,9 @@ button.header-btn {
   border: none;
   border-radius: 0 18px 18px 0;
   color: var(--white);
+  min-height: 34px;
   height: 100%;
-  padding: 0 10px;
+  padding: 6px 10px;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
   box-sizing: border-box;
@@ -946,7 +987,7 @@ wv-sort {
   flex: 1;
   min-width: 200px;
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #8c8c8c;
   border-radius: 4px;
   font-size: 1rem;
   font-family: inherit;
@@ -965,7 +1006,7 @@ wv-sort {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #8c8c8c;
   border-radius: 4px;
   background-color: var(--white);
   cursor: pointer;
@@ -986,7 +1027,7 @@ wv-sort {
 
 .trigger-arrow {
   font-size: 0.8rem;
-  color: #666;
+  color: #4a4a4a;
   transition: transform 0.2s;
 }
 
@@ -1002,7 +1043,7 @@ wv-sort {
   right: 0;
   z-index: 100;
   background-color: var(--white);
-  border: 1px solid #ccc;
+  border: 1.5px solid #8c8c8c;
   border-top: none;
   border-radius: 0 0 4px 4px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
@@ -1019,7 +1060,7 @@ wv-sort {
   font-size: 0.8rem;
   text-transform: uppercase;
   font-weight: bold;
-  color: #888;
+  color: #4a4a4a;
   padding: 8px 16px 4px 16px;
   letter-spacing: 0.5px;
 }

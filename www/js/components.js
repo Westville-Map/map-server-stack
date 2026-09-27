@@ -84,19 +84,19 @@ class SiteHeader extends HTMLElement {
           </span>
           <span class="header-btn-text">Help</span>
         </button>
-        <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false">
+        <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false" aria-label="More information options">
           <span style="font-size: 0.75rem;">▼</span>
         </button>
         <div id="help-dropdown" class="help-dropdown-menu">
           <a href="/credits.html" class="help-dropdown-item">
             <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
-              <img style="width:14px; height:14px;" src="/images/credits-scroll.svg">
+              <img style="width:14px; height:14px;" src="/images/credits-scroll.svg" alt="">
             </span>
             <span class="help-dropdown-item-text">Credits</span>
           </a>
           <a href="/privacy-tos.html" class="help-dropdown-item">
             <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
-              <img style="width:14px; height:14px;" src="/images/shield-privacy.svg">
+              <img style="width:14px; height:14px;" src="/images/shield-privacy.svg" alt="">
             </span>
             <span class="help-dropdown-item-text">Privacy & TOS</span>
           </a>
@@ -105,10 +105,11 @@ class SiteHeader extends HTMLElement {
     `;
     
     this.innerHTML = `
+      <a href="#main-content" class="skip-link">Skip to main content</a>
       <header>
         <div class="brand-logo">
           <div class="brand-icon-img">
-            <a href="/"><img class="mapicon" src="/images/w-pin.svg" alt="Westville Map Project Site Logo" aria-hidden="true"/></a>
+            <a href="/" aria-label="Welcome to Westville Home"><img class="mapicon" src="/images/w-pin.svg" alt="" aria-hidden="true"/></a>
           </div>
           <h1><a href="/" class="header_link">Welcome to Westville</a></h1>
         </div>
@@ -134,7 +135,25 @@ class SiteHeader extends HTMLElement {
         const isShown = dropdownMenu.classList.toggle('show');
         toggleBtn.setAttribute('aria-expanded', isShown);
       });
+
+      toggleBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
+          e.stopPropagation();
+          dropdownMenu.classList.remove('show');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          toggleBtn.focus();
+        }
+      });
       
+      dropdownMenu.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          dropdownMenu.classList.remove('show');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          toggleBtn.focus();
+        }
+      });
+
       // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
         if (!this.contains(e.target)) {
@@ -170,9 +189,9 @@ class SiteFooter extends HTMLElement {
       <footer>
         <div class="brand-logo">
           <div class="brand-icon-img">
-            <a href="/"><img class="mapicon" src="/images/w-pin.svg" alt="Westville Map Project Site Logo" aria-hidden="true"/></a>
+            <a href="/" aria-label="Welcome to Westville Home"><img class="mapicon" src="/images/w-pin.svg" alt="" aria-hidden="true"/></a>
           </div>
-          <h1 style="font-size: 1.2rem;"><a href="/" style="color: var(--white); text-decoration: none;">Welcome to Westville</a></h1>
+          <div class="footer-brand-title" style="font-size: 1.2rem; font-weight: 700;"><a href="/" style="color: var(--white); text-decoration: none;">Welcome to Westville</a></div>
         </div>
         <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. <span id="site-footer-version"></span>Not an official borough communication.</p>
         <div class="footer-shortcuts">
@@ -1113,6 +1132,27 @@ window.setupDropdownTrigger = function(trigger, dropdown) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       trigger.click();
+    } else if (e.key === 'ArrowDown' || e.key === 'Down') {
+      e.preventDefault();
+      if (!container || !container.classList.contains('active')) {
+        trigger.click();
+      }
+      const firstInput = dropdown.querySelector('input, [tabindex="0"]');
+      if (firstInput) firstInput.focus();
+    } else if (e.key === 'Escape' || e.key === 'Esc') {
+      if (container && container.classList.contains('active')) {
+        e.preventDefault();
+        window.closeDropdown(trigger, dropdown);
+        trigger.focus();
+      }
+    }
+  });
+
+  dropdown.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      e.preventDefault();
+      window.closeDropdown(trigger, dropdown);
+      trigger.focus();
     }
   });
 

@@ -161,7 +161,7 @@
   flex: 1;
   min-width: 250px;
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #8c8c8c;
   border-radius: 4px;
   font-size: 1rem;
   font-family: inherit;
@@ -169,7 +169,7 @@
 
 .directory-filter {
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #8c8c8c;
   border-radius: 4px;
   font-size: 1rem;
   font-family: inherit;
@@ -181,7 +181,7 @@
   padding: 12px 20px;
   background-color: var(--white);
   color: var(--text-dark);
-  border: 1px solid #ccc;
+  border: 1.5px solid #8c8c8c;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
@@ -309,7 +309,7 @@
 
 .facility-address {
   font-size: 0.85rem;
-  color: #888;
+  color: #555555;
   font-style: italic;
 }
 
@@ -366,7 +366,7 @@ collapsible-pill-tray .pill-tray-content {
 .quick-filters-label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent-gold);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-right: 4px;
@@ -380,7 +380,7 @@ collapsible-pill-tray .pill-tray-content {
   padding: 4px 10px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.1);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
   color: #ffffff;
   font-size: 0.82rem;
   font-weight: 600;
@@ -394,14 +394,14 @@ collapsible-pill-tray .pill-tray-content {
 .quick-view-pill:hover {
   background: rgba(255, 255, 255, 0.22);
   border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .quick-view-pill.active {
   background: var(--accent-gold);
   border-color: var(--accent-gold);
-  color: var(--primary-blue);
+  color: #1b436c;
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
@@ -422,13 +422,13 @@ collapsible-pill-tray .pill-tray-content {
 }
 
 .quick-view-pill.active .quick-view-count {
-  background: var(--primary-blue);
-  color: var(--accent-gold);
+  background: #1b436c;
+  color: #ffffff;
 }
 
 .quick-view-pill:hover:not(.active) .quick-view-count {
   background: rgba(229, 193, 88, 0.3);
-  color: var(--accent-gold);
+  color: #ffffff;
 }
 
 /* Pill Tray Trigger Button Styling */
@@ -463,7 +463,7 @@ collapsible-pill-tray .pill-tray-content {
 .pill-tray-label-prefix {
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--accent-gold);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -489,7 +489,7 @@ collapsible-pill-tray .pill-tray-content {
   font-size: 0.72rem;
   font-weight: 700;
   background: var(--accent-gold);
-  color: var(--primary-blue);
+  color: #1b436c;
   margin-left: auto;
 }
 
@@ -660,14 +660,14 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
 }
 
 .dropdown-section-title {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--accent-gold);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 10px 14px 6px 14px;
-  border-bottom: 1.5px solid rgba(229, 193, 88, 0.15);
-  background-color: rgba(0, 0, 0, 0.15);
+  border-bottom: 1.5px solid rgba(229, 193, 88, 0.25);
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .explore-dropdown-btn {
@@ -696,17 +696,17 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
 
 .explore-dropdown-btn:hover {
   background-color: var(--accent-gold);
-  color: var(--primary-blue);
+  color: #1b436c;
 }
 
 .explore-dropdown-btn.active {
   background-color: rgba(229, 193, 88, 0.15);
-  color: var(--accent-gold);
+  color: #ffffff;
 }
 
 .explore-dropdown-btn.active:hover {
   background-color: var(--accent-gold);
-  color: var(--primary-blue);
+  color: #1b436c;
 }
 
 .dropdown-divider {
@@ -722,7 +722,7 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
 }
 
 .map-status-label {
-  color: var(--accent-gold);
+  color: #ffffff;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -753,7 +753,7 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
 .map-layer-toggles h3 {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent-gold);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 4px 0 0;

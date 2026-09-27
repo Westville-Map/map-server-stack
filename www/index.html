@@ -64,7 +64,7 @@
       }
     })();
   </script>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-title" content="Welcome" />
   <title>Welcome to Westville</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,7 +85,7 @@
 
   <site-header active-page="portal"></site-header>
 
-  <main>
+  <main id="main-content">
     <section class="hero">
       <h2>Welcome to Westville</h2>
       <p>Welcome to the borough map portal. Whether you are looking for free public parking, exploring local businesses, or checking out our recreation facilities, our interactive map has you covered.</p>
@@ -124,7 +124,7 @@
                 <span class="quick-view-count" id="map-count-parking">0</span>
               </button>
             </collapsible-pill-tray>
-            <div id="map-transient-tags" class="map-transient-tags"></div>
+            <div id="map-transient-tags" class="map-transient-tags" role="status" aria-live="polite"></div>
           </div>
 
           <div class="map-header-actions">

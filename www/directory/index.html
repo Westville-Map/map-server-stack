@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Business Directory - Westville</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
 
   <site-header active-page="directory"></site-header>
 
-  <main>
+  <main id="main-content">
     <section class="hero-directory">
       <div class="hero-content">
         <h2>Borough of Westville Directory</h2>
@@ -35,7 +35,7 @@
       <div class="directory-header-row">
         <h3 class="directory-page-title">All Local Establishments</h3>
         <div class="directory-header-actions">
-          <p class="directory-count" id="results-count">Showing all listings</p>
+          <p class="directory-count" id="results-count" role="status" aria-live="polite">Showing all listings</p>
           <button id="print-btn" class="header-btn" title="Print directory listings">
             <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
               <img style="width:18px; height:18px;" src="/images/printer.svg" alt="">
