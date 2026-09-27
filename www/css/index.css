@@ -965,9 +965,52 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   position: relative;
 }
 
+/* Satellite Split Button */
+.satellite-split-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.satellite-split-btn .map-tag[for="layer-satellite"] {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-right: none !important;
+}
+
+.satellite-split-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-top-right-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+  color: var(--white);
+  height: 32px;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  box-sizing: border-box;
+}
+
+.satellite-split-btn:has(#layer-satellite:checked) .satellite-split-right,
+.satellite-split-btn:has(.interactive-tag.checked) .satellite-split-right {
+  background-color: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  border-left-color: rgba(168, 85, 247, 0.4);
+}
+
+.satellite-split-right:hover,
+.satellite-split-right:focus-visible {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  outline: none;
+}
+
 /* Split-pill segmented styling when labels sub-tag is active/visible */
-.satellite-merged-group.has-labels .map-tag[for="layer-satellite"],
-.satellite-merged-group:has(.labels-sub-tag:not([style*="display: none"])) .map-tag[for="layer-satellite"] {
+.satellite-merged-group.has-labels .satellite-split-right,
+.satellite-merged-group:has(.labels-sub-tag:not([style*="display: none"])) .satellite-split-right {
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
   border-right: none !important;
@@ -978,6 +1021,67 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
   border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Dropdown Menu for Satellite Imagery Sources */
+.satellite-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background-color: var(--primary-blue, #2B659F);
+  border: 1.5px solid var(--accent-gold, #E5C158);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  display: none;
+  min-width: 230px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.satellite-dropdown-menu.show {
+  display: block;
+}
+
+.satellite-dropdown-item {
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  color: var(--white, #ffffff);
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  font-family: "Open Sans", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.satellite-dropdown-item:not(:last-child) {
+  border-bottom: 1px solid rgba(229, 193, 88, 0.25);
+}
+
+.satellite-dropdown-item:hover,
+.satellite-dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--accent-gold, #E5C158);
+  outline: none;
+}
+
+.satellite-dropdown-check {
+  display: inline-block;
+  width: 14px;
+  font-weight: 800;
+  color: var(--accent-gold, #E5C158);
+  text-align: center;
 }
 
 .map-tag.interactive-tag:has(#layer-labels:checked),

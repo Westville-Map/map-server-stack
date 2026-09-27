@@ -459,6 +459,21 @@ function updateMapHeaderFromUrl(urlString) {
       }
     }
 
+    // Update active satellite imagery provider in dropdown
+    const currentImagery = (searchParams.get('imagery') || 'njgin').toLowerCase();
+    const satDropdownMenu = document.getElementById('satellite-dropdown-menu');
+    if (satDropdownMenu) {
+      satDropdownMenu.querySelectorAll('.satellite-dropdown-item').forEach(item => {
+        const prov = item.getAttribute('data-imagery');
+        const isActive = (prov === currentImagery) || (!['esri', 'njgin'].includes(currentImagery) && prov === 'njgin');
+        item.classList.toggle('active', isActive);
+        const checkSpan = item.querySelector('.satellite-dropdown-check');
+        if (checkSpan) {
+          checkSpan.textContent = isActive ? '✓' : '';
+        }
+      });
+    }
+
     // Update active state of Quick Views
     const currentView = searchParams.get('view') || searchParams.get('focus') || 'all';
     const isCleanView = !searchParams.get('search') && !searchParams.get('feature') && !searchParams.get('gps');
@@ -2268,6 +2283,66 @@ function initLayerCheckboxes() {
       });
     }
   });
+
+  // Satellite split dropdown toggle & item click handling
+  const satDropdownToggle = document.getElementById('satellite-dropdown-toggle');
+  const satDropdownMenu = document.getElementById('satellite-dropdown-menu');
+  if (satDropdownToggle && satDropdownMenu) {
+    satDropdownToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = satDropdownMenu.classList.toggle('show');
+      satDropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!satDropdownToggle.contains(e.target) && !satDropdownMenu.contains(e.target)) {
+        satDropdownMenu.classList.remove('show');
+        satDropdownToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    satDropdownMenu.addEventListener('click', (e) => {
+      const item = e.target.closest('.satellite-dropdown-item');
+      if (!item) return;
+      e.stopPropagation();
+      const imagery = item.getAttribute('data-imagery');
+      if (imagery) {
+        satDropdownMenu.querySelectorAll('.satellite-dropdown-item').forEach(el => {
+          const isSelected = el === item;
+          el.classList.toggle('active', isSelected);
+          const check = el.querySelector('.satellite-dropdown-check');
+          if (check) check.textContent = isSelected ? '✓' : '';
+        });
+
+        // Ensure satellite layer is checked and visible
+        const satelliteCb = document.getElementById('layer-satellite');
+        if (satelliteCb && !satelliteCb.checked) {
+          satelliteCb.checked = true;
+          const label = satelliteCb.closest('.interactive-tag');
+          if (label) label.classList.add('checked');
+          const iframe = document.getElementById('mapFrame');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'parent-toggle-layer',
+              layer: 'satellite',
+              visible: true
+            }, '*');
+          }
+        }
+
+        const iframe = document.getElementById('mapFrame');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'parent-change-imagery',
+            imagery: imagery
+          }, '*');
+        }
+
+        satDropdownMenu.classList.remove('show');
+        satDropdownToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
 }
 
 function applyPortalQuickView(viewKey) {

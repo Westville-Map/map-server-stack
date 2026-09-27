@@ -433,3 +433,38 @@ body { margin: 0; padding: 0; font-family: "Open Sans", sans-serif; }
 :focus {
   outline: none;
 }
+
+/* Satellite Imagery Sub-Control in LayerControl */
+.imagery-sub-control {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  margin-left: 28px;
+  margin-bottom: 6px;
+}
+
+.imagery-sub-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.imagery-sub-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.imagery-sub-btn.active {
+  background: var(--accent-gold, #E5C158);
+  border-color: var(--accent-gold, #E5C158);
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
