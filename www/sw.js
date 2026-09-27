@@ -1,6 +1,6 @@
-const CACHE_NAME = 'westville-portal-v2';
+const CACHE_NAME = 'westville-portal-v3';
 
-// Static core assets to pre-cache
+// Static core assets to pre-cache for offline shell
 const PRECACHE_ASSETS = [
   '/',
   '/css/global.css',
@@ -42,30 +42,39 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event: Stale-while-revalidate for local static assets, network-first for pages/API
+// Fetch Event:
+// 1. Skip non-GET requests, API calls, dynamic GeoJSON data, and version.json
+// 2. Network-First with Cache Fallback for navigation & app shell assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET requests and API calls
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // Allow live network & ETag revalidation for APIs, dynamic data files, and version info
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/data/') ||
+    url.pathname === '/version.json'
+  ) {
     return;
   }
 
-  // Handle local static assets with stale-while-revalidate
+  // Network-First with Cache Fallback for first-party assets
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cachedResponse) => {
-          const fetchPromise = fetch(event.request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          }).catch(() => cachedResponse);
-
-          return cachedResponse || fetchPromise;
-        });
-      })
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
     );
   }
 });
+

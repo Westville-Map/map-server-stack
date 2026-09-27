@@ -9,6 +9,18 @@
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
+    # Caching Policies: Revalidate HTML, GeoJSON data, and JS/CSS via ETag
+    @revalidate {
+        path *.html *.geojson *.json *.js *.css /
+    }
+    header @revalidate Cache-Control "no-cache, must-revalidate"
+
+    # Static media assets: long TTL with background revalidation
+    @staticAssets {
+        path *.svg *.png *.jpg *.jpeg *.ico *.webp *.woff2 *.webmanifest
+    }
+    header @staticAssets Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+
     # Route API requests to the backend container
     reverse_proxy /api/* wvmap_backend:3000
 
@@ -28,7 +40,27 @@
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
+    # Caching Policies:
+    # 1. Service Worker: Never cache in HTTP layer
+    @serviceWorker {
+        path /sw.js
+    }
+    header @serviceWorker Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+
+    # 2. Revalidate HTML, GeoJSON data, and JS/CSS via ETag
+    @revalidate {
+        path *.html *.geojson *.json *.js *.css /
+    }
+    header @revalidate Cache-Control "no-cache, must-revalidate"
+
+    # 3. Static media assets
+    @staticAssets {
+        path *.svg *.png *.jpg *.jpeg *.ico *.webp *.woff2 *.webmanifest
+    }
+    header @staticAssets Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+
     # Serve static files
     root * /srv/www
     file_server
 }
+
