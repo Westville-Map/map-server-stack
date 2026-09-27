@@ -9,17 +9,17 @@
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
-    # Caching Policies: Revalidate HTML, GeoJSON data, and JS/CSS via ETag
-    @revalidate {
-        path *.html *.geojson *.json *.js *.css /
-    }
-    header @revalidate Cache-Control "no-cache, must-revalidate"
-
     # Static media assets: long TTL with background revalidation
     @staticAssets {
         path *.svg *.png *.jpg *.jpeg *.ico *.webp *.woff2 *.webmanifest
     }
     header @staticAssets Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+
+    # Default caching policy: Revalidate everything else (HTML, GeoJSON, JS/CSS) via ETag
+    @revalidate {
+        not path *.svg *.png *.jpg *.jpeg *.ico *.webp *.woff2 *.webmanifest
+    }
+    header @revalidate Cache-Control "no-cache, must-revalidate"
 
     # Route API requests to the backend container
     reverse_proxy /api/* wvmap_backend:3000
@@ -47,18 +47,18 @@
     }
     header @serviceWorker Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
 
-    # 2. Revalidate HTML, GeoJSON data, and JS/CSS via ETag
-    @revalidate {
-        path *.html *.geojson *.json *.js *.css /
-        not path /sw.js
-    }
-    header @revalidate Cache-Control "no-cache, must-revalidate"
-
-    # 3. Static media assets
+    # 2. Static media assets: long TTL with background revalidation
     @staticAssets {
         path *.svg *.png *.jpg *.jpeg *.ico *.webp *.woff2 *.webmanifest
     }
     header @staticAssets Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+
+    # 3. Dynamic content: Revalidate HTML, subdirectories (/directory/, /festival/, /trash/), GeoJSON, and JS/CSS via ETag
+    @revalidate {
+        not path /sw.js
+        not path *.svg *.png *.jpg *.jpeg *.ico *.webp *.woff2 *.webmanifest
+    }
+    header @revalidate Cache-Control "no-cache, must-revalidate"
 
     # Serve static files
     root * /srv/www
