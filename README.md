@@ -49,6 +49,7 @@ graph TD
 ### 4. Reverse Proxy & Server (`Caddyfile`)
 - [Caddy](https://caddyserver.com/) acts as an extremely efficient web server and reverse proxy.
 - Routes `/api/*` traffic directly to the backend container, while serving all map, static portal pages, and GeoJSON files securely from the local filesystem.
+- **Granular Caching & ETag Revalidation**: Implements fine-grained `Cache-Control` header policies. Dynamic datasets (`/data/*`), application scripts, and HTML pages use conditional ETag revalidation (`no-cache, must-revalidate`), delivering `304 Not Modified` responses with zero payload when unchanged and instant updates upon deployment or API save. Static media assets leverage longer edge TTLs with background revalidation.
 
 ---
 
@@ -153,6 +154,33 @@ When changes in `testing` are tested and ready for the public:
    - Updates `version.json` and creates a GitHub release with automated changelog notes.
    - Pushes to GitHub and reloads the production stack on the remote server.
    - Switches back to `testing` and syncs the release commit so both branches stay unified.
+
+---
+
+## Caching Strategy & Cloudflare Configuration
+
+The stack uses a multi-layered caching model to eliminate stale cache issues across frequent code deployments and GeoJSON data syncs while minimizing origin bandwidth:
+
+### 1. HTTP Conditional Revalidation (ETags)
+* **HTML, GeoJSON Datasets (`/data/*`), and Application Code (`.js`, `.css`, `.json`)**:
+  * Served with `Cache-Control: no-cache, must-revalidate`.
+  * The browser stores assets locally and sends an `If-None-Match: "<etag>"` request on every subsequent load.
+  * If unchanged: Caddy / Cloudflare returns `304 Not Modified` with **0 payload bytes**, giving ~15ms latency with zero redundant bandwidth.
+  * If modified: Caddy immediately serves `200 OK` with the new file and new ETag.
+* **Service Worker (`/sw.js`)**:
+  * Served with `Cache-Control: no-cache, no-store, must-revalidate, max-age=0` so updates to the worker script activate immediately without HTTP cache holding.
+* **Static Media (`/images/*`, icons, webmanifest)**:
+  * Served with `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` for edge caching and fast icon loads.
+
+### 2. Service Worker Policy (`www/sw.js`)
+* **Dynamic Data Bypass**: Requests to `/data/*`, `/version.json`, and `/api/*` bypass the Service Worker completely, ensuring data updates from Google Apps Script reflect on the very next page load.
+* **Network-First Shell**: Core navigation and app scripts use a Network-First strategy with cache fallback, ensuring online users receive the latest deployed assets while preserving offline resilience.
+
+### 3. Cloudflare Dashboard Settings
+When managing domains behind Cloudflare (e.g. `westville.app` / `map.westville.app`):
+1. **Browser Cache TTL**: In **Caching > Configuration**, set to **"Respect Existing Headers"**.
+2. **Preserve Strong ETags**: In **Caching > Cache Rules**, add a rule for `(http.host contains "westville.app")` with setting **"Respect strong ETags: On"**.
+3. **Caching Level**: Ensure **Caching Level** is set to **"Standard"**.
 
 ---
 
