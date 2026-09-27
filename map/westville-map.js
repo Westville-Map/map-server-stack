@@ -1017,31 +1017,6 @@ try {
           }
       });
 
-      map.addLayer({
-          id: 'parking-layer-symbols',
-          type: 'symbol',
-          source: 'parking',
-          minzoom: 12.0,
-          filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
-          layout: {
-              'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
-              'icon-image': 'images/parking.svg',
-              'icon-size': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  12.0, 0.08,
-                  15.0, 0.13,
-                  18.0, 0.18
-              ],
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-overlap': 'always',
-              'symbol-sort-key': 1
-          }
-      });
-
-
       
       // 8. Interactivity: Popups on click
       map.on('click', (e) => {
@@ -1283,6 +1258,31 @@ try {
                   18.0, 2.25
               ],
               'circle-stroke-color': '#ffcc00'
+          }
+      });
+
+      // Parking symbols rendered above highlight outlines
+      map.addLayer({
+          id: 'parking-layer-symbols',
+          type: 'symbol',
+          source: 'parking',
+          minzoom: 12.0,
+          filter: ['in', 'Parking', ['coalesce', ['get', 'tags'], '']],
+          layout: {
+              'visibility': (layerStates['custom-parking-fill'].visible && layerStates['map-labels'].visible) ? 'visible' : 'none',
+              'icon-image': 'images/parking.svg',
+              'icon-size': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  12.0, 0.08,
+                  15.0, 0.13,
+                  18.0, 0.18
+              ],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-overlap': 'always',
+              'symbol-sort-key': 1
           }
       });
 
