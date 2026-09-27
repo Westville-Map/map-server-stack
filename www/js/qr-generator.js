@@ -939,8 +939,8 @@
   function openShareModal(options) {
     options = options || {};
     const url = options.url || window.location.href;
-    const title = options.title || document.title || 'Westville';
-    const subtitle = options.subtitle || 'Westville Borough Interactive Portal';
+    const featureName = options.featureName || options.title || 'Borough Overview';
+    const subtitle = options.subtitle || 'Westville Borough Portal';
     const colorDark = options.colorDark || '#1a4d7c';
     const colorLight = options.colorLight || '#ffffff';
 
@@ -952,12 +952,9 @@
 
     _previousActiveElement = document.activeElement;
 
-    // Update Title & Subtitle
-    const titleEl = overlay.querySelector('#share-modal-title');
-    if (titleEl) titleEl.textContent = title;
-
-    const subEl = overlay.querySelector('#share-modal-subtitle');
-    if (subEl) subEl.textContent = subtitle;
+    // Update Selection / Feature Title in Meta Card
+    const featureEl = overlay.querySelector('#share-meta-feature-name') || overlay.querySelector('#share-modal-title');
+    if (featureEl) featureEl.textContent = featureName;
 
     // Update URL text
     const urlEl = overlay.querySelector('#share-modal-url-text');
@@ -1031,8 +1028,8 @@
         nativeBtn.style.display = 'inline-flex';
         nativeBtn.onclick = () => {
           navigator.share({
-            title: title,
-            text: `${title} - ${subtitle}`,
+            title: featureName,
+            text: `${featureName} - ${subtitle}`,
             url: url
           }).catch((err) => {
             if (err.name !== 'AbortError') console.warn('Native share failed:', err);

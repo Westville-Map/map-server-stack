@@ -863,6 +863,40 @@ function getPrintHeaderTitle() {
   return "Westville Business Directory - " + selections.join(', ');
 }
 
+// Compile selections for Share QR modal
+function getShareSelectionName() {
+  const url = new URL(window.location.href);
+  const searchParams = url.searchParams;
+  const selections = [];
+
+  const view = searchParams.get('view');
+  if (view && window.directoryViews && window.directoryViews[view] && view !== 'all') {
+    selections.push(window.directoryViews[view].title);
+  }
+  
+  const filter = searchParams.get('filter');
+  if (filter) {
+    filter.split(',').forEach(f => {
+      const clean = f.trim().toLowerCase();
+      if (categoryColors[clean]) {
+        selections.push(categoryColors[clean].title);
+      } else {
+        const label = clean.charAt(0).toUpperCase() + clean.slice(1);
+        selections.push(label);
+      }
+    });
+  }
+  
+  const search = searchParams.get('search');
+  if (search) selections.push(`Search: "${search}"`);
+  
+  if (selections.length === 0) {
+    return "Directory Overview";
+  }
+  
+  return selections.join(', ');
+}
+
 // Draw professional border cards within PDF pages
 function drawPdfCard(pdfDoc, page, helvetica, helveticaBold, x, y, width, f) {
   const props = f.properties || {};
@@ -1417,7 +1451,7 @@ function initPrintAndShare() {
       e.stopPropagation();
       if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
         window.WestvilleQR.openShareModal({
-          title: getPrintHeaderTitle(),
+          featureName: typeof getShareSelectionName === 'function' ? getShareSelectionName() : 'Directory Overview',
           subtitle: 'Westville Borough Business Directory Portal',
           url: window.location.href,
           colorDark: '#1a4d7c',

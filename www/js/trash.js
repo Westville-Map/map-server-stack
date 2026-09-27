@@ -75,10 +75,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getTrashShareTitle() {
     const searchVal = streetSearch?.value?.trim();
-    if (searchVal) return `Trash Schedule - "${searchVal}"`;
+    if (searchVal) return `Street: "${searchVal}"`;
     if (activeDayFilter && activeDayFilter !== 'all') {
       const dayNames = { mon: 'Monday Zone', tue: 'Tuesday Zone', wed: 'Wednesday Zone', thu: 'Thursday Zone', fri: 'Friday Zone' };
-      return `Trash Schedule - ${dayNames[activeDayFilter] || activeDayFilter}`;
+      return dayNames[activeDayFilter] || activeDayFilter;
     }
     return 'Municipal Collection Schedule & Guidelines';
   }
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.stopPropagation();
       if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
         window.WestvilleQR.openShareModal({
-          title: getTrashShareTitle(),
+          featureName: getTrashShareTitle(),
           subtitle: 'Borough of Westville Public Works Department',
           url: window.location.href,
           colorDark: '#1a4d7c',

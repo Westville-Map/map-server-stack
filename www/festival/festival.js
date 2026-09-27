@@ -535,6 +535,35 @@ function getPrintHeaderTitle() {
   return "Westville Fall Festival - " + selections.join(', ');
 }
 
+// Compile search/filters/vendor from URL search params into clean share selection name
+function getShareSelectionName() {
+  const url = new URL(window.location.href);
+  const searchParams = url.searchParams;
+  const selections = [];
+
+  const vendor = searchParams.get('vendor');
+  if (vendor) selections.push(vendor);
+  
+  const filter = searchParams.get('filter');
+  if (filter) {
+    filter.split(',').forEach(f => {
+      const clean = f.trim().toLowerCase();
+      if (categoryMetadata[clean]) {
+        selections.push(categoryMetadata[clean].title);
+      }
+    });
+  }
+  
+  const search = searchParams.get('search');
+  if (search && !vendor) selections.push(`Search: "${search}"`);
+  
+  if (selections.length === 0) {
+    return "Festival Overview";
+  }
+  
+  return selections.join(', ');
+}
+
 // Capture WebGL canvas from iframe as PNG data URL
 function captureMap(orientation) {
   return new Promise((resolve, reject) => {
@@ -1370,7 +1399,7 @@ function initPrintAndShare() {
       if (shareBtn) shareBtn.setAttribute('aria-expanded', 'false');
       if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
         window.WestvilleQR.openShareModal({
-          title: getPrintHeaderTitle(),
+          featureName: typeof getShareSelectionName === 'function' ? getShareSelectionName() : 'Festival Overview',
           subtitle: 'Westville Fall Festival Map & Vendor Directory',
           url: window.location.href,
           colorDark: '#991b1b',

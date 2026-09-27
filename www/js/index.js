@@ -269,7 +269,7 @@ if (shareQrBtn) {
     if (shareBtn) shareBtn.setAttribute('aria-expanded', 'false');
     if (window.WestvilleQR && window.WestvilleQR.openShareModal) {
       window.WestvilleQR.openShareModal({
-        title: getPrintHeaderTitle(),
+        featureName: typeof getShareSelectionName === 'function' ? getShareSelectionName() : 'Borough Overview',
         subtitle: 'Westville Borough Map & Directory Portal',
         url: window.location.href,
         colorDark: '#1a4d7c',
@@ -1551,6 +1551,41 @@ function getPrintHeaderTitle() {
   }
   
   return "Westville - " + selections.join(', ');
+}
+
+// Helper to compile feature / selection / view name from current URL for share modal
+function getShareSelectionName() {
+  const url = new URL(window.location.href);
+  const searchParams = url.searchParams;
+  const selections = [];
+  
+  const feature = searchParams.get('feature');
+  if (feature) selections.push(feature);
+  
+  const filter = searchParams.get('filter');
+  if (filter) {
+    filter.split(',').forEach(f => {
+      const clean = f.trim().toLowerCase();
+      if (clean && clean !== 'satellite') {
+        const label = f.trim().charAt(0).toUpperCase() + f.trim().slice(1);
+        selections.push(label);
+      }
+    });
+  }
+  
+  const search = searchParams.get('search');
+  if (search && !feature) selections.push(`Search: "${search}"`);
+  
+  const focus = searchParams.get('focus');
+  if (focus && FOCUS_PRESETS[focus.toLowerCase()]) {
+    selections.push(FOCUS_PRESETS[focus.toLowerCase()].label);
+  }
+  
+  if (selections.length === 0) {
+    return "Borough Overview";
+  }
+  
+  return selections.join(', ');
 }
 
 // Helper to filter directory features
