@@ -227,149 +227,154 @@ window.addEventListener('message', (event) => {
     // 1. Draw base WebGL map layer
     ctx.drawImage(webglCanvas, 0, 0);
 
-    // 2. Check for active popup overlay
-    const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
-    if (popupEl && popupEl.offsetHeight > 0) {
-      const contentEl = popupEl.querySelector('.maplibregl-popup-content');
-      const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
+    // 2. Composite popup if active and visible
+    try {
+      const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
+      if (popupEl && popupEl.offsetHeight > 0) {
+        const contentEl = popupEl.querySelector('.maplibregl-popup-content');
+        const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
 
-      if (contentEl) {
-        const scaleX = compositeCanvas.width / containerRect.width;
-        const scaleY = compositeCanvas.height / containerRect.height;
-        const scale = (scaleX + scaleY) / 2;
+        if (contentEl) {
+          const scaleX = compositeCanvas.width / (containerRect.width || 1);
+          const scaleY = compositeCanvas.height / (containerRect.height || 1);
+          const scale = (scaleX + scaleY) / 2;
 
-        const cRect = contentEl.getBoundingClientRect();
-        const cx = (cRect.left - containerRect.left) * scaleX;
-        const cy = (cRect.top - containerRect.top) * scaleY;
-        const cw = cRect.width * scaleX;
-        const ch = cRect.height * scaleY;
+          const cRect = contentEl.getBoundingClientRect();
+          const cx = (cRect.left - containerRect.left) * scaleX;
+          const cy = (cRect.top - containerRect.top) * scaleY;
+          const cw = cRect.width * scaleX;
+          const ch = cRect.height * scaleY;
 
-        // Draw Drop Shadow & Bubble Background
-        ctx.save();
-        ctx.shadowColor = 'rgba(120, 53, 4, 0.25)';
-        ctx.shadowBlur = 16 * scale;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 6 * scale;
-
-        ctx.fillStyle = '#fdfaf7';
-        ctx.strokeStyle = '#d97706';
-        ctx.lineWidth = Math.max(1, 2 * scale);
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-          ctx.roundRect(cx, cy, cw, ch, 12 * scale);
-        } else {
-          ctx.rect(cx, cy, cw, ch);
-        }
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw Tip Pointer
-        if (tipEl) {
-          const tRect = tipEl.getBoundingClientRect();
-          const tx = (tRect.left - containerRect.left) * scaleX;
-          const ty = (tRect.top - containerRect.top) * scaleY;
-          const tw = tRect.width * scaleX;
-          const th = tRect.height * scaleY;
+          // Draw Drop Shadow & Bubble Background
+          ctx.save();
+          ctx.shadowColor = 'rgba(120, 53, 4, 0.25)';
+          ctx.shadowBlur = 14 * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 4 * scale;
 
           ctx.fillStyle = '#fdfaf7';
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = Math.max(1, 2 * scale);
           ctx.beginPath();
-          const cls = popupEl.className;
-          if (cls.includes('anchor-bottom')) {
-            ctx.moveTo(tx, ty);
-            ctx.lineTo(tx + tw, ty);
-            ctx.lineTo(tx + tw / 2, ty + th);
-          } else if (cls.includes('anchor-top')) {
-            ctx.moveTo(tx, ty + th);
-            ctx.lineTo(tx + tw, ty + th);
-            ctx.lineTo(tx + tw / 2, ty);
-          } else if (cls.includes('anchor-left')) {
-            ctx.moveTo(tx + tw, ty);
-            ctx.lineTo(tx + tw, ty + th);
-            ctx.lineTo(tx, ty + th / 2);
-          } else if (cls.includes('anchor-right')) {
-            ctx.moveTo(tx, ty);
-            ctx.lineTo(tx, ty + th);
-            ctx.lineTo(tx + tw, ty + th / 2);
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(cx, cy, cw, ch, 12 * scale);
+          } else {
+            ctx.rect(cx, cy, cw, ch);
           }
-          ctx.closePath();
           ctx.fill();
-        }
-        ctx.restore();
+          ctx.stroke();
 
-        // Render Content Inside Festival Popup
-        const paddingX = 16 * scale;
-        let curY = cy + 22 * scale;
-        const innerWidth = cw - (paddingX * 2);
+          // Draw Tip Pointer
+          if (tipEl) {
+            const tRect = tipEl.getBoundingClientRect();
+            const tx = (tRect.left - containerRect.left) * scaleX;
+            const ty = (tRect.top - containerRect.top) * scaleY;
+            const tw = tRect.width * scaleX;
+            const th = tRect.height * scaleY;
 
-        // Badge / Category (e.g. "EVENT ZONE", "VENDOR SPACE")
-        const badgeEl = contentEl.firstElementChild ? contentEl.firstElementChild.firstElementChild : null;
-        if (badgeEl && badgeEl.tagName === 'DIV') {
-          ctx.fillStyle = badgeEl.style.color || '#b45309';
-          ctx.font = `bold ${Math.round(11 * scale)}px "Open Sans", -apple-system, sans-serif`;
-          ctx.fillText(badgeEl.innerText.trim().toUpperCase(), cx + paddingX, curY);
-          curY += 16 * scale;
-        }
+            ctx.fillStyle = '#fdfaf7';
+            ctx.beginPath();
+            const cls = popupEl.className || '';
+            if (cls.includes('anchor-bottom')) {
+              ctx.moveTo(tx, ty);
+              ctx.lineTo(tx + tw, ty);
+              ctx.lineTo(tx + tw / 2, ty + th);
+            } else if (cls.includes('anchor-top')) {
+              ctx.moveTo(tx, ty + th);
+              ctx.lineTo(tx + tw, ty + th);
+              ctx.lineTo(tx + tw / 2, ty);
+            } else if (cls.includes('anchor-left')) {
+              ctx.moveTo(tx + tw, ty);
+              ctx.lineTo(tx + tw, ty + th);
+              ctx.lineTo(tx, ty + th / 2);
+            } else if (cls.includes('anchor-right')) {
+              ctx.moveTo(tx, ty);
+              ctx.lineTo(tx + tw, ty + th);
+              ctx.lineTo(tx + tw, ty + th / 2);
+            }
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
 
-        // Title
-        const titleEl = contentEl.querySelector('h4, h3');
-        if (titleEl) {
-          ctx.fillStyle = '#451a03';
-          ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
-          ctx.fillText(titleEl.innerText.trim(), cx + paddingX, curY);
-          curY += 18 * scale;
-        }
+          // Render Content Inside Festival Popup
+          const paddingX = 16 * scale;
+          let curY = cy + 22 * scale;
+          const innerWidth = cw - (paddingX * 2);
 
-        // Description
-        const descEl = contentEl.querySelector('p');
-        if (descEl && descEl.innerText.trim()) {
-          ctx.fillStyle = '#453b36';
-          ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
-          const words = descEl.innerText.trim().split(' ');
-          let line = '';
-          const lineHeight = 16 * scale;
-          for (let i = 0; i < words.length; i++) {
-            const testLine = line + (line ? ' ' : '') + words[i];
-            if (ctx.measureText(testLine).width > innerWidth && line) {
+          // Badge / Category (e.g. "EVENT ZONE", "VENDOR SPACE")
+          const badgeEl = contentEl.firstElementChild && contentEl.firstElementChild.firstElementChild ? contentEl.firstElementChild.firstElementChild : null;
+          if (badgeEl && badgeEl.tagName === 'DIV') {
+            ctx.fillStyle = badgeEl.style.color || '#b45309';
+            ctx.font = `bold ${Math.round(11 * scale)}px "Open Sans", -apple-system, sans-serif`;
+            ctx.fillText((badgeEl.textContent || '').trim().toUpperCase(), cx + paddingX, curY);
+            curY += 16 * scale;
+          }
+
+          // Title
+          const titleEl = contentEl.querySelector('h4, h3');
+          if (titleEl) {
+            ctx.fillStyle = '#451a03';
+            ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
+            ctx.fillText((titleEl.textContent || '').trim(), cx + paddingX, curY);
+            curY += 18 * scale;
+          }
+
+          // Description
+          const descEl = contentEl.querySelector('p');
+          if (descEl && (descEl.textContent || '').trim()) {
+            ctx.fillStyle = '#453b36';
+            ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+            const words = (descEl.textContent || '').trim().split(/\s+/);
+            let line = '';
+            const lineHeight = 16 * scale;
+            for (let i = 0; i < words.length; i++) {
+              const testLine = line + (line ? ' ' : '') + words[i];
+              if (ctx.measureText(testLine).width > innerWidth && line) {
+                ctx.fillText(line, cx + paddingX, curY);
+                line = words[i];
+                curY += lineHeight;
+              } else {
+                line = testLine;
+              }
+            }
+            if (line) {
               ctx.fillText(line, cx + paddingX, curY);
-              line = words[i];
               curY += lineHeight;
-            } else {
-              line = testLine;
             }
           }
-          if (line) {
-            ctx.fillText(line, cx + paddingX, curY);
-            curY += lineHeight;
+
+          // Location Info
+          const allDivs = Array.from(contentEl.querySelectorAll('div'));
+          const locDiv = allDivs.find(el => (el.textContent || '').includes('Location:'));
+          if (locDiv) {
+            curY += 2 * scale;
+            ctx.fillStyle = '#574742';
+            ctx.font = `italic ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+            ctx.fillText((locDiv.textContent || '').trim(), cx + paddingX, curY);
+            curY += 16 * scale;
+          }
+
+          // Directions Link
+          const linkEl = contentEl.querySelector('a');
+          if (linkEl) {
+            curY += 4 * scale;
+            ctx.strokeStyle = '#e7e0da';
+            ctx.lineWidth = Math.max(1, 1 * scale);
+            ctx.beginPath();
+            ctx.moveTo(cx + paddingX, curY);
+            ctx.lineTo(cx + cw - paddingX, curY);
+            ctx.stroke();
+            curY += 14 * scale;
+
+            ctx.fillStyle = '#c2410c';
+            ctx.font = `bold ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+            ctx.fillText('📍 Directions', cx + paddingX, curY);
           }
         }
-
-        // Location Info
-        const locDiv = Array.from(contentEl.querySelectorAll('div')).find(el => el.innerText.includes('Location:'));
-        if (locDiv) {
-          curY += 2 * scale;
-          ctx.fillStyle = '#574742';
-          ctx.font = `italic ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
-          ctx.fillText(locDiv.innerText.trim(), cx + paddingX, curY);
-          curY += 16 * scale;
-        }
-
-        // Directions Link
-        const linkEl = contentEl.querySelector('a');
-        if (linkEl) {
-          curY += 4 * scale;
-          ctx.strokeStyle = '#e7e0da';
-          ctx.lineWidth = Math.max(1, 1 * scale);
-          ctx.beginPath();
-          ctx.moveTo(cx + paddingX, curY);
-          ctx.lineTo(cx + cw - paddingX, curY);
-          ctx.stroke();
-          curY += 14 * scale;
-
-          ctx.fillStyle = '#c2410c';
-          ctx.font = `bold ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
-          ctx.fillText('📍 Directions', cx + paddingX, curY);
-        }
       }
+    } catch (popupErr) {
+      console.warn('Non-fatal festival popup compositing error:', popupErr);
     }
 
     return compositeCanvas.toDataURL('image/png');
@@ -384,25 +389,32 @@ window.addEventListener('message', (event) => {
       // Force map boundary and WebGL viewport synchronization
       map.resize();
       
-      // Register a one-time render handler to capture WebGL synchronously
-      map.once('render', async () => {
-        try {
-          const mapImage = await captureCompositeMap(map);
-          window.parent.postMessage({
-            type: 'map-capture-response',
-            dataUrl: mapImage
-          }, '*');
-        } catch (err) {
-          console.error('Error capturing composite festival map canvas:', err);
-          window.parent.postMessage({
-            type: 'map-capture-error',
-            error: err.message
-          }, '*');
-        }
+      // Allow layout and repaint to settle cleanly across animation frames
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            const mapImage = captureCompositeMap(map);
+            window.parent.postMessage({
+              type: 'map-capture-response',
+              dataUrl: mapImage
+            }, '*');
+          } catch (err) {
+            console.error('Error in festival captureCompositeMap, attempting raw canvas fallback:', err);
+            try {
+              const rawUrl = map.getCanvas().toDataURL('image/png');
+              window.parent.postMessage({
+                type: 'map-capture-response',
+                dataUrl: rawUrl
+              }, '*');
+            } catch (fallbackErr) {
+              window.parent.postMessage({
+                type: 'map-capture-error',
+                error: err.message
+              }, '*');
+            }
+          }
+        });
       });
-      
-      // Trigger an immediate redraw
-      map.triggerRepaint();
     } catch (err) {
       console.error('Error initiating map capture:', err);
       window.parent.postMessage({

@@ -2562,174 +2562,178 @@ window.addEventListener('message', (event) => {
         // 1. Draw base WebGL map layer
         ctx.drawImage(webglCanvas, 0, 0);
 
-        // 2. Check for active popup overlay
-        const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
-        if (popupEl && popupEl.offsetHeight > 0) {
-            const contentEl = popupEl.querySelector('.maplibregl-popup-content');
-            const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
+        // 2. Composite popup if active and visible
+        try {
+            const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
+            if (popupEl && popupEl.offsetHeight > 0) {
+                const contentEl = popupEl.querySelector('.maplibregl-popup-content');
+                const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
 
-            if (contentEl) {
-                const scaleX = compositeCanvas.width / containerRect.width;
-                const scaleY = compositeCanvas.height / containerRect.height;
-                const scale = (scaleX + scaleY) / 2;
+                if (contentEl) {
+                    const scaleX = compositeCanvas.width / (containerRect.width || 1);
+                    const scaleY = compositeCanvas.height / (containerRect.height || 1);
+                    const scale = (scaleX + scaleY) / 2;
 
-                const cRect = contentEl.getBoundingClientRect();
-                const cx = (cRect.left - containerRect.left) * scaleX;
-                const cy = (cRect.top - containerRect.top) * scaleY;
-                const cw = cRect.width * scaleX;
-                const ch = cRect.height * scaleY;
+                    const cRect = contentEl.getBoundingClientRect();
+                    const cx = (cRect.left - containerRect.left) * scaleX;
+                    const cy = (cRect.top - containerRect.top) * scaleY;
+                    const cw = cRect.width * scaleX;
+                    const ch = cRect.height * scaleY;
 
-                // Draw Drop Shadow & Bubble Background
-                ctx.save();
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                ctx.shadowBlur = 16 * scale;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 6 * scale;
-
-                ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                ctx.lineWidth = Math.max(1, 1 * scale);
-                ctx.beginPath();
-                if (typeof ctx.roundRect === 'function') {
-                    ctx.roundRect(cx, cy, cw, ch, 12 * scale);
-                } else {
-                    ctx.rect(cx, cy, cw, ch);
-                }
-                ctx.fill();
-                ctx.stroke();
-
-                // Draw Tip Pointer
-                if (tipEl) {
-                    const tRect = tipEl.getBoundingClientRect();
-                    const tx = (tRect.left - containerRect.left) * scaleX;
-                    const ty = (tRect.top - containerRect.top) * scaleY;
-                    const tw = tRect.width * scaleX;
-                    const th = tRect.height * scaleY;
+                    // Draw Drop Shadow & Bubble Background
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                    ctx.shadowBlur = 14 * scale;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 4 * scale;
 
                     ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
-                    ctx.beginPath();
-                    const cls = popupEl.className;
-                    if (cls.includes('anchor-bottom')) {
-                        ctx.moveTo(tx, ty);
-                        ctx.lineTo(tx + tw, ty);
-                        ctx.lineTo(tx + tw / 2, ty + th);
-                    } else if (cls.includes('anchor-top')) {
-                        ctx.moveTo(tx, ty + th);
-                        ctx.lineTo(tx + tw, ty + th);
-                        ctx.lineTo(tx + tw / 2, ty);
-                    } else if (cls.includes('anchor-left')) {
-                        ctx.moveTo(tx + tw, ty);
-                        ctx.lineTo(tx + tw, ty + th);
-                        ctx.lineTo(tx, ty + th / 2);
-                    } else if (cls.includes('anchor-right')) {
-                        ctx.moveTo(tx, ty);
-                        ctx.lineTo(tx, ty + th);
-                        ctx.lineTo(tx + tw, ty + th / 2);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-                }
-                ctx.restore();
-
-                // Render Content Inside Popup
-                const paddingX = 20 * scale;
-                let curY = cy + 26 * scale;
-                const innerWidth = cw - (paddingX * 2);
-
-                // Title
-                const titleEl = contentEl.querySelector('h3');
-                if (titleEl) {
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.font = `bold ${Math.round(17 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                    ctx.fillText(titleEl.innerText.trim(), cx + paddingX, curY);
-                    curY += 18 * scale;
-                }
-
-                // Tags / Details above divider
-                const tagDetailEl = Array.from(contentEl.querySelectorAll('.wv-popup-detail')).find(el => el.innerText.includes('Tags:'));
-                if (tagDetailEl) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                    ctx.fillText(tagDetailEl.innerText.trim(), cx + paddingX, curY);
-                    curY += 16 * scale;
-                }
-
-                // Description
-                const descEl = contentEl.querySelector('p:not(.wv-popup-detail)');
-                if (descEl && descEl.innerText.trim()) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                    ctx.font = `${Math.round(13.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                    const words = descEl.innerText.trim().split(' ');
-                    let line = '';
-                    const lineHeight = 17 * scale;
-                    for (let i = 0; i < words.length; i++) {
-                        const testLine = line + (line ? ' ' : '') + words[i];
-                        if (ctx.measureText(testLine).width > innerWidth && line) {
-                            ctx.fillText(line, cx + paddingX, curY);
-                            line = words[i];
-                            curY += lineHeight;
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    if (line) {
-                        ctx.fillText(line, cx + paddingX, curY);
-                        curY += lineHeight;
-                    }
-                }
-
-                // Divider (hr)
-                const hrEl = contentEl.querySelector('hr');
-                if (hrEl) {
-                    curY += 4 * scale;
-                    ctx.strokeStyle = 'rgba(229, 193, 88, 0.75)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                     ctx.lineWidth = Math.max(1, 1 * scale);
                     ctx.beginPath();
-                    ctx.moveTo(cx + paddingX, curY);
-                    ctx.lineTo(cx + cw - paddingX, curY);
-                    ctx.stroke();
-                    curY += 16 * scale;
-                }
-
-                // Phone & Address Details
-                const otherDetails = contentEl.querySelectorAll('.wv-popup-detail');
-                otherDetails.forEach(detailEl => {
-                    if (detailEl === tagDetailEl) return;
-                    const text = detailEl.innerText.trim();
-                    if (!text) return;
-                    
-                    ctx.fillStyle = '#E5C158';
-                    ctx.beginPath();
-                    ctx.arc(cx + paddingX + 4 * scale, curY - 4 * scale, 3 * scale, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                    ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                    ctx.fillText(text, cx + paddingX + 14 * scale, curY);
-                    curY += 18 * scale;
-                });
-
-                // Directions Button
-                const dirBtn = contentEl.querySelector('.wv-directions-btn');
-                if (dirBtn) {
-                    curY += 6 * scale;
-                    const btnH = 32 * scale;
-                    ctx.fillStyle = '#E5C158';
-                    ctx.beginPath();
                     if (typeof ctx.roundRect === 'function') {
-                        ctx.roundRect(cx + paddingX, curY, innerWidth, btnH, 16 * scale);
+                        ctx.roundRect(cx, cy, cw, ch, 12 * scale);
                     } else {
-                        ctx.rect(cx + paddingX, curY, innerWidth, btnH);
+                        ctx.rect(cx, cy, cw, ch);
                     }
                     ctx.fill();
+                    ctx.stroke();
 
-                    ctx.fillStyle = '#1E3D60';
-                    ctx.font = `bold ${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Directions', cx + paddingX + innerWidth / 2, curY + btnH / 2 + 4.5 * scale);
-                    ctx.textAlign = 'left';
+                    // Draw Tip Pointer
+                    if (tipEl) {
+                        const tRect = tipEl.getBoundingClientRect();
+                        const tx = (tRect.left - containerRect.left) * scaleX;
+                        const ty = (tRect.top - containerRect.top) * scaleY;
+                        const tw = tRect.width * scaleX;
+                        const th = tRect.height * scaleY;
+
+                        ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
+                        ctx.beginPath();
+                        const cls = popupEl.className || '';
+                        if (cls.includes('anchor-bottom')) {
+                            ctx.moveTo(tx, ty);
+                            ctx.lineTo(tx + tw, ty);
+                            ctx.lineTo(tx + tw / 2, ty + th);
+                        } else if (cls.includes('anchor-top')) {
+                            ctx.moveTo(tx, ty + th);
+                            ctx.lineTo(tx + tw, ty + th);
+                            ctx.lineTo(tx + tw / 2, ty);
+                        } else if (cls.includes('anchor-left')) {
+                            ctx.moveTo(tx + tw, ty);
+                            ctx.lineTo(tx + tw, ty + th);
+                            ctx.lineTo(tx, ty + th / 2);
+                        } else if (cls.includes('anchor-right')) {
+                            ctx.moveTo(tx, ty);
+                            ctx.lineTo(tx, ty + th);
+                            ctx.lineTo(tx + tw, ty + th / 2);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    ctx.restore();
+
+                    // Render Content Inside Popup
+                    const paddingX = 18 * scale;
+                    let curY = cy + 24 * scale;
+                    const innerWidth = cw - (paddingX * 2);
+
+                    // Title
+                    const titleEl = contentEl.querySelector('h3');
+                    if (titleEl) {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                        ctx.fillText((titleEl.textContent || '').trim(), cx + paddingX, curY);
+                        curY += 18 * scale;
+                    }
+
+                    // Tags / Details
+                    const allDetails = Array.from(contentEl.querySelectorAll('.wv-popup-detail'));
+                    const tagEl = allDetails.find(el => (el.textContent || '').includes('Tags:'));
+                    if (tagEl) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.font = `${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                        ctx.fillText((tagEl.textContent || '').trim(), cx + paddingX, curY);
+                        curY += 16 * scale;
+                    }
+
+                    // Description
+                    const descEl = contentEl.querySelector('p:not(.wv-popup-detail)');
+                    if (descEl && (descEl.textContent || '').trim()) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                        ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                        const words = (descEl.textContent || '').trim().split(/\s+/);
+                        let line = '';
+                        const lineHeight = 16 * scale;
+                        for (let i = 0; i < words.length; i++) {
+                            const testLine = line + (line ? ' ' : '') + words[i];
+                            if (ctx.measureText(testLine).width > innerWidth && line) {
+                                ctx.fillText(line, cx + paddingX, curY);
+                                line = words[i];
+                                curY += lineHeight;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        if (line) {
+                            ctx.fillText(line, cx + paddingX, curY);
+                            curY += lineHeight;
+                        }
+                    }
+
+                    // Divider (hr)
+                    const hrEl = contentEl.querySelector('hr');
+                    if (hrEl) {
+                        curY += 4 * scale;
+                        ctx.strokeStyle = 'rgba(229, 193, 88, 0.75)';
+                        ctx.lineWidth = Math.max(1, 1 * scale);
+                        ctx.beginPath();
+                        ctx.moveTo(cx + paddingX, curY);
+                        ctx.lineTo(cx + cw - paddingX, curY);
+                        ctx.stroke();
+                        curY += 16 * scale;
+                    }
+
+                    // Details (address, phone)
+                    allDetails.forEach(detailEl => {
+                        if (detailEl === tagEl) return;
+                        const text = (detailEl.textContent || '').trim();
+                        if (!text) return;
+                        
+                        ctx.fillStyle = '#E5C158';
+                        ctx.beginPath();
+                        ctx.arc(cx + paddingX + 4 * scale, curY - 4 * scale, 3 * scale, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                        ctx.font = `${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                        ctx.fillText(text, cx + paddingX + 14 * scale, curY);
+                        curY += 18 * scale;
+                    });
+
+                    // Directions Button
+                    const dirBtn = contentEl.querySelector('.wv-directions-btn');
+                    if (dirBtn) {
+                        curY += 6 * scale;
+                        const btnH = 30 * scale;
+                        ctx.fillStyle = '#E5C158';
+                        ctx.beginPath();
+                        if (typeof ctx.roundRect === 'function') {
+                            ctx.roundRect(cx + paddingX, curY, innerWidth, btnH, 15 * scale);
+                        } else {
+                            ctx.rect(cx + paddingX, curY, innerWidth, btnH);
+                        }
+                        ctx.fill();
+
+                        ctx.fillStyle = '#1E3D60';
+                        ctx.font = `bold ${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Directions', cx + paddingX + innerWidth / 2, curY + btnH / 2 + 4.5 * scale);
+                        ctx.textAlign = 'left';
+                    }
                 }
             }
+        } catch (popupErr) {
+            console.warn('Non-fatal popup compositing error:', popupErr);
         }
 
         return compositeCanvas.toDataURL('image/png');
@@ -2744,25 +2748,32 @@ window.addEventListener('message', (event) => {
             // Force map boundary and WebGL viewport synchronization
             map.resize();
             
-            // Register a one-time render handler to capture WebGL synchronously
-            map.once('render', async () => {
-                try {
-                    const mapImage = await captureCompositeMap(map);
-                    window.parent.postMessage({
-                        type: 'map-capture-response',
-                        dataUrl: mapImage
-                    }, '*');
-                } catch (err) {
-                    console.error('Error capturing composite map canvas:', err);
-                    window.parent.postMessage({
-                        type: 'map-capture-error',
-                        error: err.message
-                    }, '*');
-                }
+            // Allow layout and repaint to settle cleanly across animation frames
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    try {
+                        const mapImage = captureCompositeMap(map);
+                        window.parent.postMessage({
+                            type: 'map-capture-response',
+                            dataUrl: mapImage
+                        }, '*');
+                    } catch (err) {
+                        console.error('Error in captureCompositeMap, attempting raw canvas fallback:', err);
+                        try {
+                            const rawUrl = map.getCanvas().toDataURL('image/png');
+                            window.parent.postMessage({
+                                type: 'map-capture-response',
+                                dataUrl: rawUrl
+                            }, '*');
+                        } catch (fallbackErr) {
+                            window.parent.postMessage({
+                                type: 'map-capture-error',
+                                error: err.message
+                            }, '*');
+                        }
+                    }
+                });
             });
-            
-            // Trigger an immediate redraw
-            map.triggerRepaint();
         } catch (err) {
             console.error('Error initiating map capture:', err);
             window.parent.postMessage({
