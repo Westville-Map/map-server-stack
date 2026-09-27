@@ -1756,11 +1756,12 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   }
 
   .print-map-wrapper {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     border: 1px solid #ccc;
     background: #fafafa;
     text-align: center;
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   .print-map-image {
@@ -1771,11 +1772,30 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   }
 
   #print-layout-container.print-portrait .print-map-image {
-    max-height: 7.8in;
+    max-height: 7.2in;
   }
 
   #print-layout-container.print-landscape .print-map-image {
-    max-height: 5.4in;
+    max-height: 5.0in;
+  }
+
+  #print-layout-container.has-selected-feature .print-map-wrapper {
+    margin-bottom: 12px;
+  }
+
+  #print-layout-container.print-portrait.has-selected-feature .print-map-image {
+    max-height: 4.6in;
+  }
+
+  #print-layout-container.print-landscape.has-selected-feature .print-map-image {
+    max-height: 3.2in;
+  }
+
+  .print-selected-feature-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-top: 10px;
+    margin-bottom: 12px;
   }
 
   .print-section-title {

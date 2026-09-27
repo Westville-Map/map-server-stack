@@ -1590,9 +1590,6 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
   const container = document.getElementById('print-layout-container');
   if (!container) return;
   
-  // Set orientation class for dynamic media sizing
-  container.className = `print-${orientation}`;
-  
   const title = getPrintHeaderTitle();
   const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   
@@ -1608,35 +1605,38 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
   let selectedFeatureHtml = '';
   const searchParams = new URL(window.location.href).searchParams;
   const selFeatureName = searchParams.get('feature');
-  if (selFeatureName) {
-    const matched = (allDirFeatures || []).find(f => (f.properties.name || '').toLowerCase() === selFeatureName.toLowerCase());
-    if (matched) {
-      const cleanSource = matched._source === 'parking' ? 'Parking' : matched._source === 'establishment' ? 'Local Establishment' : 'Parks & Recreation';
-      const tagsList = (matched.properties.tags || matched._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
-      const tagSpanList = tagsList.map(tag => `<span class="print-card-tag">${tag}</span>`).join('');
-      const desc = matched.properties.description ? `<p class="print-card-meta"><strong>About:</strong> ${matched.properties.description}</p>` : '';
-      const addr = matched.properties.address ? `<p class="print-card-meta"><strong>Location:</strong> ${matched.properties.address}</p>` : '';
-      const phone = matched.properties.phone ? `<p class="print-card-meta"><strong>Phone:</strong> ${matched.properties.phone}</p>` : '';
-      const web = matched.properties.url ? `<p class="print-card-meta"><strong>Website:</strong> ${matched.properties.url}</p>` : '';
-      let borderColor = '#1a4d7c';
-      if (matched.properties && matched.properties.primary_tag) {
-        borderColor = tagColors[matched.properties.primary_tag] || '#1a4d7c';
-      }
-      selectedFeatureHtml = `
-        <div class="print-selected-feature-section" style="margin-top: 14px; margin-bottom: 14px;">
-          <div class="print-section-title" style="margin-bottom: 8px;">Selected Feature Details</div>
-          <div class="print-card" style="border-left-color: ${borderColor};">
-            <div class="print-card-title">${matched.properties.name || 'Unnamed'}</div>
-            <div class="print-card-category">${cleanSource}</div>
-            ${desc}
-            ${addr}
-            ${phone}
-            ${web}
-            <div class="print-card-tags">${tagSpanList}</div>
-          </div>
-        </div>
-      `;
+  const matched = selFeatureName ? (allDirFeatures || []).find(f => (f.properties.name || '').toLowerCase() === selFeatureName.toLowerCase()) : null;
+  const hasSelectedFeature = Boolean(matched);
+
+  // Set orientation and selected-feature modifier classes for dynamic media sizing
+  container.className = `print-${orientation}${hasSelectedFeature ? ' has-selected-feature' : ''}`;
+
+  if (matched) {
+    const cleanSource = matched._source === 'parking' ? 'Parking' : matched._source === 'establishment' ? 'Local Establishment' : 'Parks & Recreation';
+    const tagsList = (matched.properties.tags || matched._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    const tagSpanList = tagsList.map(tag => `<span class="print-card-tag">${tag}</span>`).join('');
+    const desc = matched.properties.description ? `<p class="print-card-meta"><strong>About:</strong> ${matched.properties.description}</p>` : '';
+    const addr = matched.properties.address ? `<p class="print-card-meta"><strong>Location:</strong> ${matched.properties.address}</p>` : '';
+    const phone = matched.properties.phone ? `<p class="print-card-meta"><strong>Phone:</strong> ${matched.properties.phone}</p>` : '';
+    const web = matched.properties.url ? `<p class="print-card-meta"><strong>Website:</strong> ${matched.properties.url}</p>` : '';
+    let borderColor = '#1a4d7c';
+    if (matched.properties && matched.properties.primary_tag) {
+      borderColor = tagColors[matched.properties.primary_tag] || '#1a4d7c';
     }
+    selectedFeatureHtml = `
+      <div class="print-selected-feature-section">
+        <div class="print-section-title" style="margin-top: 10px; margin-bottom: 8px;">Selected Location Details</div>
+        <div class="print-card" style="border-left-color: ${borderColor};">
+          <div class="print-card-title">${matched.properties.name || 'Unnamed'}</div>
+          <div class="print-card-category">${cleanSource}</div>
+          ${desc}
+          ${addr}
+          ${phone}
+          ${web}
+          <div class="print-card-tags">${tagSpanList}</div>
+        </div>
+      </div>
+    `;
   }
   
   let cardsHtml = '';
@@ -1761,7 +1761,84 @@ if (printExecuteBtn) {
 // base64ToUint8Array is now loaded globally from components.js
 
 
-// Helper to draw left border and text block inside PDF dynamically
+// Helpers for Rich Text formatting inside vector PDF
+function parseHtmlTokens(prefixText, html) {
+  const tokens = [];
+  if (prefixText) {
+    tokens.push({ text: prefixText, isSpace: false, isBold: true });
+    tokens.push({ text: ' ', isSpace: true, isBold: false });
+  }
+  if (!html) return tokens;
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  function traverse(node, isBold = false) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      if (text) {
+        const parts = text.split(/(\s+)/);
+        parts.forEach(part => {
+          if (!part) return;
+          tokens.push({
+            text: part,
+            isSpace: /^\s+$/.test(part),
+            isBold: isBold
+          });
+        });
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName.toLowerCase();
+      const nextBold = isBold || tag === 'b' || tag === 'strong' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4';
+      node.childNodes.forEach(child => traverse(child, nextBold));
+    }
+  }
+
+  traverse(container);
+  return tokens;
+}
+
+function wrapRichTokens(tokens, maxPixelWidth, fontSize, helvetica, helveticaBold) {
+  const lines = [];
+  let currentLine = [];
+  let currentLineWidth = 0;
+
+  tokens.forEach(tok => {
+    const font = tok.isBold ? helveticaBold : helvetica;
+    const tokenWidth = font.widthOfTextAtSize(tok.text, fontSize);
+
+    if (tok.isSpace) {
+      if (currentLine.length > 0) {
+        currentLine.push({ ...tok, width: tokenWidth });
+        currentLineWidth += tokenWidth;
+      }
+      return;
+    }
+
+    if (currentLineWidth + tokenWidth <= maxPixelWidth || currentLine.length === 0) {
+      currentLine.push({ ...tok, width: tokenWidth });
+      currentLineWidth += tokenWidth;
+    } else {
+      while (currentLine.length > 0 && currentLine[currentLine.length - 1].isSpace) {
+        currentLine.pop();
+      }
+      if (currentLine.length > 0) lines.push(currentLine);
+      currentLine = [{ ...tok, width: tokenWidth }];
+      currentLineWidth = tokenWidth;
+    }
+  });
+
+  if (currentLine.length > 0) {
+    while (currentLine.length > 0 && currentLine[currentLine.length - 1].isSpace) {
+      currentLine.pop();
+    }
+    if (currentLine.length > 0) lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+// Helper to draw left border and rich text block inside PDF dynamically
 function drawPdfCard(pdfDoc, page, helvetica, helveticaBold, x, y, width, f, tColors) {
   const name = f.properties.name || 'Unnamed';
   const cleanSource = f._source === 'parking' ? 'Parking' : f._source === 'establishment' ? 'Local Establishment' : 'Parks & Recreation';
@@ -1770,15 +1847,25 @@ function drawPdfCard(pdfDoc, page, helvetica, helveticaBold, x, y, width, f, tCo
   const phone = f.properties.phone || '';
   const web = f.properties.url || '';
   
-  // Wrap details
-  const wrapWidth = Math.floor(width / 6); // character width approximation
-  const descLines = desc ? wrapText(`About: ${desc}`, wrapWidth) : [];
-  const addrLines = addr ? wrapText(`Location: ${addr}`, wrapWidth) : [];
-  const phoneLines = phone ? [`Phone: ${phone}`] : [];
-  const webLines = web ? wrapText(`Website: ${web}`, wrapWidth) : [];
+  const innerWidth = width - 30; // 15px left padding + margin
+  
+  // Wrap details with rich HTML tokens (renders <b> bold tags and normal text properly!)
+  const descTokens = desc ? parseHtmlTokens('About:', desc) : [];
+  const descLines = descTokens.length > 0 ? wrapRichTokens(descTokens, innerWidth, 9, helvetica, helveticaBold) : [];
+
+  const addrTokens = addr ? parseHtmlTokens('Location:', addr) : [];
+  const addrLines = addrTokens.length > 0 ? wrapRichTokens(addrTokens, innerWidth, 9, helvetica, helveticaBold) : [];
+
+  const phoneTokens = phone ? parseHtmlTokens('Phone:', phone) : [];
+  const phoneLines = phoneTokens.length > 0 ? wrapRichTokens(phoneTokens, innerWidth, 9, helvetica, helveticaBold) : [];
+
+  const webTokens = web ? parseHtmlTokens('Website:', web) : [];
+  const webLines = webTokens.length > 0 ? wrapRichTokens(webTokens, innerWidth, 9, helvetica, helveticaBold) : [];
+
   const tagsList = (f.properties.tags || f._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
-  const tagsLine = tagsList.length > 0 ? `Tags: ${tagsList.join(', ')}` : '';
-  const tagsLines = tagsLine ? wrapText(tagsLine, wrapWidth) : [];
+  const tagsLine = tagsList.length > 0 ? tagsList.join(', ') : '';
+  const tagsTokens = tagsLine ? parseHtmlTokens('Tags:', tagsLine) : [];
+  const tagsLines = tagsTokens.length > 0 ? wrapRichTokens(tagsTokens, innerWidth, 8, helvetica, helveticaBold) : [];
   
   // Calculate heights
   let lineCount = 2 + descLines.length + addrLines.length + phoneLines.length + webLines.length + tagsLines.length;
@@ -1847,36 +1934,30 @@ function drawPdfCard(pdfDoc, page, helvetica, helveticaBold, x, y, width, f, tCo
   });
   currY -= 13;
   
-  const drawTextLines = (lines) => {
+  const drawRichLines = (lines, fontSize, color, spacing = 11) => {
     lines.forEach(line => {
-      page.drawText(line, {
-        x: x + 15,
-        y: currY,
-        size: 9,
-        font: helvetica,
-        color: PDFLib.rgb(0.2, 0.2, 0.2),
+      let curX = x + 15;
+      line.forEach(tok => {
+        const font = tok.isBold ? helveticaBold : helvetica;
+        page.drawText(tok.text, {
+          x: curX,
+          y: currY,
+          size: fontSize,
+          font: font,
+          color: color,
+        });
+        curX += tok.width;
       });
-      currY -= 11;
+      currY -= spacing;
     });
   };
   
   // Draw Details
-  if (desc) drawTextLines(descLines);
-  if (addr) drawTextLines(addrLines);
-  if (phone) drawTextLines(phoneLines);
-  if (web) drawTextLines(webLines);
-  if (tagsLine) {
-    tagsLines.forEach(line => {
-      page.drawText(line, {
-        x: x + 15,
-        y: currY,
-        size: 8,
-        font: helvetica,
-        color: PDFLib.rgb(0.4, 0.4, 0.4),
-      });
-      currY -= 10;
-    });
-  }
+  if (descLines.length > 0) drawRichLines(descLines, 9, PDFLib.rgb(0.2, 0.2, 0.2), 11);
+  if (addrLines.length > 0) drawRichLines(addrLines, 9, PDFLib.rgb(0.2, 0.2, 0.2), 11);
+  if (phoneLines.length > 0) drawRichLines(phoneLines, 9, PDFLib.rgb(0.2, 0.2, 0.2), 11);
+  if (webLines.length > 0) drawRichLines(webLines, 9, PDFLib.rgb(0.2, 0.2, 0.2), 11);
+  if (tagsLines.length > 0) drawRichLines(tagsLines, 8, PDFLib.rgb(0.4, 0.4, 0.4), 10);
   
   return cardHeight;
 }
