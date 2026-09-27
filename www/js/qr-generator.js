@@ -907,6 +907,35 @@
     }
   }
 
+  let _previousActiveElement = null;
+
+  function closeShareModal() {
+    const overlay = document.getElementById('share-modal') || document.querySelector('wv-modal[modal-id="share-modal"] .wv-modal-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
+          _previousActiveElement.focus();
+          _previousActiveElement = null;
+        }
+      }, 200);
+    }
+  }
+
+  // Global escape key listener for share modal
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const overlay = document.getElementById('share-modal') || document.querySelector('wv-modal[modal-id="share-modal"] .wv-modal-overlay');
+        if (overlay && overlay.classList.contains('active')) {
+          closeShareModal();
+        }
+      }
+    });
+  }
+
   function openShareModal(options) {
     options = options || {};
     const url = options.url || window.location.href;
@@ -915,22 +944,27 @@
     const colorDark = options.colorDark || '#1a4d7c';
     const colorLight = options.colorLight || '#ffffff';
 
-    const modal = document.getElementById('share-modal');
-    if (!modal) return;
+    const overlay = document.getElementById('share-modal') || document.querySelector('wv-modal[modal-id="share-modal"] .wv-modal-overlay') || document.querySelector('wv-modal[modal-id="share-modal"]');
+    if (!overlay) {
+      console.warn("Share modal overlay element not found in DOM");
+      return;
+    }
+
+    _previousActiveElement = document.activeElement;
 
     // Update Title & Subtitle
-    const titleEl = modal.querySelector('#share-modal-title');
+    const titleEl = overlay.querySelector('#share-modal-title');
     if (titleEl) titleEl.textContent = title;
 
-    const subEl = modal.querySelector('#share-modal-subtitle');
+    const subEl = overlay.querySelector('#share-modal-subtitle');
     if (subEl) subEl.textContent = subtitle;
 
     // Update URL text
-    const urlEl = modal.querySelector('#share-modal-url-text');
+    const urlEl = overlay.querySelector('#share-modal-url-text');
     if (urlEl) urlEl.textContent = url;
 
     // Render Canvas
-    const renderArea = modal.querySelector('#share-qr-render-area');
+    const renderArea = overlay.querySelector('#share-qr-render-area');
     let activeCanvas = null;
     if (renderArea) {
       renderArea.innerHTML = '';
@@ -947,7 +981,7 @@
     }
 
     // Tap QR Box -> Copy image
-    const qrBox = modal.querySelector('#share-qr-box');
+    const qrBox = overlay.querySelector('#share-qr-box');
     if (qrBox) {
       qrBox.onclick = () => {
         copyCanvasToClipboard(activeCanvas, url, 'QR code image copied to clipboard!');
@@ -961,7 +995,7 @@
     }
 
     // Tap Meta Card -> Copy link
-    const metaCard = modal.querySelector('#share-meta-card');
+    const metaCard = overlay.querySelector('#share-meta-card');
     if (metaCard) {
       metaCard.onclick = () => {
         copyTextToClipboard(url, 'Link copied to clipboard!');
@@ -975,7 +1009,7 @@
     }
 
     // Copy QR Image button
-    const copyQrBtn = modal.querySelector('#share-copy-qr-btn');
+    const copyQrBtn = overlay.querySelector('#share-copy-qr-btn');
     if (copyQrBtn) {
       copyQrBtn.onclick = () => {
         copyCanvasToClipboard(activeCanvas, url, 'QR code image copied to clipboard!');
@@ -983,7 +1017,7 @@
     }
 
     // Copy Link button
-    const copyLinkBtn = modal.querySelector('#share-copy-link-btn');
+    const copyLinkBtn = overlay.querySelector('#share-copy-link-btn');
     if (copyLinkBtn) {
       copyLinkBtn.onclick = () => {
         copyTextToClipboard(url, 'Link copied to clipboard!');
@@ -991,7 +1025,7 @@
     }
 
     // Native Share button
-    const nativeBtn = modal.querySelector('#share-native-btn');
+    const nativeBtn = overlay.querySelector('#share-native-btn');
     if (nativeBtn) {
       if (navigator.share) {
         nativeBtn.style.display = 'inline-flex';
@@ -1009,34 +1043,32 @@
       }
     }
 
-    // Close button
-    const closeBtn = modal.querySelector('#share-modal-close-btn');
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        if (typeof modal.close === 'function') {
-          modal.close();
-        } else {
-          const overlay = modal.querySelector('.wv-modal-overlay');
-          if (overlay) {
-            overlay.classList.remove('active');
-            setTimeout(() => { overlay.style.display = 'none'; }, 200);
-          }
-        }
+    // Close buttons
+    const closeBtns = overlay.querySelectorAll('.wv-modal-close, #share-modal-close-btn');
+    closeBtns.forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        closeShareModal();
       };
-    }
+    });
+
+    // Backdrop click
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        closeShareModal();
+      }
+    };
 
     // Open Modal
-    if (typeof modal.open === 'function') {
-      modal.open();
-    } else {
-      const overlay = modal.querySelector('.wv-modal-overlay');
-      if (overlay) {
-        overlay.style.display = 'flex';
-        requestAnimationFrame(() => {
-          overlay.classList.add('active');
-        });
-      }
-    }
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+    });
+    document.body.style.overflow = 'hidden';
+
+    // Focus close button for accessibility
+    const headerCloseBtn = overlay.querySelector('.wv-modal-close');
+    if (headerCloseBtn) headerCloseBtn.focus();
   }
 
   return {
