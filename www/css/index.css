@@ -690,6 +690,10 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   box-sizing: border-box;
 }
 
+.explore-dropdown-btn.highlight-option {
+  background-color: rgba(229, 193, 88, 0.05);
+}
+
 .explore-dropdown-btn:hover {
   background-color: var(--accent-gold);
   color: var(--primary-blue);
@@ -708,10 +712,6 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
 .dropdown-divider {
   height: 1.5px;
   background-color: rgba(229, 193, 88, 0.3);
-}
-
-.explore-dropdown-btn.highlight-option {
-  background-color: rgba(229, 193, 88, 0.05);
 }
 
 .map-status {
