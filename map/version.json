@@ -1,7 +1,7 @@
 {
-  "version": "2026.09.27.1-test.ffa50ff",
-  "channel": "testing",
-  "buildDate": "2026-09-27 11:00:50 EDT",
+  "version": "2026.09.27.1",
+  "channel": "production",
+  "buildDate": "2026-09-27 11:39:37 EDT",
   "timezone": "America/New_York",
-  "gitCommit": "ffa50ff"
+  "gitCommit": "802f5d3"
 }
