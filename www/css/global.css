@@ -52,6 +52,22 @@ header h1 {
 .brand-logo a {
   text-decoration: unset;
   color: unset;
+  border-radius: 4px;
+}
+
+.brand-logo a:focus-visible {
+  outline: 3px solid var(--accent-gold) !important;
+  outline-offset: 3px !important;
+}
+
+.brand-icon-img a {
+  display: inline-flex;
+  border-radius: 50%;
+}
+
+.brand-icon-img a:focus-visible {
+  outline: 3px solid var(--accent-gold) !important;
+  outline-offset: 3px !important;
 }
 
 .brand-icon-img img, .mapicon {
@@ -200,6 +216,14 @@ button.header-btn {
   color: var(--primary-blue);
 }
 
+.help-split-left-btn:focus,
+.help-split-left-btn:focus-visible {
+  background-color: var(--white);
+  color: var(--primary-blue);
+  outline: 2.5px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
+}
+
 .help-split-btn::after {
   content: "";
   display: block;
@@ -227,6 +251,14 @@ button.header-btn {
 .help-split-right-btn:hover {
   background-color: var(--white);
   color: var(--primary-blue);
+}
+
+.help-split-right-btn:focus,
+.help-split-right-btn:focus-visible {
+  background-color: var(--white);
+  color: var(--primary-blue);
+  outline: 2.5px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
 }
 
 /* Dropdown menu */
@@ -321,10 +353,18 @@ footer {
   font-weight: inherit;
   font-size: inherit;
   margin: 0 4px;
+  border-radius: 2px;
   transition: text-decoration-color 0.2s ease, opacity 0.2s ease;
 }
 
 .footer-version-link:hover {
+  text-decoration-color: var(--white);
+  opacity: 1;
+}
+
+.footer-version-link:focus-visible {
+  outline: 2px solid var(--accent-gold) !important;
+  outline-offset: 3px !important;
   text-decoration-color: var(--white);
   opacity: 1;
 }
