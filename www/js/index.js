@@ -1604,6 +1604,40 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
       </div>
     `;
   }
+
+  let selectedFeatureHtml = '';
+  const searchParams = new URL(window.location.href).searchParams;
+  const selFeatureName = searchParams.get('feature');
+  if (selFeatureName) {
+    const matched = (allDirFeatures || []).find(f => (f.properties.name || '').toLowerCase() === selFeatureName.toLowerCase());
+    if (matched) {
+      const cleanSource = matched._source === 'parking' ? 'Parking' : matched._source === 'establishment' ? 'Local Establishment' : 'Parks & Recreation';
+      const tagsList = (matched.properties.tags || matched._source || '').split(',').map(tag => tag.trim()).filter(Boolean);
+      const tagSpanList = tagsList.map(tag => `<span class="print-card-tag">${tag}</span>`).join('');
+      const desc = matched.properties.description ? `<p class="print-card-meta"><strong>About:</strong> ${matched.properties.description}</p>` : '';
+      const addr = matched.properties.address ? `<p class="print-card-meta"><strong>Location:</strong> ${matched.properties.address}</p>` : '';
+      const phone = matched.properties.phone ? `<p class="print-card-meta"><strong>Phone:</strong> ${matched.properties.phone}</p>` : '';
+      const web = matched.properties.url ? `<p class="print-card-meta"><strong>Website:</strong> ${matched.properties.url}</p>` : '';
+      let borderColor = '#1a4d7c';
+      if (matched.properties && matched.properties.primary_tag) {
+        borderColor = tagColors[matched.properties.primary_tag] || '#1a4d7c';
+      }
+      selectedFeatureHtml = `
+        <div class="print-selected-feature-section" style="margin-top: 14px; margin-bottom: 14px;">
+          <div class="print-section-title" style="margin-bottom: 8px;">Selected Feature Details</div>
+          <div class="print-card" style="border-left-color: ${borderColor};">
+            <div class="print-card-title">${matched.properties.name || 'Unnamed'}</div>
+            <div class="print-card-category">${cleanSource}</div>
+            ${desc}
+            ${addr}
+            ${phone}
+            ${web}
+            <div class="print-card-tags">${tagSpanList}</div>
+          </div>
+        </div>
+      `;
+    }
+  }
   
   let cardsHtml = '';
   if (cards && cards.length > 0) {
@@ -1653,6 +1687,7 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
     </div>
     <div class="print-subheader">Westville Borough Map & Directory Portal</div>
     ${mapHtml}
+    ${selectedFeatureHtml}
     ${cardsHtml}
   `;
 }
@@ -1937,8 +1972,12 @@ if (printPdfBtn) {
           const mapImgEmbed = await pdfDoc.embedPng(imageBytes);
           
           // Calculate fitted map proportions cleanly within borders
+          const selFeatureParam = new URL(window.location.href).searchParams.get('feature');
+          const matchedFeature = selFeatureParam ? (allDirFeatures || []).find(f => (f.properties.name || '').toLowerCase() === selFeatureParam.toLowerCase()) : null;
+          const reserveHeight = matchedFeature ? 140 : 60;
+
           const maxMapWidth = pageWidth - 100;
-          const maxMapHeight = nextY - 60; // Leave space for page index footer
+          const maxMapHeight = nextY - reserveHeight; // Leave space for page index footer / selected feature card
           
           let mapW = mapImgEmbed.width;
           let mapH = mapImgEmbed.height;
@@ -1991,6 +2030,24 @@ if (printPdfBtn) {
         nextY -= 50;
       }
       
+      // Render Selected Feature Details on Page 1 if present and space permits
+      const selFeatureParam = new URL(window.location.href).searchParams.get('feature');
+      if (selFeatureParam) {
+        const matchedFeature = (allDirFeatures || []).find(f => (f.properties.name || '').toLowerCase() === selFeatureParam.toLowerCase());
+        if (matchedFeature && nextY > 110) {
+          page1.drawText("Selected Feature Details", {
+            x: 50,
+            y: nextY,
+            size: 10,
+            font: helveticaBold,
+            color: rgb(43/255, 101/255, 159/255),
+          });
+          nextY -= 14;
+          const drawnH = drawPdfCard(pdfDoc, page1, helvetica, helveticaBold, 50, nextY, pageWidth - 100, matchedFeature, tagColors);
+          nextY -= (drawnH + 15);
+        }
+      }
+
       // Draw Page 1 Footer index
       page1.drawText("Page 1 of Directory Portal", {
         x: pageWidth - 160,

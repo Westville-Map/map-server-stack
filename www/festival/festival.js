@@ -710,6 +710,32 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
       </div>
     `;
   }
+
+  let selectedVendorHtml = '';
+  const activeCard = document.querySelector('.festival-grid .facility-card.active');
+  const activeVendorId = activeCard ? activeCard.id.replace('card-', '') : null;
+  const matchedVendor = activeVendorId ? (allVendors || []).find(v => (v.properties && v.properties.id === activeVendorId) || v.id === activeVendorId) : null;
+  if (matchedVendor) {
+    const props = matchedVendor.properties || {};
+    const meta = categoryMetadata[props.class] || { title: 'Vendor Space', color: '#d97706' };
+    const cleanSource = meta.title;
+    const tagsList = (props.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    const tagSpanList = tagsList.map(tag => `<span class="print-card-tag" style="background-color: var(--autumn-brown); color: var(--autumn-cream);">${tag}</span>`).join('');
+    const desc = props.description ? `<p class="print-card-meta"><strong>About:</strong> ${props.description}</p>` : '';
+    const addr = props.address ? `<p class="print-card-meta"><strong>Placement:</strong> ${props.address}</p>` : '';
+    selectedVendorHtml = `
+      <div class="print-selected-feature-section" style="margin-top: 14px; margin-bottom: 14px;">
+        <div class="print-section-title" style="margin-bottom: 8px;">Selected Vendor Details</div>
+        <div class="print-card" style="border-left-color: ${meta.color};">
+          <div class="print-card-title" style="color: var(--autumn-crimson);">${props.name || 'Unnamed'}</div>
+          <div class="print-card-category" style="color: ${meta.color};">${cleanSource}</div>
+          ${desc}
+          ${addr}
+          <div class="print-card-tags">${tagSpanList}</div>
+        </div>
+      </div>
+    `;
+  }
   
   let cardsHtml = '';
   if (cards && cards.length > 0) {
@@ -752,6 +778,7 @@ function generatePrintLayoutHTML(cards, mapDataUrl, orientation) {
     </div>
     <div class="print-subheader">Westville Fall Festival Map & Vendor Directory</div>
     ${mapHtml}
+    ${selectedVendorHtml}
     ${cardsHtml}
   `;
 }
@@ -962,8 +989,13 @@ function initPrintAndShare() {
             const imageBytes = base64ToUint8Array(mapDataUrl);
             const mapImgEmbed = await pdfDoc.embedPng(imageBytes);
             
+            const activeCard = document.querySelector('.festival-grid .facility-card.active');
+            const activeVendorId = activeCard ? activeCard.id.replace('card-', '') : null;
+            const matchedVendor = activeVendorId ? (allVendors || []).find(v => (v.properties && v.properties.id === activeVendorId) || v.id === activeVendorId) : null;
+            const reserveHeight = matchedVendor ? 130 : 60;
+
             const maxMapWidth = pageWidth - 100;
-            const maxMapHeight = nextY - 60;
+            const maxMapHeight = nextY - reserveHeight;
             
             let mapW = mapImgEmbed.width;
             let mapH = mapImgEmbed.height;
@@ -1012,6 +1044,23 @@ function initPrintAndShare() {
             color: rgb(0.4, 0.4, 0.4),
           });
           nextY -= 50;
+        }
+
+        // Render Selected Vendor on Page 1 if present
+        const activeCard = document.querySelector('.festival-grid .facility-card.active');
+        const activeVendorId = activeCard ? activeCard.id.replace('card-', '') : null;
+        const matchedVendor = activeVendorId ? (allVendors || []).find(v => (v.properties && v.properties.id === activeVendorId) || v.id === activeVendorId) : null;
+        if (matchedVendor && nextY > 110) {
+          page1.drawText("Selected Vendor Details", {
+            x: 50,
+            y: nextY,
+            size: 10,
+            font: helveticaBold,
+            color: rgb(153/255, 27/255, 27/255),
+          });
+          nextY -= 14;
+          const drawnH = drawPdfCard(pdfDoc, page1, helvetica, helveticaBold, 50, nextY, pageWidth - 100, matchedVendor);
+          nextY -= (drawnH + 15);
         }
         
         page1.drawText("Page 1 of Fall Festival Export", {

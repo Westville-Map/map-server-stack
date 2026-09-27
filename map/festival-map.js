@@ -10,6 +10,7 @@ console.warn = (...args) => {
 
 let map;
 let activePopup = null;
+let activePopupData = null;
 const markersMap = {}; // mapping of vendor ID to MapLibre marker objects
 
 // Bounds for Westville, NJ
@@ -122,7 +123,8 @@ try {
           element: el,
           coords: coords,
           popupContent: popupContent,
-          name: props.name
+          name: props.name,
+          props: props
         };
 
         // Click handler
@@ -161,6 +163,15 @@ function selectVendorMarker(id) {
     activePopup = null;
   }
 
+  activePopupData = {
+    id: id,
+    coords: data.coords,
+    name: data.name,
+    class: (data.props && data.props.class) || '',
+    description: (data.props && data.props.description) || '',
+    location: (data.props && data.props.location) || ''
+  };
+
   // Auto-pan point so popup fits beautifully above feature
   const verticalOffset = isMobileDevice() ? 90 : 130;
   const targetZoom = 16.2;
@@ -181,6 +192,10 @@ function selectVendorMarker(id) {
   activePopup.on('open', () => {
     requestAnimationFrame(() => ensurePopupInView(activePopup));
     map.once('moveend', () => ensurePopupInView(activePopup));
+  });
+
+  activePopup.on('close', () => {
+    activePopupData = null;
   });
 
   // Focus effect: brief flash animation on the inner circle element
@@ -224,157 +239,166 @@ window.addEventListener('message', (event) => {
     compositeCanvas.height = webglCanvas.height;
     const ctx = compositeCanvas.getContext('2d');
 
-    // 1. Draw base WebGL map layer
+    // 1. Draw WebGL Map layer
     ctx.drawImage(webglCanvas, 0, 0);
 
-    // 2. Composite popup if active and visible
+    // 2. Draw Active Festival Popup via geographic coordinates
     try {
-      const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
-      if (popupEl && popupEl.offsetHeight > 0) {
-        const contentEl = popupEl.querySelector('.maplibregl-popup-content');
-        const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
+      if (activePopupData && activePopupData.coords && mapInstance) {
+        const projected = mapInstance.project(activePopupData.coords);
+        const scaleX = compositeCanvas.width / (containerRect.width || compositeCanvas.width);
+        const scaleY = compositeCanvas.height / (containerRect.height || compositeCanvas.height);
+        const scale = (scaleX + scaleY) / 2;
 
-        if (contentEl) {
-          const scaleX = compositeCanvas.width / (containerRect.width || 1);
-          const scaleY = compositeCanvas.height / (containerRect.height || 1);
-          const scale = (scaleX + scaleY) / 2;
+        const tipX = projected.x * scaleX;
+        const tipY = projected.y * scaleY;
 
-          const cRect = contentEl.getBoundingClientRect();
-          const cx = (cRect.left - containerRect.left) * scaleX;
-          const cy = (cRect.top - containerRect.top) * scaleY;
-          const cw = cRect.width * scaleX;
-          const ch = cRect.height * scaleY;
+        const popupW = Math.min(270 * scale, compositeCanvas.width - 32 * scale);
+        const paddingX = 14 * scale;
+        const innerW = popupW - (paddingX * 2);
 
-          // Draw Drop Shadow & Bubble Background
-          ctx.save();
-          ctx.shadowColor = 'rgba(120, 53, 4, 0.25)';
-          ctx.shadowBlur = 14 * scale;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 4 * scale;
-
-          ctx.fillStyle = '#fdfaf7';
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = Math.max(1, 2 * scale);
-          ctx.beginPath();
-          if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(cx, cy, cw, ch, 12 * scale);
+        // Precompute line wrapping for description
+        const desc = activePopupData.description || '';
+        const descWords = desc.split(/\s+/).filter(Boolean);
+        const descLines = [];
+        ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+        let curLine = '';
+        for (let w of descWords) {
+          const test = curLine ? `${curLine} ${w}` : w;
+          if (ctx.measureText(test).width > innerW && curLine) {
+            descLines.push(curLine);
+            curLine = w;
           } else {
-            ctx.rect(cx, cy, cw, ch);
-          }
-          ctx.fill();
-          ctx.stroke();
-
-          // Draw Tip Pointer
-          if (tipEl) {
-            const tRect = tipEl.getBoundingClientRect();
-            const tx = (tRect.left - containerRect.left) * scaleX;
-            const ty = (tRect.top - containerRect.top) * scaleY;
-            const tw = tRect.width * scaleX;
-            const th = tRect.height * scaleY;
-
-            ctx.fillStyle = '#fdfaf7';
-            ctx.beginPath();
-            const cls = popupEl.className || '';
-            if (cls.includes('anchor-bottom')) {
-              ctx.moveTo(tx, ty);
-              ctx.lineTo(tx + tw, ty);
-              ctx.lineTo(tx + tw / 2, ty + th);
-            } else if (cls.includes('anchor-top')) {
-              ctx.moveTo(tx, ty + th);
-              ctx.lineTo(tx + tw, ty + th);
-              ctx.lineTo(tx + tw / 2, ty);
-            } else if (cls.includes('anchor-left')) {
-              ctx.moveTo(tx + tw, ty);
-              ctx.lineTo(tx + tw, ty + th);
-              ctx.lineTo(tx, ty + th / 2);
-            } else if (cls.includes('anchor-right')) {
-              ctx.moveTo(tx, ty);
-              ctx.lineTo(tx + tw, ty + th);
-              ctx.lineTo(tx + tw, ty + th / 2);
-            }
-            ctx.closePath();
-            ctx.fill();
-          }
-          ctx.restore();
-
-          // Render Content Inside Festival Popup
-          const paddingX = 16 * scale;
-          let curY = cy + 22 * scale;
-          const innerWidth = cw - (paddingX * 2);
-
-          // Badge / Category (e.g. "EVENT ZONE", "VENDOR SPACE")
-          const badgeEl = contentEl.firstElementChild && contentEl.firstElementChild.firstElementChild ? contentEl.firstElementChild.firstElementChild : null;
-          if (badgeEl && badgeEl.tagName === 'DIV') {
-            ctx.fillStyle = badgeEl.style.color || '#b45309';
-            ctx.font = `bold ${Math.round(11 * scale)}px "Open Sans", -apple-system, sans-serif`;
-            ctx.fillText((badgeEl.textContent || '').trim().toUpperCase(), cx + paddingX, curY);
-            curY += 16 * scale;
-          }
-
-          // Title
-          const titleEl = contentEl.querySelector('h4, h3');
-          if (titleEl) {
-            ctx.fillStyle = '#451a03';
-            ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
-            ctx.fillText((titleEl.textContent || '').trim(), cx + paddingX, curY);
-            curY += 18 * scale;
-          }
-
-          // Description
-          const descEl = contentEl.querySelector('p');
-          if (descEl && (descEl.textContent || '').trim()) {
-            ctx.fillStyle = '#453b36';
-            ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
-            const words = (descEl.textContent || '').trim().split(/\s+/);
-            let line = '';
-            const lineHeight = 16 * scale;
-            for (let i = 0; i < words.length; i++) {
-              const testLine = line + (line ? ' ' : '') + words[i];
-              if (ctx.measureText(testLine).width > innerWidth && line) {
-                ctx.fillText(line, cx + paddingX, curY);
-                line = words[i];
-                curY += lineHeight;
-              } else {
-                line = testLine;
-              }
-            }
-            if (line) {
-              ctx.fillText(line, cx + paddingX, curY);
-              curY += lineHeight;
-            }
-          }
-
-          // Location Info
-          const allDivs = Array.from(contentEl.querySelectorAll('div'));
-          const locDiv = allDivs.find(el => (el.textContent || '').includes('Location:'));
-          if (locDiv) {
-            curY += 2 * scale;
-            ctx.fillStyle = '#574742';
-            ctx.font = `italic ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
-            ctx.fillText((locDiv.textContent || '').trim(), cx + paddingX, curY);
-            curY += 16 * scale;
-          }
-
-          // Directions Link
-          const linkEl = contentEl.querySelector('a');
-          if (linkEl) {
-            curY += 4 * scale;
-            ctx.strokeStyle = '#e7e0da';
-            ctx.lineWidth = Math.max(1, 1 * scale);
-            ctx.beginPath();
-            ctx.moveTo(cx + paddingX, curY);
-            ctx.lineTo(cx + cw - paddingX, curY);
-            ctx.stroke();
-            curY += 14 * scale;
-
-            ctx.fillStyle = '#c2410c';
-            ctx.font = `bold ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
-            ctx.fillText('📍 Directions', cx + paddingX, curY);
+            curLine = test;
           }
         }
+        if (curLine) descLines.push(curLine);
+
+        // Badge color based on class
+        let badgeColor = '#b45309';
+        let badgeText = (activePopupData.class || 'Vendor Space').replace('-', ' ').toUpperCase();
+        if (activePopupData.class === 'event-zone') {
+          badgeColor = '#b91c1c';
+        } else if (activePopupData.class === 'borough-booth') {
+          badgeColor = '#15803d';
+        }
+
+        // Height calculation
+        let contentH = 20 * scale; // top padding
+        contentH += 16 * scale; // badge
+        contentH += 22 * scale; // title
+        if (descLines.length > 0) contentH += descLines.length * (16 * scale) + 4 * scale;
+        if (activePopupData.location) contentH += 18 * scale;
+        contentH += 34 * scale; // directions button
+        contentH += 12 * scale; // bottom padding
+
+        const popupH = contentH;
+        let bubbleX = tipX - (popupW / 2);
+        let bubbleY = tipY - popupH - (12 * scale);
+        let pointDown = true;
+
+        bubbleX = Math.max(16 * scale, Math.min(compositeCanvas.width - popupW - 16 * scale, bubbleX));
+        if (bubbleY < 16 * scale) {
+          bubbleY = tipY + 12 * scale;
+          pointDown = false;
+        }
+
+        // Draw Drop Shadow & Bubble Card
+        ctx.save();
+        ctx.shadowColor = 'rgba(120, 53, 4, 0.3)';
+        ctx.shadowBlur = 14 * scale;
+        ctx.shadowOffsetY = 4 * scale;
+
+        ctx.fillStyle = '#fdfaf7';
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = Math.max(1, 2 * scale);
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(bubbleX, bubbleY, popupW, popupH, 12 * scale);
+        } else {
+          ctx.rect(bubbleX, bubbleY, popupW, popupH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw Tip Pointer Triangle
+        ctx.beginPath();
+        const tipBaseW = 10 * scale;
+        if (pointDown) {
+          ctx.moveTo(tipX - tipBaseW, bubbleY + popupH);
+          ctx.lineTo(tipX + tipBaseW, bubbleY + popupH);
+          ctx.lineTo(tipX, tipY);
+        } else {
+          ctx.moveTo(tipX - tipBaseW, bubbleY);
+          ctx.lineTo(tipX + tipBaseW, bubbleY);
+          ctx.lineTo(tipX, tipY);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Render Text
+        let textY = bubbleY + 20 * scale;
+
+        // Badge
+        ctx.fillStyle = badgeColor;
+        ctx.font = `bold ${Math.round(11 * scale)}px "Open Sans", -apple-system, sans-serif`;
+        ctx.fillText(badgeText, bubbleX + paddingX, textY);
+        textY += 18 * scale;
+
+        // Title
+        ctx.fillStyle = '#451a03';
+        ctx.font = `bold ${Math.round(15 * scale)}px "Open Sans", -apple-system, sans-serif`;
+        ctx.fillText(activePopupData.name || '', bubbleX + paddingX, textY);
+        textY += 20 * scale;
+
+        // Description
+        if (descLines.length > 0) {
+          ctx.fillStyle = '#453b36';
+          ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          for (let line of descLines) {
+            ctx.fillText(line, bubbleX + paddingX, textY);
+            textY += 16 * scale;
+          }
+          textY += 4 * scale;
+        }
+
+        // Location Info
+        if (activePopupData.location) {
+          ctx.fillStyle = '#574742';
+          ctx.font = `italic ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+          ctx.fillText(`Location: ${activePopupData.location}`, bubbleX + paddingX, textY);
+          textY += 18 * scale;
+        }
+
+        // Divider
+        ctx.strokeStyle = '#e7e0da';
+        ctx.lineWidth = Math.max(1, 1 * scale);
+        ctx.beginPath();
+        ctx.moveTo(bubbleX + paddingX, textY);
+        ctx.lineTo(bubbleX + popupW - paddingX, textY);
+        ctx.stroke();
+        textY += 16 * scale;
+
+        // Directions Button
+        const btnH = 26 * scale;
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(bubbleX + paddingX, textY, innerW, btnH, 13 * scale);
+        } else {
+          ctx.rect(bubbleX + paddingX, textY, innerW, btnH);
+        }
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('📍 Directions', bubbleX + paddingX + innerW / 2, textY + btnH / 2 + 4 * scale);
+        ctx.textAlign = 'left';
       }
     } catch (popupErr) {
-      console.warn('Non-fatal festival popup compositing error:', popupErr);
+      console.warn('Non-fatal festival projected popup compositing error:', popupErr);
     }
 
     return compositeCanvas.toDataURL('image/png');

@@ -1839,6 +1839,7 @@ try {
       }
 
       let activePopup = null;
+      let activePopupData = null;
 
       map.on('resize', () => {
           if (activePopup) {
@@ -1847,6 +1848,7 @@ try {
       });
 
       function dismissActivePopup() {
+          activePopupData = null;
           if (!activePopup) return Promise.resolve();
           const popup = activePopup;
           activePopup = null; // Clear instantly so other flows know it's being removed
@@ -1881,6 +1883,12 @@ try {
           const cleanDesc = sanitizeHtml(props.description || '');
           const cleanAddress = sanitizeHtml(props.address || '');
           const cleanTags = sanitizeHtml(props.tags || '');
+
+          activePopupData = {
+              feature: feature,
+              coordinates: coordinates,
+              props: props
+          };
 
           const linkedName = props.url != null ? `
               <a class="wv-popup-title-link" target="_blank" href="${encodeURI(props.url)}">
@@ -1946,6 +1954,7 @@ try {
           });
 
           activePopup.on('close', () => {
+              activePopupData = null;
               if (selectedFeatureName === props.name) {
                   selectedFeatureName = '';
                   searchInput.value = '';
@@ -2552,7 +2561,6 @@ window.addEventListener('message', (event) => {
     function captureCompositeMap(mapInstance) {
         const webglCanvas = mapInstance.getCanvas();
         const mapContainer = mapInstance.getContainer();
-        const containerRect = mapContainer.getBoundingClientRect();
 
         const compositeCanvas = document.createElement('canvas');
         compositeCanvas.width = webglCanvas.width;
@@ -2562,178 +2570,214 @@ window.addEventListener('message', (event) => {
         // 1. Draw base WebGL map layer
         ctx.drawImage(webglCanvas, 0, 0);
 
-        // 2. Composite popup if active and visible
+        // 2. Determine if a popup or feature is active
         try {
-            const popupEl = (activePopup && activePopup.isOpen() ? activePopup.getElement() : null) || mapContainer.querySelector('.maplibregl-popup');
-            if (popupEl && popupEl.offsetHeight > 0) {
-                const contentEl = popupEl.querySelector('.maplibregl-popup-content');
-                const tipEl = popupEl.querySelector('.maplibregl-popup-tip');
+            let targetFeature = null;
+            let targetCoords = null;
 
-                if (contentEl) {
-                    const scaleX = compositeCanvas.width / (containerRect.width || 1);
-                    const scaleY = compositeCanvas.height / (containerRect.height || 1);
-                    const scale = (scaleX + scaleY) / 2;
-
-                    const cRect = contentEl.getBoundingClientRect();
-                    const cx = (cRect.left - containerRect.left) * scaleX;
-                    const cy = (cRect.top - containerRect.top) * scaleY;
-                    const cw = cRect.width * scaleX;
-                    const ch = cRect.height * scaleY;
-
-                    // Draw Drop Shadow & Bubble Background
-                    ctx.save();
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                    ctx.shadowBlur = 14 * scale;
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 4 * scale;
-
-                    ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                    ctx.lineWidth = Math.max(1, 1 * scale);
-                    ctx.beginPath();
-                    if (typeof ctx.roundRect === 'function') {
-                        ctx.roundRect(cx, cy, cw, ch, 12 * scale);
+            if (activePopupData && activePopupData.coordinates) {
+                targetFeature = activePopupData.feature;
+                targetCoords = activePopupData.coordinates;
+            } else if (selectedFeatureName) {
+                const found = allFeatures.find(f => (f.properties?.name || '').toLowerCase() === selectedFeatureName.toLowerCase());
+                if (found) {
+                    targetFeature = found;
+                    if (found.geometry?.type === 'Point') {
+                        targetCoords = found.geometry.coordinates;
                     } else {
-                        ctx.rect(cx, cy, cw, ch);
-                    }
-                    ctx.fill();
-                    ctx.stroke();
-
-                    // Draw Tip Pointer
-                    if (tipEl) {
-                        const tRect = tipEl.getBoundingClientRect();
-                        const tx = (tRect.left - containerRect.left) * scaleX;
-                        const ty = (tRect.top - containerRect.top) * scaleY;
-                        const tw = tRect.width * scaleX;
-                        const th = tRect.height * scaleY;
-
-                        ctx.fillStyle = 'rgba(74, 115, 172, 0.95)';
-                        ctx.beginPath();
-                        const cls = popupEl.className || '';
-                        if (cls.includes('anchor-bottom')) {
-                            ctx.moveTo(tx, ty);
-                            ctx.lineTo(tx + tw, ty);
-                            ctx.lineTo(tx + tw / 2, ty + th);
-                        } else if (cls.includes('anchor-top')) {
-                            ctx.moveTo(tx, ty + th);
-                            ctx.lineTo(tx + tw, ty + th);
-                            ctx.lineTo(tx + tw / 2, ty);
-                        } else if (cls.includes('anchor-left')) {
-                            ctx.moveTo(tx + tw, ty);
-                            ctx.lineTo(tx + tw, ty + th);
-                            ctx.lineTo(tx, ty + th / 2);
-                        } else if (cls.includes('anchor-right')) {
-                            ctx.moveTo(tx, ty);
-                            ctx.lineTo(tx, ty + th);
-                            ctx.lineTo(tx + tw, ty + th / 2);
-                        }
-                        ctx.closePath();
-                        ctx.fill();
-                    }
-                    ctx.restore();
-
-                    // Render Content Inside Popup
-                    const paddingX = 18 * scale;
-                    let curY = cy + 24 * scale;
-                    const innerWidth = cw - (paddingX * 2);
-
-                    // Title
-                    const titleEl = contentEl.querySelector('h3');
-                    if (titleEl) {
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                        ctx.fillText((titleEl.textContent || '').trim(), cx + paddingX, curY);
-                        curY += 18 * scale;
-                    }
-
-                    // Tags / Details
-                    const allDetails = Array.from(contentEl.querySelectorAll('.wv-popup-detail'));
-                    const tagEl = allDetails.find(el => (el.textContent || '').includes('Tags:'));
-                    if (tagEl) {
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.font = `${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                        ctx.fillText((tagEl.textContent || '').trim(), cx + paddingX, curY);
-                        curY += 16 * scale;
-                    }
-
-                    // Description
-                    const descEl = contentEl.querySelector('p:not(.wv-popup-detail)');
-                    if (descEl && (descEl.textContent || '').trim()) {
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                        ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                        const words = (descEl.textContent || '').trim().split(/\s+/);
-                        let line = '';
-                        const lineHeight = 16 * scale;
-                        for (let i = 0; i < words.length; i++) {
-                            const testLine = line + (line ? ' ' : '') + words[i];
-                            if (ctx.measureText(testLine).width > innerWidth && line) {
-                                ctx.fillText(line, cx + paddingX, curY);
-                                line = words[i];
-                                curY += lineHeight;
-                            } else {
-                                line = testLine;
-                            }
-                        }
-                        if (line) {
-                            ctx.fillText(line, cx + paddingX, curY);
-                            curY += lineHeight;
-                        }
-                    }
-
-                    // Divider (hr)
-                    const hrEl = contentEl.querySelector('hr');
-                    if (hrEl) {
-                        curY += 4 * scale;
-                        ctx.strokeStyle = 'rgba(229, 193, 88, 0.75)';
-                        ctx.lineWidth = Math.max(1, 1 * scale);
-                        ctx.beginPath();
-                        ctx.moveTo(cx + paddingX, curY);
-                        ctx.lineTo(cx + cw - paddingX, curY);
-                        ctx.stroke();
-                        curY += 16 * scale;
-                    }
-
-                    // Details (address, phone)
-                    allDetails.forEach(detailEl => {
-                        if (detailEl === tagEl) return;
-                        const text = (detailEl.textContent || '').trim();
-                        if (!text) return;
-                        
-                        ctx.fillStyle = '#E5C158';
-                        ctx.beginPath();
-                        ctx.arc(cx + paddingX + 4 * scale, curY - 4 * scale, 3 * scale, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                        ctx.font = `${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                        ctx.fillText(text, cx + paddingX + 14 * scale, curY);
-                        curY += 18 * scale;
-                    });
-
-                    // Directions Button
-                    const dirBtn = contentEl.querySelector('.wv-directions-btn');
-                    if (dirBtn) {
-                        curY += 6 * scale;
-                        const btnH = 30 * scale;
-                        ctx.fillStyle = '#E5C158';
-                        ctx.beginPath();
-                        if (typeof ctx.roundRect === 'function') {
-                            ctx.roundRect(cx + paddingX, curY, innerWidth, btnH, 15 * scale);
-                        } else {
-                            ctx.rect(cx + paddingX, curY, innerWidth, btnH);
-                        }
-                        ctx.fill();
-
-                        ctx.fillStyle = '#1E3D60';
-                        ctx.font = `bold ${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
-                        ctx.textAlign = 'center';
-                        ctx.fillText('Directions', cx + paddingX + innerWidth / 2, curY + btnH / 2 + 4.5 * scale);
-                        ctx.textAlign = 'left';
+                        const b = getFeaturesBounds([found]);
+                        if (b) targetCoords = [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2];
                     }
                 }
             }
+
+            if (targetFeature && targetCoords) {
+                const rawLng = Array.isArray(targetCoords) ? targetCoords[0] : targetCoords.lng;
+                const rawLat = Array.isArray(targetCoords) ? targetCoords[1] : targetCoords.lat;
+
+                // Project geographic coordinates into container screen pixels
+                const screenPt = mapInstance.project([rawLng, rawLat]);
+                const containerW = mapContainer.clientWidth || mapContainer.offsetWidth || 1;
+                const containerH = mapContainer.clientHeight || mapContainer.offsetHeight || 1;
+                const scaleX = compositeCanvas.width / containerW;
+                const scaleY = compositeCanvas.height / containerH;
+                const scale = (scaleX + scaleY) / 2;
+
+                const tipX = screenPt.x * scaleX;
+                const tipY = screenPt.y * scaleY;
+
+                // Extract feature details
+                const props = targetFeature.properties || {};
+                const name = props.name || 'Unnamed';
+                const desc = props.description || '';
+                const addr = props.address ? `${props.address}, Westville, NJ 08093` : '';
+                const phone = props.phone || '';
+                const tags = props.tags || '';
+
+                // Calculate bubble layout dimensions
+                const popupW = Math.min(300 * scale, compositeCanvas.width - 40 * scale);
+                const paddingX = 18 * scale;
+                const innerW = popupW - (paddingX * 2);
+
+                // Pre-calculate line wrapping and height
+                ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                const descWords = desc.trim().split(/\s+/).filter(Boolean);
+                const descLines = [];
+                let curLine = '';
+                for (let w of descWords) {
+                    const test = curLine ? `${curLine} ${w}` : w;
+                    if (ctx.measureText(test).width > innerW && curLine) {
+                        descLines.push(curLine);
+                        curLine = w;
+                    } else {
+                        curLine = test;
+                    }
+                }
+                if (curLine) descLines.push(curLine);
+
+                // Compute total dynamic height
+                let contentH = 24 * scale; // top padding
+                contentH += 22 * scale; // title
+                if (tags) contentH += 18 * scale;
+                if (descLines.length > 0) contentH += descLines.length * (16 * scale) + 4 * scale;
+                if (addr || phone) contentH += 16 * scale; // divider
+                if (phone) contentH += 18 * scale;
+                if (addr) contentH += 18 * scale;
+                contentH += 36 * scale; // directions button
+                contentH += 14 * scale; // bottom padding
+
+                const popupH = contentH;
+                let bubbleX = tipX - (popupW / 2);
+                let bubbleY = tipY - popupH - (12 * scale);
+                let pointDown = true;
+
+                // Clamp to screen bounds
+                bubbleX = Math.max(16 * scale, Math.min(compositeCanvas.width - popupW - 16 * scale, bubbleX));
+                if (bubbleY < 16 * scale) {
+                    // Position below point if near top edge
+                    bubbleY = tipY + 12 * scale;
+                    pointDown = false;
+                }
+
+                // Draw Drop Shadow & Bubble Card
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+                ctx.shadowBlur = 16 * scale;
+                ctx.shadowOffsetY = 6 * scale;
+
+                ctx.fillStyle = 'rgba(74, 115, 172, 0.96)';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.lineWidth = Math.max(1, 1 * scale);
+                ctx.beginPath();
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.roundRect(bubbleX, bubbleY, popupW, popupH, 12 * scale);
+                } else {
+                    ctx.rect(bubbleX, bubbleY, popupW, popupH);
+                }
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw Tip Pointer Triangle
+                ctx.beginPath();
+                const tipBaseW = 10 * scale;
+                if (pointDown) {
+                    ctx.moveTo(tipX - tipBaseW, bubbleY + popupH);
+                    ctx.lineTo(tipX + tipBaseW, bubbleY + popupH);
+                    ctx.lineTo(tipX, tipY);
+                } else {
+                    ctx.moveTo(tipX - tipBaseW, bubbleY);
+                    ctx.lineTo(tipX + tipBaseW, bubbleY);
+                    ctx.lineTo(tipX, tipY);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                // Render Text & Details
+                let textY = bubbleY + 24 * scale;
+
+                // Title
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = `bold ${Math.round(16 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                ctx.fillText(name, bubbleX + paddingX, textY);
+                textY += 20 * scale;
+
+                // Tags
+                if (tags) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.font = `${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.fillText(`Tags: ${tags}`, bubbleX + paddingX, textY);
+                    textY += 18 * scale;
+                }
+
+                // Description
+                if (descLines.length > 0) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.font = `${Math.round(13 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    for (let line of descLines) {
+                        ctx.fillText(line, bubbleX + paddingX, textY);
+                        textY += 16 * scale;
+                    }
+                    textY += 4 * scale;
+                }
+
+                // Divider (hr)
+                if (addr || phone) {
+                    ctx.strokeStyle = 'rgba(229, 193, 88, 0.75)';
+                    ctx.lineWidth = Math.max(1, 1 * scale);
+                    ctx.beginPath();
+                    ctx.moveTo(bubbleX + paddingX, textY);
+                    ctx.lineTo(bubbleX + popupW - paddingX, textY);
+                    ctx.stroke();
+                    textY += 16 * scale;
+                }
+
+                // Phone
+                if (phone) {
+                    ctx.fillStyle = '#E5C158';
+                    ctx.beginPath();
+                    ctx.arc(bubbleX + paddingX + 4 * scale, textY - 4 * scale, 3 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.font = `${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.fillText(phone, bubbleX + paddingX + 14 * scale, textY);
+                    textY += 18 * scale;
+                }
+
+                // Address
+                if (addr) {
+                    ctx.fillStyle = '#E5C158';
+                    ctx.beginPath();
+                    ctx.arc(bubbleX + paddingX + 4 * scale, textY - 4 * scale, 3 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.font = `${Math.round(12.5 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                    ctx.fillText(addr, bubbleX + paddingX + 14 * scale, textY);
+                    textY += 18 * scale;
+                }
+
+                // Directions Button
+                textY += 4 * scale;
+                const btnH = 28 * scale;
+                ctx.fillStyle = '#E5C158';
+                ctx.beginPath();
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.roundRect(bubbleX + paddingX, textY, innerW, btnH, 14 * scale);
+                } else {
+                    ctx.rect(bubbleX + paddingX, textY, innerW, btnH);
+                }
+                ctx.fill();
+
+                ctx.fillStyle = '#1E3D60';
+                ctx.font = `bold ${Math.round(12 * scale)}px "Open Sans", -apple-system, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText('Directions', bubbleX + paddingX + innerW / 2, textY + btnH / 2 + 4 * scale);
+                ctx.textAlign = 'left';
+            }
         } catch (popupErr) {
-            console.warn('Non-fatal popup compositing error:', popupErr);
+            console.warn('Non-fatal projected popup compositing error:', popupErr);
         }
 
         return compositeCanvas.toDataURL('image/png');
