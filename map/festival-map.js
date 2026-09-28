@@ -22,6 +22,14 @@ try {
   const styleResponse = await fetch('welcome_to_westville.json');
   const style = await styleResponse.json();
 
+  if (typeof maplibregl === 'undefined' || (maplibregl.supported && !maplibregl.supported())) {
+    const mapEl = document.getElementById('map');
+    if (mapEl) {
+      mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2B659F;font-family:\'Open Sans\',sans-serif;text-align:center;padding:20px;"><div><h2>Interactive Map Unavailable</h2><p>Your web browser or device does not support WebGL hardware acceleration.</p></div></div>';
+    }
+    return;
+  }
+
   // 2. Initialize MapLibre GL Map
   map = new maplibregl.Map({
     container: 'map',
@@ -148,8 +156,9 @@ try {
 
 } catch (error) {
   console.error('Error initializing fall festival map:', error);
-  if (window.showMapError) {
-    window.showMapError(error.message || error);
+  const mapEl = document.getElementById('map');
+  if (mapEl && !document.querySelector('#map canvas')) {
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2B659F;font-family:\'Open Sans\',sans-serif;text-align:center;padding:20px;"><div><h2>Interactive Map Unavailable</h2><p>An error occurred while loading festival map data.</p></div></div>';
   }
 }
 

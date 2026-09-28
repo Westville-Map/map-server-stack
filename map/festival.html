@@ -2,92 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <script>
-      (function() {
-        var supportsCustomElements = 'customElements' in window;
-        var supportsFetch = 'fetch' in window;
-        var supportsESModules = 'noModule' in document.createElement('script');
-        var supportsURL = 'URL' in window && 'URLSearchParams' in window;
-
-        var isTier1Supported = supportsCustomElements && supportsFetch && supportsESModules && supportsURL;
-
-        var supportsWebGL2 = (function() {
-          try {
-            var canvas = document.createElement('canvas');
-            return !!window.WebGL2RenderingContext && !!canvas.getContext('webgl2');
-          } catch (e) {
-            return false;
-          }
-        })();
-
-        // Global fallback map error display function (only called on catastrophic map failure)
-        window.showMapError = function(errorMsg) {
-          if (document.getElementById('unsupported-browser-overlay')) {
-            return; // Already showing an error
-          }
-
-          var heading = 'Interactive Map Unavailable';
-          var message = 'Your web browser or device failed to render the interactive map canvas. This could be due to a lack of WebGL 2 hardware acceleration, or an unexpected runtime error.';
-
-          if (errorMsg) {
-            message += '<br><br><span style="font-size:12px;color:#cc3333;font-family:monospace;word-break:break-all;">Error: ' + errorMsg + '</span>';
-          }
-
-          var warningDiv = document.createElement('div');
-          warningDiv.id = 'unsupported-browser-overlay';
-          warningDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#F4F7F6;z-index:999999;display:flex;align-items:center;justify-content:center;font-family:\'Open Sans\',sans-serif;color:#2B659F;padding:20px;box-sizing:border-box;';
-          warningDiv.innerHTML = 
-            '<div style="max-width:500px;text-align:center;background:#fff;padding:32px 28px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid #E5C158;">' +
-              '<h2 style="margin-top:0;font-size:22px;font-weight:600;color:#2B659F;">' + heading + '</h2>' +
-              '<div style="color:#555;line-height:1.6;font-size:14px;margin:16px 0;">' + message + '</div>' +
-              '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>' +
-              '<div style="font-weight:bold;font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Westville Interactive Map Project</div>' +
-            '</div>';
-          
-          if (document.body) {
-            document.body.appendChild(warningDiv);
-            var mapEl = document.getElementById('map');
-            if (mapEl) mapEl.style.display = 'none';
-          } else {
-            document.write(warningDiv.outerHTML);
-          }
-        };
-
-        // Non-destructive runtime error logging (never destroys active map DOM on extension/third-party errors)
-        window.onerror = function(message, source, lineno, colno, error) {
-          console.warn('[Festival Map Runtime Diagnostic]', message, source ? ('at ' + source + ':' + lineno) : '');
-          return false;
-        };
-
-        window.addEventListener('unhandledrejection', function(event) {
-          var reason = event.reason ? (event.reason.message || event.reason) : event.reason;
-          console.warn('[Festival Map Promise Diagnostic]', reason);
-        });
-
-        if (!isTier1Supported || !supportsWebGL2) {
-          var heading = !isTier1Supported ? 'Browser Not Fully Supported' : 'Interactive Map Unavailable';
-          var message = !isTier1Supported 
-            ? 'We apologize, but this modern interactive map requires a newer web browser to function. We use modern web technologies like ES modules and Web Components to deliver a premium mapping experience.'
-            : 'Your web browser or device does not support WebGL 2, which is required to load our high-performance hardware-accelerated interactive map.';
-
-          document.write(
-            '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#F4F7F6;z-index:999999;display:flex;align-items:center;justify-content:center;font-family:\'Open Sans\',sans-serif;color:#2B659F;padding:20px;box-sizing:border-box;">' +
-              '<div style="max-width:500px;text-align:center;background:#fff;padding:40px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid #E5C158;">' +
-                '<h2 style="margin-top:0;font-size:24px;font-weight:600;">' + heading + '</h2>' +
-                '<p style="color:#555;line-height:1.6;font-size:15px;margin:20px 0;">' + message + '</p>' +
-                '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>' +
-                '<div style="font-weight:bold;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;">Westville Interactive Map Project</div>' +
-              '</div>' +
-            '</div>'
-          );
-          if (window.stop) {
-            window.stop();
-          } else {
-            document.execCommand('Stop');
-          }
-        }
-      })();
-    </script>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <title>Westville Fall Festival Map</title>
     <link rel="stylesheet" href="/fonts/fonts.css">
@@ -99,7 +13,7 @@
     <link rel="stylesheet" href="/vendor/maplibre-gl/maplibre-gl.css" />
     <link rel="stylesheet" href="westville-map.css">
     <script src="/vendor/maplibre-gl/maplibre-gl.js"></script>
-    <script type="module" src="festival-map.js"> </script>
+    <script type="module" src="festival-map.js"></script>
     <style>
       body, html { margin:0; padding:0; height:100%; width:100%; overflow:hidden; }
       #map { height:100%; width:100%; }

@@ -351,6 +351,14 @@ try {
       });
   }
 
+  if (typeof maplibregl === 'undefined' || (maplibregl.supported && !maplibregl.supported())) {
+      const mapEl = document.getElementById('map');
+      if (mapEl) {
+          mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2B659F;font-family:\'Open Sans\',sans-serif;text-align:center;padding:20px;"><div><h2>Interactive Map Unavailable</h2><p>Your web browser or device does not support WebGL hardware acceleration.</p></div></div>';
+      }
+      return;
+  }
+
   let nav = new maplibregl.NavigationControl();
   map = new maplibregl.Map({
       container: 'map',
@@ -2494,8 +2502,9 @@ try {
   });
 } catch (error) {
   console.error('Error loading map:', error);
-  if (window.showMapError) {
-    window.showMapError(error.message || error);
+  const mapEl = document.getElementById('map');
+  if (mapEl && !document.querySelector('#map canvas')) {
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2B659F;font-family:\'Open Sans\',sans-serif;text-align:center;padding:20px;"><div><h2>Interactive Map Unavailable</h2><p>An error occurred while loading map data.</p></div></div>';
   }
 }
 
