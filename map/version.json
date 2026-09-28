@@ -1,7 +1,7 @@
 {
-  "version": "2026.09.28.2-test.873bc7e",
+  "version": "2026.09.28.2-test.30b1ae5",
   "channel": "testing",
-  "buildDate": "2026-09-28 14:30:20 EDT",
+  "buildDate": "2026-09-28 15:01:50 EDT",
   "timezone": "America/New_York",
-  "gitCommit": "873bc7e"
+  "gitCommit": "30b1ae5"
 }
