@@ -22,7 +22,7 @@ let map;
 
 async function fetchGeoJsonFiles(files) {
   try {
-    const requestPromises = files.map(file => fetch(`/data/${file}.geojson`));
+    const requestPromises = files.map(file => fetch(`/data/${file}.geojson?cb=true`));
     const responses = await Promise.all(requestPromises);
 
     const data = await Promise.all(responses.map(async (res, index) => {
