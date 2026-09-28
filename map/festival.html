@@ -21,13 +21,32 @@
         })();
 
         // Global fallback map error display function
-        window.showMapError = function(errorMsg) {
+        window.showMapError = function(errorMsg, isAdblockSuspected) {
           if (document.getElementById('unsupported-browser-overlay')) {
             return; // Already showing an error
           }
-          var heading = 'Interactive Map Unavailable';
-          var message = 'Your web browser or device failed to render the interactive map canvas. This could be due to a lack of WebGL 2 hardware acceleration, or an unexpected runtime error.';
-          if (errorMsg) {
+
+          var isBlocker = isAdblockSuspected || 
+                          errorMsg === 'Script error.' || 
+                          typeof maplibregl === 'undefined' ||
+                          /blocked|content blocker|extension|adblock/i.test(errorMsg || '');
+
+          var heading = isBlocker ? 'Content Blocker / Extension Detected' : 'Interactive Map Unavailable';
+          var message = isBlocker
+            ? 'A Safari Content Blocker or Ad Blocker (such as AdBlock Plus) prevented essential map rendering files from loading.<br><br><small style="color:#666;">Note: The Westville Interactive Map contains no advertisements, telemetry, or tracking scripts.</small>'
+            : 'Your web browser or device failed to render the interactive map canvas. This could be due to a lack of WebGL 2 hardware acceleration, or an unexpected runtime error.';
+
+          var actionGuide = isBlocker
+            ? '<div style="background:#f0f4f8;padding:14px;border-radius:8px;margin:20px 0;text-align:left;font-size:13px;color:#2B659F;line-height:1.6;border-left:4px solid #2B659F;">' +
+                '<strong>How to enable the map on Mobile Safari / iOS:</strong><br>' +
+                '1. Tap the <strong>aA</strong> / Page Settings icon in your Safari address bar.<br>' +
+                '2. Select <strong>"Turn Off Content Blockers"</strong> (or allow on <em>westville.app</em>).<br>' +
+                '3. Tap <strong>Reload</strong> below.' +
+              '</div>' +
+              '<button type="button" onclick="window.location.reload();" style="background:#2B659F;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:20px;">Reload Map</button>'
+            : '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>';
+
+          if (errorMsg && !isBlocker) {
             message += '<br><br><span style="font-size:12px;color:#cc3333;font-family:monospace;word-break:break-all;">Error: ' + errorMsg + '</span>';
           }
 
@@ -35,11 +54,11 @@
           warningDiv.id = 'unsupported-browser-overlay';
           warningDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#F4F7F6;z-index:999999;display:flex;align-items:center;justify-content:center;font-family:\'Open Sans\',sans-serif;color:#2B659F;padding:20px;box-sizing:border-box;';
           warningDiv.innerHTML = 
-            '<div style="max-width:500px;text-align:center;background:#fff;padding:40px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid #E5C158;">' +
-              '<h2 style="margin-top:0;font-size:24px;font-weight:600;">' + heading + '</h2>' +
-              '<p style="color:#555;line-height:1.6;font-size:15px;margin:20px 0;">' + message + '</p>' +
-              '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>' +
-              '<div style="font-weight:bold;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;">Westville Interactive Map Project</div>' +
+            '<div style="max-width:500px;text-align:center;background:#fff;padding:32px 28px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid ' + (isBlocker ? '#2B659F' : '#E5C158') + ';">' +
+              '<h2 style="margin-top:0;font-size:22px;font-weight:600;color:#2B659F;">' + heading + '</h2>' +
+              '<div style="color:#555;line-height:1.6;font-size:14px;margin:16px 0;">' + message + '</div>' +
+              actionGuide +
+              '<div style="font-weight:bold;font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Westville Interactive Map Project</div>' +
             '</div>';
           
           if (document.body) {
@@ -91,17 +110,15 @@
     </script>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <title>Westville Fall Festival Map</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=fallback" rel="stylesheet">
+    <link rel="stylesheet" href="/fonts/fonts.css">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />   
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="/vendor/maplibre-gl/maplibre-gl.css" />
     <link rel="stylesheet" href="westville-map.css">
-    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
+    <script src="/vendor/maplibre-gl/maplibre-gl.js"></script>
     <script type="module" src="festival-map.js"> </script>
     <style>
       body, html { margin:0; padding:0; height:100%; width:100%; overflow:hidden; }

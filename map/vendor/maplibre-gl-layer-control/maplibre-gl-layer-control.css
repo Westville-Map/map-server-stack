@@ -1,0 +1,1214 @@
+/* Layer Control Styles */
+
+/* Toggle button icon. Only the icon is sized here; its color is intentionally
+   left to the host/theme via `currentColor` (the SVG uses stroke="currentColor")
+   so dark-mode themes can recolor it. Without an explicit size the inline SVG
+   renders at the full button size, so cap it. */
+.maplibregl-ctrl-layer-control .layer-control-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.maplibregl-ctrl-layer-control .layer-control-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Panel - positioned dynamically by JavaScript for floating behavior */
+.layer-control-panel {
+  position: absolute;
+  /* Position is set dynamically by updatePanelPosition() */
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  /* Width is set explicitly in JS and clamped to the configured
+     panelMinWidth/panelMaxWidth; no fixed CSS min/max so custom bounds
+     (and edge-drag resizing) are honored. */
+  max-height: 600px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  display: none;
+}
+
+.layer-control-panel.expanded {
+  display: block;
+}
+
+/* Panel header */
+.layer-control-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 600;
+  color: #333;
+  padding: 4px 0 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.layer-control-panel-title {
+  flex: 1 1 auto;
+  font-size: 13px;
+}
+
+/* Edge resize handle — drag the panel edge to resize its width */
+.layer-control-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 1001;
+}
+
+.layer-control-resize-handle-left {
+  left: 0;
+}
+
+.layer-control-resize-handle-right {
+  right: 0;
+}
+
+/* Subtle visual affordance on hover / while dragging */
+.layer-control-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.layer-control-resize-handle-left::before {
+  left: 1px;
+}
+
+.layer-control-resize-handle-right::before {
+  right: 1px;
+}
+
+.layer-control-resize-handle:hover::before,
+.layer-control-panel.resizing-active .layer-control-resize-handle::before {
+  background: #2f6fed;
+}
+
+.layer-control-panel.resizing-active {
+  user-select: none;
+}
+
+.layer-control-panel.resizing-active * {
+  cursor: ew-resize !important;
+  user-select: none !important;
+}
+
+/* Action buttons (Show All / Hide All) */
+.layer-control-actions {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 4px;
+}
+
+.layer-control-action-btn {
+  flex: 1;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff !important;
+  background: #2f6fed !important;
+  border: 1px solid #2f6fed !important;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: auto;
+  height: auto;
+}
+
+.layer-control-action-btn:hover {
+  background: #1d5bd6 !important;
+  border-color: #1d5bd6 !important;
+  color: #ffffff !important;
+}
+
+.layer-control-action-btn:active {
+  background: #1a4fc2 !important;
+  border-color: #1a4fc2 !important;
+}
+
+/* Layer items */
+.layer-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+  box-sizing: border-box;
+}
+
+.layer-control-item:last-child {
+  border-bottom: none;
+}
+
+.layer-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 20px;
+}
+
+.layer-control-checkbox {
+  margin: 0;
+  cursor: pointer;
+}
+
+.layer-control-name {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Layer symbol/icon */
+.layer-control-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.layer-control-symbol svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.layer-control-opacity {
+  flex: 0 0 auto;
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  background: linear-gradient(to right, #ddd 0%, #333 100%);
+  border-radius: 8px;
+  appearance: none;
+  outline: none;
+}
+
+.layer-control-opacity::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.layer-control-opacity::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Exact-opacity input popup (double-click the opacity slider) */
+.layer-control-opacity-input {
+  position: absolute;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #fff;
+  border: 1px solid #d0d7e2;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  font-size: 12px;
+  color: #333;
+}
+
+.layer-control-opacity-input-label {
+  font-weight: 600;
+  color: #5c6a7d;
+}
+
+.layer-control-opacity-input-field {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.layer-control-opacity-input-field input {
+  width: 56px;
+  padding: 3px 6px;
+  border: 1px solid #c4ccd8;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #333;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+
+.layer-control-opacity-input-field input:focus {
+  outline: none;
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 2px rgba(47, 111, 237, 0.2);
+}
+
+.layer-control-opacity-input-suffix {
+  color: #5c6a7d;
+  font-weight: 500;
+}
+
+/* Style button */
+.layer-control-style-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.1s ease;
+  flex-shrink: 0;
+}
+
+.layer-control-style-button:hover {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+
+.layer-control-style-button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* Style editor */
+.layer-control-style-editor {
+  display: none;
+  width: 100%;
+  background: #f7f9fc;
+  border: 1px solid #dfe3eb;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.layer-control-style-editor.expanded {
+  display: block;
+}
+
+.layer-control-style-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: #2f3c4a;
+}
+
+.layer-control-style-close,
+.layer-control-style-close-secondary {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #556372;
+  font-size: 14px;
+}
+
+.layer-control-style-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layer-style-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.layer-style-control label {
+  font-weight: 500;
+  color: #3a4756;
+}
+
+.layer-style-color-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layer-style-color {
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.layer-style-color-text {
+  flex: 1;
+  height: 22px;
+  border: 1px solid #d0d7e2;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 11px;
+  background-color: #fff;
+}
+
+.layer-style-slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layer-style-slider {
+  flex: 1;
+  cursor: pointer;
+}
+
+.layer-style-value {
+  min-width: 38px;
+  text-align: right;
+  font-family: monospace;
+  color: #3a4756;
+}
+
+.layer-control-style-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.layer-control-style-action {
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.layer-control-style-apply {
+  background-color: #2f6fed;
+  color: #fff;
+}
+
+.layer-control-style-apply:hover {
+  background-color: #2557b8;
+}
+
+.layer-control-style-reset {
+  background-color: #e4e8f1;
+  color: #2f3c4a;
+  border: 1px solid #c6cedd;
+}
+
+.layer-control-style-reset:hover {
+  background-color: #d7deed;
+}
+
+.layer-control-style-close-secondary {
+  background-color: #f7f9fc;
+  color: #2f3c4a;
+  border: 1px solid #d7deed;
+}
+
+.layer-control-style-close-secondary:hover {
+  background-color: #e9edf7;
+}
+
+.layer-control-style-empty {
+  margin: 0;
+  font-size: 11px;
+  color: #5c6a7d;
+}
+
+/* Style control groups */
+.style-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.style-control-group:last-child {
+  margin-bottom: 0;
+}
+
+.style-control-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3a4756;
+  margin: 0;
+}
+
+.style-control-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.style-control-slider {
+  flex: 1;
+  height: 18px;
+  cursor: pointer;
+  background: linear-gradient(to right, #e0e6ed 0%, #2f6fed 100%);
+  border-radius: 9px;
+  outline: none;
+  appearance: none;
+}
+
+.style-control-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #2f6fed;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.style-control-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #2f6fed;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.style-control-value {
+  min-width: 48px;
+  text-align: right;
+  font-family: "SF Mono", "Monaco", "Consolas", monospace;
+  font-size: 11px;
+  color: #3a4756;
+  font-weight: 500;
+}
+
+.style-control-color-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.style-control-color-picker {
+  width: 40px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid #d0d7e2;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.style-control-color-value {
+  flex: 1;
+  height: 28px;
+  padding: 4px 8px;
+  border: 1px solid #d0d7e2;
+  border-radius: 4px;
+  font-family: "SF Mono", "Monaco", "Consolas", monospace;
+  font-size: 11px;
+  color: #3a4756;
+  background: #fff;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Custom scrollbar */
+.layer-control-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layer-control-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.layer-control-panel::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.layer-control-panel::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Style button */
+.layer-control-style-button {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.layer-control-style-button:hover {
+  background: #f5f5f5;
+  border-color: #2f6fed;
+  color: #2f6fed;
+}
+
+.layer-control-style-button:active {
+  background: #e8e8e8;
+}
+
+/* Style editor */
+.layer-control-style-editor {
+  display: block;
+  margin-top: 8px;
+  padding: 12px;
+  background: #f7fafc;
+  border: 1px solid #e0e6ed;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.style-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.style-editor-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.style-editor-close {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.style-editor-close:hover {
+  color: #333;
+}
+
+.style-editor-controls {
+  margin-bottom: 12px;
+  min-height: 40px;
+  color: #666;
+  font-size: 12px;
+}
+
+.style-editor-section-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin: 8px 0 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.style-editor-section-header:first-child {
+  margin-top: 0;
+}
+
+.style-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid #e0e6ed;
+}
+
+.style-editor-button {
+  padding: 8px 12px;
+  min-width: 60px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background: white;
+  color: #333;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.style-editor-button:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.style-editor-button:active {
+  background: #e0e0e0;
+}
+
+/* The Reset / Remove / Close action buttons share the neutral base style above.
+   They intentionally drop the former orange/gray/red fills: consuming apps
+   reserve those signal colors for warnings and errors, so a standard action
+   button should not emit them. The destructive Remove action is confirmed via
+   an inline prompt and only hints its nature with a restrained red on hover. */
+.layer-control-style-editor .style-editor-button-remove:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+/* ===== Background Legend Panel ===== */
+.layer-control-background-legend {
+  display: block;
+  margin-top: 8px;
+  padding: 10px;
+  background: #f7fafc;
+  border: 1px solid #e0e6ed;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.background-legend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.background-legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+.background-legend-close {
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.background-legend-close:hover {
+  color: #333;
+}
+
+/* Quick action buttons */
+.background-legend-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.layer-control-background-legend .background-legend-action-btn {
+  flex: 1;
+  padding: 5px 10px;
+  border: 1px solid #2f6fed;
+  border-radius: 3px;
+  background: #2f6fed;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: auto;
+  height: auto;
+}
+
+.layer-control-background-legend .background-legend-action-btn:hover {
+  background: #1d5bd6 !important;
+  background-color: #1d5bd6 !important;
+  border-color: #1d5bd6;
+  color: #ffffff;
+}
+
+.layer-control-background-legend .background-legend-action-btn:active {
+  background: #1a4fc2 !important;
+  background-color: #1a4fc2 !important;
+  border-color: #1a4fc2;
+}
+
+.layer-control-background-legend .background-legend-action-btn:disabled {
+  background: #b9c4d6 !important;
+  background-color: #b9c4d6 !important;
+  border-color: #b9c4d6;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+/* Filter row */
+.background-legend-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: #eef2f7;
+  border-radius: 3px;
+}
+
+.background-legend-filter-checkbox {
+  margin: 0;
+  cursor: pointer;
+}
+
+.background-legend-filter-label {
+  font-size: 11px;
+  color: #444;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Layer list container */
+.background-legend-layer-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Individual layer row */
+.background-legend-layer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.background-legend-layer-row:last-child {
+  border-bottom: none;
+}
+
+.background-legend-checkbox {
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Layer symbol in background legend */
+.background-legend-layer-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.background-legend-layer-symbol svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Saved configurations (presets) */
+.background-legend-presets {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.background-legend-presets-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.background-legend-presets-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.background-legend-presets-row:last-child {
+  margin-bottom: 0;
+}
+
+.background-legend-presets-select,
+.background-legend-presets-input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #333;
+  font-size: 11px;
+  height: auto;
+}
+
+.background-legend-presets-select:focus,
+.background-legend-presets-input:focus {
+  outline: none;
+  border-color: #2f6fed;
+}
+
+.background-legend-presets-row .background-legend-action-btn {
+  flex: 0 0 auto;
+}
+
+.background-legend-layer-name {
+  flex: 1;
+  font-size: 11px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.background-legend-layer-type {
+  flex-shrink: 0;
+  font-size: 9px;
+  color: #888;
+  background: #e8ecf0;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Empty state */
+.background-legend-empty {
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  padding: 12px;
+  margin: 0;
+}
+
+/* Active state for legend button */
+.layer-control-background-legend-button.active {
+  background: #e8ecf0;
+  border-color: #2f6fed;
+  color: #2f6fed;
+}
+
+/* Custom scrollbar for legend layer list */
+.background-legend-layer-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.background-legend-layer-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.background-legend-layer-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.background-legend-layer-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Custom layer info panel */
+.layer-control-custom-info-text {
+  margin: 0;
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #666;
+  background: #f0f4f8;
+  border-radius: 4px;
+  border-left: 3px solid #2f6fed;
+}
+
+/* ===== Context Menu Styles ===== */
+.layer-control-context-menu {
+  position: absolute;
+  z-index: 1001;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  min-width: 180px;
+  padding: 4px 0;
+  font-size: 12px;
+  user-select: none;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  color: #333;
+  transition: background-color 0.1s ease;
+}
+
+.context-menu-item:hover {
+  background: #f5f7fa;
+}
+
+.context-menu-item:active {
+  background: #e8ecf0;
+}
+
+.context-menu-item-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.context-menu-item-label {
+  flex: 1;
+}
+
+.context-menu-item-danger {
+  color: #dc3545;
+}
+
+.context-menu-item-danger:hover {
+  background: #fef2f2;
+}
+
+.context-menu-item-danger .context-menu-item-icon {
+  color: #dc3545;
+}
+
+.context-menu-item[disabled] {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.context-menu-item[disabled]:hover {
+  background: transparent;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: #e8e8e8;
+  margin: 4px 0;
+}
+
+/* Layer name input for renaming */
+.layer-control-name-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #2f6fed;
+  border-radius: 3px;
+  outline: none;
+  background: #fff;
+  color: #333;
+}
+
+.layer-control-name-input:focus {
+  box-shadow: 0 0 0 2px rgba(47, 111, 237, 0.2);
+}
+
+/* ===== Drag and Drop Styles ===== */
+.layer-control-drag-handle {
+  width: 16px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #999;
+  font-size: 12px;
+  flex-shrink: 0;
+  touch-action: none;
+  transition: color 0.1s ease;
+}
+
+.layer-control-drag-handle:hover {
+  color: #666;
+}
+
+.layer-control-drag-handle:active {
+  cursor: grabbing;
+}
+
+.layer-control-drag-handle-disabled {
+  color: #ddd;
+  cursor: default;
+  pointer-events: none;
+}
+
+.layer-control-drag-handle-disabled:hover {
+  color: #ddd;
+}
+
+.layer-control-drag-handle svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Dragging state for the item */
+.layer-control-item.dragging {
+  opacity: 0.5;
+}
+
+/* Floating dragged element */
+.layer-control-item-dragging {
+  position: fixed;
+  z-index: 1002;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  padding: 4px 8px;
+  opacity: 0.95;
+}
+
+/* Drop placeholder */
+.layer-control-drop-placeholder {
+  background: #e8f0fe;
+  border: 2px dashed #2f6fed;
+  border-radius: 4px;
+  margin: 2px 0;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+/* Prevent text selection during drag */
+.layer-control-panel.dragging-active {
+  user-select: none;
+}
+
+.layer-control-panel.dragging-active * {
+  cursor: grabbing !important;
+}
+
+/* ===== Inline Remove Confirmation ===== */
+.layer-control-remove-confirm {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  animation: confirmSlideIn 0.15s ease-out;
+}
+
+@keyframes confirmSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.layer-control-remove-confirm-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.layer-control-remove-confirm-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.layer-control-remove-confirm-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.layer-control-remove-confirm-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.15s ease;
+}
+
+.layer-control-remove-confirm-btn-cancel {
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.layer-control-remove-confirm-btn-cancel:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.layer-control-remove-confirm-btn-confirm {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+.layer-control-remove-confirm-btn-confirm:hover {
+  background: #b91c1c;
+  border-color: #991b1b;
+}

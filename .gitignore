@@ -5,6 +5,7 @@
 /unused/
 /app/data/
 /app/node_modules/
+/node_modules/
 /map/control/
 /map/data/
 /map/westville-map-2.js

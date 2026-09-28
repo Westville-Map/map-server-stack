@@ -35,3 +35,15 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+
+  # Frontend vendor dependencies (root package.json)
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "testing"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"

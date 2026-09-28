@@ -1,0 +1,17 @@
+{
+  "name": "westville-map-stack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive map and information portal for the Borough of Westville, New Jersey",
+  "scripts": {
+    "sync-vendor": "node scripts/sync-vendor.js",
+    "verify-vendor": "node scripts/sync-vendor.js --verify",
+    "check-syntax": "node --check map/westville-map.js && node --check map/festival-map.js && node --check www/js/index.js && node --check www/js/components.js && node --check www/directory/directory.js && node --check www/festival/festival.js && node --check www/js/trash.js"
+  },
+  "devDependencies": {
+    "@fontsource/open-sans": "^5.1.1",
+    "maplibre-gl": "5.24.0",
+    "maplibre-gl-layer-control": "0.17.4",
+    "pdf-lib": "1.17.1"
+  }
+}
