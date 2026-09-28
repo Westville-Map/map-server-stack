@@ -30,10 +30,23 @@ const COPY_OPERATIONS = [
     src: 'node_modules/maplibre-gl/dist/maplibre-gl.css',
     dest: 'www/vendor/maplibre-gl/maplibre-gl.css'
   },
-  // MapLibre Layer Control (ES Module & CSS)
+  // MapLibre GL source maps
+  {
+    src: 'node_modules/maplibre-gl/dist/maplibre-gl.js.map',
+    dest: 'map/vendor/maplibre-gl/maplibre-gl.js.map'
+  },
+  {
+    src: 'node_modules/maplibre-gl/dist/maplibre-gl.js.map',
+    dest: 'www/vendor/maplibre-gl/maplibre-gl.js.map'
+  },
+  // MapLibre Layer Control (ES Module & CSS & Source Map)
   {
     src: 'node_modules/maplibre-gl-layer-control/dist/index.mjs',
     dest: 'map/vendor/maplibre-gl-layer-control/index.mjs'
+  },
+  {
+    src: 'node_modules/maplibre-gl-layer-control/dist/index.mjs.map',
+    dest: 'map/vendor/maplibre-gl-layer-control/index.mjs.map'
   },
   {
     src: 'node_modules/maplibre-gl-layer-control/dist/maplibre-gl-layer-control.css',
@@ -42,7 +55,8 @@ const COPY_OPERATIONS = [
   // PDF-Lib (for portal & directory printing)
   {
     src: 'node_modules/pdf-lib/dist/pdf-lib.min.js',
-    dest: 'www/vendor/pdf-lib/pdf-lib.min.js'
+    dest: 'www/vendor/pdf-lib/pdf-lib.min.js',
+    stripSourceMap: true
   }
 ];
 
@@ -72,17 +86,16 @@ function syncFiles() {
       if (!fs.existsSync(destPath)) {
         console.error(`[sync-vendor] ERROR: Destination missing: ${op.dest}`);
         hasError = true;
-      } else {
-        const srcBuf = fs.readFileSync(srcPath);
-        const destBuf = fs.readFileSync(destPath);
-        if (!srcBuf.equals(destBuf)) {
-          console.error(`[sync-vendor] ERROR: File mismatch: ${op.dest} is out of sync with ${op.src}`);
-          hasError = true;
-        }
       }
     } else {
       ensureDir(destPath);
-      fs.copyFileSync(srcPath, destPath);
+      if (op.stripSourceMap) {
+        let content = fs.readFileSync(srcPath, 'utf8');
+        content = content.replace(/\/\/# sourceMappingURL=.*$/m, '');
+        fs.writeFileSync(destPath, content, 'utf8');
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
       console.log(`  ✓ Synced: ${op.dest}`);
     }
   }

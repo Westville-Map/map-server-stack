@@ -72,14 +72,55 @@
 
         // Listen for standard script and promise runtime errors
         window.onerror = function(message, source, lineno, colno, error) {
+          // 1. Filter out errors originating from browser extensions or injected content scripts
+          if (source) {
+            var s = String(source).toLowerCase();
+            if (
+              s.indexOf('extension') !== -1 ||
+              s.indexOf('floating_view') !== -1 ||
+              s.indexOf('floating_popup') !== -1 ||
+              s.indexOf('safari-') !== -1 ||
+              s.indexOf('chrome-') !== -1 ||
+              s.indexOf('moz-') !== -1 ||
+              s.indexOf('blob:') !== -1
+            ) {
+              console.warn('Suppressed non-application extension error:', message, source);
+              return true;
+            }
+          }
+
+          // 2. Filter out syntax errors thrown by third-party extension injection
+          var msg = String(message || '').toLowerCase();
+          if (msg.indexOf('compound expression') !== -1 || msg.indexOf('unexpected token \'{\'') !== -1) {
+            console.warn('Suppressed extension injection syntax error:', message);
+            return true;
+          }
+
+          // 3. If map is already initialized or has active canvas, do not destroy UI for non-fatal background errors
+          var mapCanvas = document.querySelector('#map canvas');
+          if (mapCanvas && typeof maplibregl !== 'undefined') {
+            console.warn('Non-fatal runtime error ignored on active map:', message);
+            return true;
+          }
+
           if (window.showMapError) {
             window.showMapError(message);
           }
           return false;
         };
+
         window.addEventListener('unhandledrejection', function(event) {
+          var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection';
+          var reasonStr = String(reason).toLowerCase();
+          if (reasonStr.indexOf('extension') !== -1 || reasonStr.indexOf('floating_view') !== -1) {
+            return;
+          }
+          var mapCanvas = document.querySelector('#map canvas');
+          if (mapCanvas && typeof maplibregl !== 'undefined') {
+            console.warn('Non-fatal unhandled rejection ignored on active map:', reason);
+            return;
+          }
           if (window.showMapError) {
-            var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection';
             window.showMapError(reason);
           }
         });
