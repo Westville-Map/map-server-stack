@@ -20,33 +20,16 @@
           }
         })();
 
-        // Global fallback map error display function
-        window.showMapError = function(errorMsg, isAdblockSuspected) {
+        // Global fallback map error display function (only called on catastrophic map failure)
+        window.showMapError = function(errorMsg) {
           if (document.getElementById('unsupported-browser-overlay')) {
             return; // Already showing an error
           }
 
-          var isBlocker = isAdblockSuspected || 
-                          errorMsg === 'Script error.' || 
-                          typeof maplibregl === 'undefined' ||
-                          /blocked|content blocker|extension|adblock/i.test(errorMsg || '');
+          var heading = 'Interactive Map Unavailable';
+          var message = 'Your web browser or device failed to render the interactive map canvas. This could be due to a lack of WebGL 2 hardware acceleration, or an unexpected runtime error.';
 
-          var heading = isBlocker ? 'Content Blocker / Extension Detected' : 'Interactive Map Unavailable';
-          var message = isBlocker
-            ? 'A Safari Content Blocker or Ad Blocker (such as AdBlock Plus) prevented essential map rendering files from loading.<br><br><small style="color:#666;">Note: The Westville Interactive Map contains no advertisements, telemetry, or tracking scripts.</small>'
-            : 'Your web browser or device failed to render the interactive map canvas. This could be due to a lack of WebGL 2 hardware acceleration, or an unexpected runtime error.';
-
-          var actionGuide = isBlocker
-            ? '<div style="background:#f0f4f8;padding:14px;border-radius:8px;margin:20px 0;text-align:left;font-size:13px;color:#2B659F;line-height:1.6;border-left:4px solid #2B659F;">' +
-                '<strong>How to enable the map on Mobile Safari / iOS:</strong><br>' +
-                '1. Tap the <strong>aA</strong> / Page Settings icon in your Safari address bar.<br>' +
-                '2. Select <strong>"Turn Off Content Blockers"</strong> (or allow on <em>westville.app</em>).<br>' +
-                '3. Tap <strong>Reload</strong> below.' +
-              '</div>' +
-              '<button type="button" onclick="window.location.reload();" style="background:#2B659F;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:20px;">Reload Map</button>'
-            : '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>';
-
-          if (errorMsg && !isBlocker) {
+          if (errorMsg) {
             message += '<br><br><span style="font-size:12px;color:#cc3333;font-family:monospace;word-break:break-all;">Error: ' + errorMsg + '</span>';
           }
 
@@ -54,10 +37,10 @@
           warningDiv.id = 'unsupported-browser-overlay';
           warningDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#F4F7F6;z-index:999999;display:flex;align-items:center;justify-content:center;font-family:\'Open Sans\',sans-serif;color:#2B659F;padding:20px;box-sizing:border-box;';
           warningDiv.innerHTML = 
-            '<div style="max-width:500px;text-align:center;background:#fff;padding:32px 28px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid ' + (isBlocker ? '#2B659F' : '#E5C158') + ';">' +
+            '<div style="max-width:500px;text-align:center;background:#fff;padding:32px 28px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);border-top:5px solid #E5C158;">' +
               '<h2 style="margin-top:0;font-size:22px;font-weight:600;color:#2B659F;">' + heading + '</h2>' +
               '<div style="color:#555;line-height:1.6;font-size:14px;margin:16px 0;">' + message + '</div>' +
-              actionGuide +
+              '<p style="color:#666;font-size:14px;margin-bottom:30px;line-height:1.5;">Please upgrade to a modern version of Google Chrome, Mozilla Firefox, Apple Safari, or Microsoft Edge.</p>' +
               '<div style="font-weight:bold;font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Westville Interactive Map Project</div>' +
             '</div>';
           
@@ -70,59 +53,15 @@
           }
         };
 
-        // Listen for standard script and promise runtime errors
+        // Non-destructive runtime error logging (never destroys active map DOM on extension/third-party errors)
         window.onerror = function(message, source, lineno, colno, error) {
-          // 1. Filter out errors originating from browser extensions or injected content scripts
-          if (source) {
-            var s = String(source).toLowerCase();
-            if (
-              s.indexOf('extension') !== -1 ||
-              s.indexOf('floating_view') !== -1 ||
-              s.indexOf('floating_popup') !== -1 ||
-              s.indexOf('safari-') !== -1 ||
-              s.indexOf('chrome-') !== -1 ||
-              s.indexOf('moz-') !== -1 ||
-              s.indexOf('blob:') !== -1
-            ) {
-              console.warn('Suppressed non-application extension error:', message, source);
-              return true;
-            }
-          }
-
-          // 2. Filter out syntax errors thrown by third-party extension injection
-          var msg = String(message || '').toLowerCase();
-          if (msg.indexOf('compound expression') !== -1 || msg.indexOf('unexpected token \'{\'') !== -1) {
-            console.warn('Suppressed extension injection syntax error:', message);
-            return true;
-          }
-
-          // 3. If map is already initialized or has active canvas, do not destroy UI for non-fatal background errors
-          var mapCanvas = document.querySelector('#map canvas');
-          if (mapCanvas && typeof maplibregl !== 'undefined') {
-            console.warn('Non-fatal runtime error ignored on active map:', message);
-            return true;
-          }
-
-          if (window.showMapError) {
-            window.showMapError(message);
-          }
+          console.warn('[Festival Map Runtime Diagnostic]', message, source ? ('at ' + source + ':' + lineno) : '');
           return false;
         };
 
         window.addEventListener('unhandledrejection', function(event) {
-          var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection';
-          var reasonStr = String(reason).toLowerCase();
-          if (reasonStr.indexOf('extension') !== -1 || reasonStr.indexOf('floating_view') !== -1) {
-            return;
-          }
-          var mapCanvas = document.querySelector('#map canvas');
-          if (mapCanvas && typeof maplibregl !== 'undefined') {
-            console.warn('Non-fatal unhandled rejection ignored on active map:', reason);
-            return;
-          }
-          if (window.showMapError) {
-            window.showMapError(reason);
-          }
+          var reason = event.reason ? (event.reason.message || event.reason) : event.reason;
+          console.warn('[Festival Map Promise Diagnostic]', reason);
         });
 
         if (!isTier1Supported || !supportsWebGL2) {
