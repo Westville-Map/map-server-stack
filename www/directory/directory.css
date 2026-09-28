@@ -73,6 +73,7 @@
   font-size: 0.95rem;
   color: var(--primary-blue);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .quick-views-pills {
@@ -97,6 +98,8 @@
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .quick-view-pill:hover {

@@ -1277,12 +1277,65 @@ class CollapsiblePillTray extends HTMLElement {
         triggerBtn.focus();
       }
     });
+
+    // Horizontal wheel-to-scroll support on desktop
+    contentWrapper.addEventListener('wheel', (e) => {
+      if (contentWrapper.scrollWidth > contentWrapper.clientWidth && e.deltaY !== 0 && !this.classList.contains('open')) {
+        e.preventDefault();
+        contentWrapper.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    // Ensure keyboard focus brings pills smoothly into view
+    contentWrapper.addEventListener('focusin', (e) => {
+      if (e.target && typeof e.target.scrollIntoView === 'function') {
+        e.target.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+      }
+    });
+
+    // Dynamic edge-fade mask updater based on scroll position
+    const updateOverflowAttributes = () => {
+      const isScrollable = contentWrapper.scrollWidth > contentWrapper.clientWidth + 1;
+      if (!isScrollable || this.classList.contains('open')) {
+        contentWrapper.removeAttribute('data-overflow-left');
+        contentWrapper.removeAttribute('data-overflow-right');
+        return;
+      }
+      const atStart = contentWrapper.scrollLeft <= 2;
+      const atEnd = Math.ceil(contentWrapper.scrollLeft + contentWrapper.clientWidth) >= contentWrapper.scrollWidth - 2;
+
+      if (!atStart) {
+        contentWrapper.setAttribute('data-overflow-left', 'true');
+      } else {
+        contentWrapper.removeAttribute('data-overflow-left');
+      }
+
+      if (!atEnd) {
+        contentWrapper.setAttribute('data-overflow-right', 'true');
+      } else {
+        contentWrapper.removeAttribute('data-overflow-right');
+      }
+    };
+
+    this._updateOverflowAttributes = updateOverflowAttributes;
+    contentWrapper.addEventListener('scroll', updateOverflowAttributes, { passive: true });
+    window.addEventListener('resize', updateOverflowAttributes, { passive: true });
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => updateOverflowAttributes());
+      ro.observe(contentWrapper);
+    }
+
+    requestAnimationFrame(updateOverflowAttributes);
   }
 
   setActiveLabel(text) {
     this.setAttribute('active-label', text);
     const labelEl = this.querySelector('.pill-tray-active-text');
     if (labelEl) labelEl.innerText = text;
+    if (this._updateOverflowAttributes) {
+      requestAnimationFrame(this._updateOverflowAttributes);
+    }
   }
 
   setActiveCount(count) {
@@ -1291,6 +1344,9 @@ class CollapsiblePillTray extends HTMLElement {
     if (countEl) {
       countEl.innerText = count;
       countEl.style.display = (count !== '' && count !== null && count !== undefined) ? 'inline-flex' : 'none';
+    }
+    if (this._updateOverflowAttributes) {
+      requestAnimationFrame(this._updateOverflowAttributes);
     }
   }
 
@@ -1308,6 +1364,10 @@ class CollapsiblePillTray extends HTMLElement {
         if (tray !== this) tray.close();
       });
     }
+
+    if (this._updateOverflowAttributes) {
+      requestAnimationFrame(this._updateOverflowAttributes);
+    }
   }
 
   close() {
@@ -1315,6 +1375,9 @@ class CollapsiblePillTray extends HTMLElement {
       this.classList.remove('open');
       const triggerBtn = this.querySelector('.pill-tray-trigger');
       if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'false');
+      if (this._updateOverflowAttributes) {
+        requestAnimationFrame(this._updateOverflowAttributes);
+      }
     }
   }
 }

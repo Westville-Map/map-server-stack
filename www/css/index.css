@@ -330,11 +330,11 @@
   background: var(--primary-blue);
   padding: 12px 20px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   border-bottom: 1.5px solid var(--accent-gold);
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-wrap: nowrap;
+  gap: 16px;
   transition: min-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -344,6 +344,7 @@
   align-items: flex-start;
   gap: 0;
   min-width: 0;
+  width: 0;
   flex: 1 1 auto;
 }
 
@@ -353,6 +354,8 @@ collapsible-pill-tray {
   align-items: center;
   gap: 8px;
   position: relative;
+  width: 100%;
+  min-width: 0;
 }
 
 collapsible-pill-tray .pill-tray-trigger {
@@ -363,7 +366,34 @@ collapsible-pill-tray .pill-tray-content {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 2px;
+  min-width: 0;
+  width: 100%;
+}
+
+collapsible-pill-tray .pill-tray-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Edge fade masks for overflowing horizontal pill trays */
+.pill-tray-content[data-overflow-right="true"]:not([data-overflow-left="true"]) {
+  mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+}
+
+.pill-tray-content[data-overflow-left="true"]:not([data-overflow-right="true"]) {
+  mask-image: linear-gradient(to right, transparent 0%, black 28px, black 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 28px, black 100%);
+}
+
+.pill-tray-content[data-overflow-left="true"][data-overflow-right="true"] {
+  mask-image: linear-gradient(to right, transparent 0%, black 28px, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 28px, black calc(100% - 28px), transparent 100%);
 }
 
 .quick-filters-label {
@@ -374,6 +404,7 @@ collapsible-pill-tray .pill-tray-content {
   letter-spacing: 0.05em;
   margin-right: 4px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .quick-view-pill {
@@ -392,6 +423,8 @@ collapsible-pill-tray .pill-tray-content {
   user-select: none;
   font-family: inherit;
   line-height: 1.2;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .quick-view-pill:hover {
@@ -589,6 +622,9 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .share-wrapper {
@@ -1576,6 +1612,9 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
     justify-content: center;
     max-height: 280px;
     overflow-y: auto;
+    overflow-x: hidden;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
   }
 
   collapsible-pill-tray.open .pill-tray-content {
