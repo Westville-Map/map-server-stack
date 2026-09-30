@@ -47,3 +47,7 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
+    ignore:
+      - dependency-name: "maplibre-gl"
+        update-types: ["version-update:semver-major"]
+

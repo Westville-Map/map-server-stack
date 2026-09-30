@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@fontsource/open-sans": "^5.1.1",
-    "maplibre-gl": "5.24.0",
+    "maplibre-gl": "^5.24.0",
     "maplibre-gl-layer-control": "0.17.4",
     "pdf-lib": "1.17.1"
   }
