@@ -114,7 +114,7 @@ fi
 
 # 9. Deploy to production stack
 echo "🚀 Step 6/7: Deploying to production stack on ${REMOTE_HOST}..."
-ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${PROD_DIR} && git pull && docker compose up -d --build --remove-orphans && docker compose restart wvmap_webserver"
+ssh "$REMOTE_HOST" "export PATH='/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH'; cd ${PROD_DIR} && git pull && docker compose build --pull wvmap_backend && docker compose up -d --build --remove-orphans && docker compose restart wvmap_webserver"
 
 # 10. Switch back to testing and synchronize
 echo "🔄 Step 7/7: Syncing release back into 'testing' branch..."

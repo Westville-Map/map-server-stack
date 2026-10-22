@@ -21,6 +21,13 @@
     }
     header @revalidate Cache-Control "no-cache, must-revalidate"
 
+    # Block compressed request bodies to protect upstream backend against decompression exploits (CVE-2026-111497)
+    @compressedApiUpload {
+        path /api/*
+        header Content-Encoding *
+    }
+    respond @compressedApiUpload "Upload compression not supported" 415
+
     # Route API requests to the backend container
     reverse_proxy /api/* wvmap_backend:3000
 

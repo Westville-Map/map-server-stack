@@ -4,7 +4,8 @@
   "description": "Secure and resilient backend for saving GeoJSON map data",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test/security.test.js"
   },
   "engines": {
     "node": ">=24.0.0"
