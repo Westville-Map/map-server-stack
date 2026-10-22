@@ -42,6 +42,8 @@ graph TD
   - `helmet` for robust, web-vulnerability header configurations.
   - `express-rate-limit` to prevent brute force and Denial of Service (DoS).
   - Timing-safe secure comparison of client tokens (`APPS_SCRIPT_TOKEN`) to prevent side-channel timing attacks.
+  - Pre-authentication header validation: verifies authorization tokens and feature types before request body reading or parsing begins.
+  - Inbound decompression exploit mitigation: body decompression is disabled (`inflate: false`), preventing decompression-based memory corruption or DoS vulnerabilities.
   - Safe path validation and traversal blocks using a strict whitelist of allowed file names (`parks`, `roads`, `boundaries`, etc.).
   - Automatic validation of uploaded payloads using `geojson-validation` before writing to disk.
   - Writing updates to temporary files first, then executing atomic renames to eliminate risk of storage corruption.
@@ -49,6 +51,7 @@ graph TD
 ### 4. Reverse Proxy & Server (`Caddyfile`)
 - [Caddy](https://caddyserver.com/) acts as an extremely efficient web server and reverse proxy.
 - Routes `/api/*` traffic directly to the backend container, while serving all map, static portal pages, and GeoJSON files securely from the local filesystem.
+- **Edge Perimeter Hardening**: Blocks compressed request uploads (`Content-Encoding: *`) destined for `/api/*` with HTTP 415 before traffic touches upstream application runtimes.
 - **Granular Caching & ETag Revalidation**: Implements fine-grained `Cache-Control` header policies. Dynamic datasets (`/data/*`), application scripts, and HTML pages use conditional ETag revalidation (`no-cache, must-revalidate`), delivering `304 Not Modified` responses with zero payload when unchanged and instant updates upon deployment or API save. Static media assets leverage longer edge TTLs with background revalidation.
 
 ---
