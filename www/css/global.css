@@ -26,21 +26,22 @@ body {
 header {
   background-color: var(--primary-blue);
   color: var(--white);
-  padding: 1.5rem 2rem;
-  border-bottom: 5px solid var(--accent-gold);
+  padding: 0.65rem 1.25rem;
+  border-bottom: 3.5px solid var(--accent-gold);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 12px;
   position: relative;
   z-index: 100;
 }
 
 header h1 {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .brand-logo {
@@ -71,8 +72,8 @@ header h1 {
 }
 
 .brand-icon-img img, .mapicon {
-  max-width: 40px;
-  height: 40px;
+  max-width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,8 +131,13 @@ footer :focus-visible,
 
 .header-shortcuts {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.header-nav-links {
+  display: flex;
+  gap: 10px;
   align-items: center;
 }
 
@@ -139,15 +145,15 @@ footer :focus-visible,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   background-color: transparent;
   border: 1.5px solid var(--accent-gold);
   border-radius: 20px;
   color: var(--white);
-  min-height: 34px;
-  height: auto;
-  padding: 6px 14px;
-  font-size: 0.9rem;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -326,18 +332,23 @@ margin-bottom: 15px;
 footer {
   background-color: var(--primary-blue);
   color: var(--white);
-  padding: 1.5rem 2rem;
-  border-top: 5px solid var(--accent-gold);
+  padding: 0.65rem 1.25rem;
+  border-top: 3.5px solid var(--accent-gold);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 12px;
   margin-top: auto;
 }
 
+.footer-brand-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
 .footer-copyright {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   opacity: 0.9;
   color: var(--white);
   margin: 0;
@@ -568,79 +579,160 @@ main {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) and (min-width: 769px) {
   header {
-    position: relative;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.4rem 0.6rem;
+    padding: 0.5rem 1rem;
     gap: 8px;
+  }
+  header h1 {
+    font-size: 1.25rem;
+  }
+  .header-btn {
+    padding: 0 10px;
+    font-size: 0.82rem;
+    min-height: 30px;
+    height: 30px;
+  }
+  footer {
+    padding: 0.5rem 1rem;
+    gap: 8px;
+  }
+  footer .footer-brand-title {
+    font-size: 0.95rem;
+  }
+  .footer-copyright {
+    font-size: 0.78rem;
+  }
+  .footer-shortcuts .header-btn {
+    padding: 0 8px;
+    font-size: 0.8rem;
+    min-height: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Header Option H2: 2-Row Compact Flex Layout */
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    padding: 0.45rem 0.65rem;
+    row-gap: 5px;
+    column-gap: 8px;
+    align-items: center;
   }
 
   .brand-logo {
-    width: 100%;
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    width: auto;
+    padding-right: 0;
     justify-content: flex-start;
-    padding-right: 75px;
   }
 
   .brand-logo h1 {
-    font-size: 1.15rem;
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .brand-icon-img img, .mapicon {
-    max-width: 28px;
-    height: 28px;
+    max-width: 26px;
+    height: 26px;
+  }
+
+  .header-shortcuts {
+    display: contents;
   }
 
   .help-split-btn {
-    position: absolute;
-    right: 8px;
-    top: 6px;
-    margin: 0;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
     height: 28px;
+    margin: 0;
+    position: static;
   }
 
   .help-split-left-btn {
     font-size: 0.82rem;
-    padding: 0 6px 0 10px;
+    padding: 0 6px 0 8px;
+    height: 28px;
   }
 
   .help-split-right-btn {
     padding: 0 6px;
+    height: 28px;
   }
 
-  .header-shortcuts {
+  .header-nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
     justify-content: center;
     width: 100%;
     gap: 8px;
   }
 
-  .header-shortcuts .header-btn {
+  .header-nav-links .header-btn {
     font-size: 0.82rem;
     height: 28px;
-    padding: 0 8px;
+    min-height: 28px;
+    padding: 0 clamp(8px, 3vw, 14px);
+    flex: 0 1 auto;
   }
 
+  /* Footer Option F1: Streamlined 2-Row Layout */
   footer {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.6rem 0.6rem;
-    gap: 10px;
+    padding: 0.5rem 0.6rem;
+    gap: 6px;
   }
 
   footer .brand-logo {
-    padding-right: 0;
+    display: none;
+  }
+
+  .footer-shortcuts {
+    order: 1;
+    display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .footer-shortcuts .header-btn {
+    font-size: 0.78rem;
+    height: 26px;
+    min-height: 26px;
+    padding: 0 8px;
+    gap: 5px;
+  }
+
+  .footer-shortcuts .header-btn-icon img,
+  .footer-shortcuts .header-btn-icon svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   footer .footer-copyright {
-    font-size: 0.8rem;
+    order: 2;
+    font-size: 0.74rem;
     text-align: center;
     width: 100%;
-    margin: 2px 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
+    line-height: 1.35;
   }
 
   footer .footer-copy-text,
@@ -652,20 +744,6 @@ main {
   footer .footer-version-group:not(:empty)::before,
   footer .footer-version-group:not(:empty)::after {
     content: "";
-  }
-
-  .footer-shortcuts {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .footer-shortcuts .header-btn {
-    font-size: 0.82rem;
-    height: 28px;
-    padding: 0 8px;
   }
 }
 

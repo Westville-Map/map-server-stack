@@ -66,13 +66,15 @@ class SiteHeader extends HTMLElement {
     }
 
     let shortcutsHTML = `
-      <a href="/" class="header-btn" ${homeActive}>
-        <span class="header-btn-text">Home</span>
-      </a>
-      <a href="/directory/" class="header-btn" ${directoryActive}>
-        <span class="header-btn-text">Directory</span>
-      </a>
-      ${festivalLinkHTML}
+      <nav class="header-nav-links" aria-label="Main Navigation">
+        <a href="/" class="header-btn" ${homeActive}>
+          <span class="header-btn-text">Home</span>
+        </a>
+        <a href="/directory/" class="header-btn" ${directoryActive}>
+          <span class="header-btn-text">Directory</span>
+        </a>
+        ${festivalLinkHTML}
+      </nav>
       <div class="help-split-btn">
         <button id="header-help-btn" class="help-split-left-btn help-btn" title="How to Use the Site">
           <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
