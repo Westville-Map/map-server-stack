@@ -63,7 +63,8 @@ graph TD
 ├── Caddyfile              # Caddy server and proxy configuration
 ├── compose.yaml           # Docker Compose definition for the entire stack
 ├── .env.example           # Configuration template for local setup
-├── LICENSE                # Open-source MIT License
+├── LICENSE                # Open-source GNU AGPL-3.0 License
+├── LICENSE.md             # Symlink to LICENSE for repository markdown viewing
 ├── README.md              # Project documentation
 │
 ├── app/                   # API Backend
