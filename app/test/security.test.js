@@ -128,6 +128,23 @@ async function runTests() {
         console.log('✓ Test 4 Passed: Legitimate uncompressed GeoJSON upload succeeds with 200');
     }
 
+    // Test 5: Verify ip-address >= 10.7.4 and ReDoS resilience
+    {
+        const { Address6 } = require('ip-address');
+        const ipAddressPkg = require('ip-address/package.json');
+        const semver = ipAddressPkg.version.split('.').map(Number);
+        assert.ok(
+            semver[0] > 10 || (semver[0] === 10 && semver[1] > 7) || (semver[0] === 10 && semver[1] === 7 && semver[2] >= 4),
+            `Expected ip-address >= 10.7.4, found ${ipAddressPkg.version}`
+        );
+
+        const start = process.hrtime.bigint();
+        Address6.isValid('%'.repeat(10000) + '\n');
+        const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
+        assert.ok(elapsedMs < 10, `ReDoS payload took too long: ${elapsedMs.toFixed(2)}ms`);
+        console.log(`✓ Test 5 Passed: ip-address@${ipAddressPkg.version} immune to ReDoS (${elapsedMs.toFixed(2)}ms)`);
+    }
+
     console.log('--- All Security & Decompression Tests Passed ---');
 }
 
