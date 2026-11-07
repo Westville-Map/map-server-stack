@@ -129,41 +129,41 @@
 
           <div class="map-header-actions">
             <div class="explore-wrapper" id="explore-wrapper">
-              <button id="explore-btn" class="header-btn" title="Explore tours and full map options" aria-haspopup="true" aria-expanded="false">
+              <button id="explore-btn" class="header-btn" title="Explore tours and full map options" aria-haspopup="true" aria-expanded="false" aria-controls="explore-dropdown">
                 <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
                   <img style="width:18px; height:18px;" src="/images/compass.svg" alt="">
                 </span>
                 <span class="header-btn-text">Explore</span>
                 <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
               </button>
-              <div id="explore-dropdown" class="explore-dropdown">
-                <div class="dropdown-section-title">Guided Tours</div>
-                <a href="https://map.westville.app/?tour=borough" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="borough">
+              <div id="explore-dropdown" class="explore-dropdown app-dropdown-menu" role="menu" popover="auto">
+                <div class="dropdown-section-title app-dropdown-title">Guided Tours</div>
+                <a href="https://map.westville.app/?tour=borough" target="mapFrame" class="explore-dropdown-btn app-dropdown-item scroll-trigger" data-tour="borough" role="menuitem">
                   <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/w-pin.svg" alt="">
                   </span>
                   <span class="explore-dropdown-btn-text">Borough Tour</span>
                 </a>
-                <a href="https://map.westville.app/?tour=businesses" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="businesses">
+                <a href="https://map.westville.app/?tour=businesses" target="mapFrame" class="explore-dropdown-btn app-dropdown-item scroll-trigger" data-tour="businesses" role="menuitem">
                   <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/store.svg" alt="">
                   </span>
                   <span class="explore-dropdown-btn-text">Business Tour</span>
                 </a>
-                <a href="https://map.westville.app/?tour=parks" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="parks">
+                <a href="https://map.westville.app/?tour=parks" target="mapFrame" class="explore-dropdown-btn app-dropdown-item scroll-trigger" data-tour="parks" role="menuitem">
                   <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/tree.svg" alt="">
                   </span>
                   <span class="explore-dropdown-btn-text">Parks &amp; Rec Tour</span>
                 </a>
-                <a href="https://map.westville.app/?tour=public" target="mapFrame" class="explore-dropdown-btn scroll-trigger" data-tour="public">
+                <a href="https://map.westville.app/?tour=public" target="mapFrame" class="explore-dropdown-btn app-dropdown-item scroll-trigger" data-tour="public" role="menuitem">
                   <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/map-pin.svg" alt="">
                   </span>
                   <span class="explore-dropdown-btn-text">Public Services Tour</span>
                 </a>
-                <div class="dropdown-divider"></div>
-                <a id="full-map-link" href="https://map.westville.app" target="_blank" class="explore-dropdown-btn highlight-option">
+                <div class="dropdown-divider app-dropdown-divider"></div>
+                <a id="full-map-link" href="https://map.westville.app" target="_blank" class="explore-dropdown-btn app-dropdown-item highlight-option" role="menuitem">
                   <span class="explore-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/map-folded.svg" alt="">
                   </span>
@@ -178,27 +178,27 @@
               <span class="header-btn-text">Print</span>
             </button>
             <div class="share-wrapper" id="share-wrapper">
-              <button id="share-btn" class="header-btn" title="Share map view or location">
+              <button id="share-btn" class="header-btn" title="Share map view or location" aria-haspopup="true" aria-expanded="false" aria-controls="share-dropdown">
                 <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
                   <img style="width:18px; height:18px;" src="/images/share.svg" alt="">
                 </span>
                 <span class="header-btn-text">Share</span>
                 <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
               </button>
-              <div id="share-dropdown" class="share-dropdown">
-                <button id="share-view-btn" class="share-dropdown-btn">
+              <div id="share-dropdown" class="share-dropdown app-dropdown-menu" role="menu" popover="auto">
+                <button id="share-view-btn" class="share-dropdown-btn app-dropdown-item" role="menuitem">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/share.svg" alt="">
                   </span>
                   <span class="share-dropdown-btn-text">Share current view</span>
                 </button>
-                <button id="share-location-btn" class="share-dropdown-btn">
+                <button id="share-location-btn" class="share-dropdown-btn app-dropdown-item" role="menuitem">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/map-pin.svg" alt="">
                   </span>
                   <span class="share-dropdown-btn-text">Share my location</span>
                 </button>
-                <button id="share-qr-btn" class="share-dropdown-btn">
+                <button id="share-qr-btn" class="share-dropdown-btn app-dropdown-item" role="menuitem">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/w-pin.svg" alt="">
                   </span>
@@ -253,15 +253,15 @@
                   <input type="checkbox" id="layer-satellite" data-layer="satellite" class="tag-checkbox" checked>
                   <span><img style="width:14px; height:14px; margin-bottom: -2px;" src="/images/satellite.svg" alt=""> Satellite</span>
                 </label>
-                <button type="button" id="satellite-dropdown-toggle" class="satellite-split-right" title="Choose Satellite Imagery Source" aria-haspopup="true" aria-expanded="false" aria-label="Choose satellite imagery source">
+                <button type="button" id="satellite-dropdown-toggle" class="satellite-split-right" title="Choose Satellite Imagery Source" aria-haspopup="true" aria-expanded="false" aria-controls="satellite-dropdown-menu" aria-label="Choose satellite imagery source">
                   <span style="font-size: 0.7rem; pointer-events: none;">▼</span>
                 </button>
-                <div id="satellite-dropdown-menu" class="satellite-dropdown-menu" role="menu">
-                  <button type="button" class="satellite-dropdown-item active" data-imagery="njgin" role="menuitem">
+                <div id="satellite-dropdown-menu" class="satellite-dropdown-menu app-dropdown-menu" role="menu" popover="auto">
+                  <button type="button" class="satellite-dropdown-item app-dropdown-item active" data-imagery="njgin" role="menuitem">
                     <span class="satellite-dropdown-check">✓</span>
                     <span class="satellite-dropdown-text">NJGIN 2020 (High-Res 1ft)</span>
                   </button>
-                  <button type="button" class="satellite-dropdown-item" data-imagery="esri" role="menuitem">
+                  <button type="button" class="satellite-dropdown-item app-dropdown-item" data-imagery="esri" role="menuitem">
                     <span class="satellite-dropdown-check"></span>
                     <span class="satellite-dropdown-text">Esri 2025 (Recent 0.5m)</span>
                   </button>

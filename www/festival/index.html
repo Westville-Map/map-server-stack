@@ -58,27 +58,27 @@
               <span class="header-btn-text">Print</span>
             </button>
             <div class="share-wrapper" id="share-wrapper">
-              <button id="share-btn" class="header-btn" title="Share map view or location">
+              <button id="share-btn" class="header-btn" title="Share map view or location" aria-haspopup="true" aria-expanded="false" aria-controls="share-dropdown">
                 <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
                   <img style="width:18px; height:18px;" src="/images/share.svg" alt="">
                 </span>
                 <span class="header-btn-text">Share</span>
                 <span style="font-size: 0.75rem; margin-left: 2px;">▼</span>
               </button>
-              <div id="share-dropdown" class="share-dropdown">
-                <button id="share-view-btn" class="share-dropdown-btn">
+              <div id="share-dropdown" class="share-dropdown app-dropdown-menu" role="menu" popover="auto">
+                <button id="share-view-btn" class="share-dropdown-btn app-dropdown-item" role="menuitem">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/share.svg" alt="">
                   </span>
                   <span class="share-dropdown-btn-text">Share current view</span>
                 </button>
-                <button id="share-location-btn" class="share-dropdown-btn">
+                <button id="share-location-btn" class="share-dropdown-btn app-dropdown-item" role="menuitem">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/map-pin.svg" alt="">
                   </span>
                   <span class="share-dropdown-btn-text">Share my location</span>
                 </button>
-                <button id="share-qr-btn" class="share-dropdown-btn">
+                <button id="share-qr-btn" class="share-dropdown-btn app-dropdown-item" role="menuitem">
                   <span class="share-dropdown-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
                     <img style="width:14px; height:14px;" src="/images/w-pin.svg" alt="">
                   </span>

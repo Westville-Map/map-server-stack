@@ -1104,57 +1104,9 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Dropup Menu for Satellite Imagery Sources (Opens Upward) */
+/* Dropdown Menu for Satellite Imagery Sources (Controlled by AppDropdown) */
 .satellite-dropdown-menu {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  top: auto;
-  left: 0;
-  background-color: var(--primary-blue, #2B659F);
-  border: 1.5px solid var(--accent-gold, #E5C158);
-  border-radius: 12px;
-  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
-  z-index: 1000;
-  display: none;
   min-width: 230px;
-  padding: 0;
-  overflow: hidden;
-}
-
-.satellite-dropdown-menu.show {
-  display: block;
-}
-
-.satellite-dropdown-item {
-  width: 100%;
-  background-color: transparent;
-  border: none;
-  color: var(--white, #ffffff);
-  padding: 9px 12px;
-  font-size: 0.82rem;
-  font-family: "Open Sans", sans-serif;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  transition: background-color 0.2s, color 0.2s;
-  white-space: nowrap;
-  text-decoration: none;
-  box-sizing: border-box;
-  text-align: left;
-}
-
-.satellite-dropdown-item:not(:last-child) {
-  border-bottom: 1px solid rgba(229, 193, 88, 0.25);
-}
-
-.satellite-dropdown-item:hover,
-.satellite-dropdown-item:focus {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: var(--accent-gold, #E5C158);
-  outline: none;
 }
 
 .satellite-dropdown-check {
@@ -1163,6 +1115,7 @@ collapsible-pill-tray[variant="light"] .quick-view-pill.active .quick-view-count
   font-weight: 800;
   color: var(--accent-gold, #E5C158);
   text-align: center;
+  transition: color 0.2s;
 }
 
 .map-tag.interactive-tag:has(#layer-labels:checked),

@@ -48,6 +48,241 @@ if (document.readyState === 'loading') {
   syncPortalMapUrls();
 }
 
+// --- Unified Reusable Dropdown Component ---
+class AppDropdown {
+  static instances = new Set();
+
+  static closeAll(except = null) {
+    AppDropdown.instances.forEach(instance => {
+      if (instance !== except) {
+        instance.close();
+      }
+    });
+  }
+
+  constructor(trigger, menu, options = {}) {
+    this.trigger = typeof trigger === 'string' ? document.querySelector(trigger) : trigger;
+    this.menu = typeof menu === 'string' ? document.querySelector(menu) : menu;
+    if (!this.trigger || !this.menu) return;
+
+    this.placement = options.placement || 'auto'; // 'auto', 'bottom', 'top'
+    this.align = options.align || 'start'; // 'start', 'end'
+    this.teleport = options.teleport !== false; // Break out of overflow containers
+    this.offset = options.offset !== undefined ? options.offset : 6;
+    this.hasPopover = typeof HTMLElement.prototype.showPopover === 'function';
+
+    this.isOpen = false;
+    this._handleOutsideClick = this._handleOutsideClick.bind(this);
+    this._handlePositionUpdate = this._handlePositionUpdate.bind(this);
+
+    this.init();
+    AppDropdown.instances.add(this);
+  }
+
+  init() {
+    this.trigger.setAttribute('aria-haspopup', 'true');
+    this.trigger.setAttribute('aria-expanded', 'false');
+    if (this.menu.id) {
+      this.trigger.setAttribute('aria-controls', this.menu.id);
+    }
+    this.menu.setAttribute('role', 'menu');
+
+    if (this.hasPopover) {
+      this.menu.setAttribute('popover', 'auto');
+      this.menu.addEventListener('toggle', (e) => {
+        if (e.newState === 'open') {
+          this.isOpen = true;
+          this.trigger.setAttribute('aria-expanded', 'true');
+          this.updatePosition();
+          AppDropdown.closeAll(this);
+        } else {
+          this.isOpen = false;
+          this.trigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    this.trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+
+    this.trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'Down') {
+        e.preventDefault();
+        if (!this.isOpen) this.open();
+        this.focusFirstItem();
+      } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+        e.preventDefault();
+        if (!this.isOpen) this.open();
+        this.focusLastItem();
+      } else if (e.key === 'Escape' || e.key === 'Esc') {
+        if (this.isOpen) {
+          e.preventDefault();
+          this.close();
+          this.trigger.focus();
+        }
+      }
+    });
+
+    this.menu.addEventListener('keydown', (e) => {
+      const items = this.getItems();
+      if (!items.length) return;
+      const currentIndex = items.indexOf(document.activeElement);
+
+      if (e.key === 'ArrowDown' || e.key === 'Down') {
+        e.preventDefault();
+        const next = (currentIndex + 1) % items.length;
+        items[next]?.focus();
+      } else if (e.key === 'ArrowUp' || e.key === 'Up') {
+        e.preventDefault();
+        const prev = (currentIndex - 1 + items.length) % items.length;
+        items[prev]?.focus();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        items[0]?.focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        items[items.length - 1]?.focus();
+      } else if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        this.close();
+        this.trigger.focus();
+      } else if (e.key === 'Tab') {
+        this.close();
+      }
+    });
+
+    const pillTrayContent = this.trigger.closest('.pill-tray-content');
+    if (pillTrayContent) {
+      pillTrayContent.addEventListener('scroll', () => {
+        if (this.isOpen) this.updatePosition();
+      }, { passive: true });
+    }
+  }
+
+  getItems() {
+    return Array.from(this.menu.querySelectorAll('a:not([disabled]), button:not([disabled]), [role="menuitem"]:not([disabled])'));
+  }
+
+  focusFirstItem() {
+    const items = this.getItems();
+    if (items.length) items[0].focus();
+  }
+
+  focusLastItem() {
+    const items = this.getItems();
+    if (items.length) items[items.length - 1].focus();
+  }
+
+  updatePosition() {
+    if (!this.trigger || !this.menu) return;
+    const triggerRect = this.trigger.getBoundingClientRect();
+    const menuWidth = this.menu.offsetWidth || 210;
+    const menuHeight = this.menu.offsetHeight || 160;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let placeTop = this.placement === 'top';
+    if (this.placement === 'auto') {
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      placeTop = (spaceBelow < menuHeight + 12 && spaceAbove >= menuHeight + 12) ||
+                 (triggerRect.top > viewportHeight / 2 && spaceAbove >= menuHeight + 12);
+    }
+
+    this.menu.style.position = 'fixed';
+    this.menu.style.zIndex = '10000';
+    this.menu.style.margin = '0';
+
+    if (placeTop) {
+      this.menu.style.bottom = `${Math.round(viewportHeight - triggerRect.top + this.offset)}px`;
+      this.menu.style.top = 'auto';
+    } else {
+      this.menu.style.top = `${Math.round(triggerRect.bottom + this.offset)}px`;
+      this.menu.style.bottom = 'auto';
+    }
+
+    if (this.align === 'end') {
+      const right = Math.max(8, viewportWidth - triggerRect.right);
+      this.menu.style.right = `${Math.round(right)}px`;
+      this.menu.style.left = 'auto';
+    } else {
+      let left = triggerRect.left;
+      if (left + menuWidth > viewportWidth - 8) {
+        left = Math.max(8, viewportWidth - menuWidth - 8);
+      }
+      this.menu.style.left = `${Math.round(Math.max(8, left))}px`;
+      this.menu.style.right = 'auto';
+    }
+  }
+
+  open() {
+    AppDropdown.closeAll(this);
+    if (!this.hasPopover && this.teleport && this.menu.parentElement !== document.body) {
+      document.body.appendChild(this.menu);
+    }
+    this.menu.classList.add('show');
+    if (this.hasPopover) {
+      try {
+        if (!this.menu.matches(':popover-open')) {
+          this.menu.showPopover();
+        }
+      } catch (_) {}
+    }
+    this.updatePosition();
+    this.isOpen = true;
+    this.trigger.setAttribute('aria-expanded', 'true');
+
+    document.addEventListener('click', this._handleOutsideClick, true);
+    window.addEventListener('resize', this._handlePositionUpdate, { passive: true });
+    window.addEventListener('scroll', this._handlePositionUpdate, { passive: true });
+  }
+
+  close() {
+    if (!this.isOpen && !this.menu.classList.contains('show')) return;
+    if (this.hasPopover) {
+      try {
+        if (this.menu.matches(':popover-open')) {
+          this.menu.hidePopover();
+        }
+      } catch (_) {}
+    }
+    this.menu.classList.remove('show');
+    this.isOpen = false;
+    this.trigger.setAttribute('aria-expanded', 'false');
+
+    document.removeEventListener('click', this._handleOutsideClick, true);
+    window.removeEventListener('resize', this._handlePositionUpdate);
+    window.removeEventListener('scroll', this._handlePositionUpdate);
+  }
+
+  toggle() {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  _handleOutsideClick(e) {
+    if (!this.isOpen) return;
+    if (this.trigger.contains(e.target) || this.menu.contains(e.target)) return;
+    this.close();
+  }
+
+  _handlePositionUpdate() {
+    if (!this.isOpen) return;
+    const rect = this.trigger.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      this.close();
+      return;
+    }
+    this.updatePosition();
+  }
+}
+window.AppDropdown = AppDropdown;
+
 class SiteHeader extends HTMLElement {
   connectedCallback() {
     const activePage = this.getAttribute('active-page') || 'portal';
@@ -86,17 +321,17 @@ class SiteHeader extends HTMLElement {
           </span>
           <span class="header-btn-text">Help</span>
         </button>
-        <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false" aria-label="More information options">
+        <button id="help-dropdown-toggle" class="help-split-right-btn" title="More Information" aria-haspopup="true" aria-expanded="false" aria-controls="help-dropdown" aria-label="More information options">
           <span style="font-size: 0.75rem;">▼</span>
         </button>
-        <div id="help-dropdown" class="help-dropdown-menu">
-          <a href="/credits.html" class="help-dropdown-item">
+        <div id="help-dropdown" class="help-dropdown-menu app-dropdown-menu" role="menu" popover="auto">
+          <a href="/credits.html" class="help-dropdown-item app-dropdown-item" role="menuitem">
             <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
               <img style="width:14px; height:14px;" src="/images/credits-scroll.svg" alt="">
             </span>
             <span class="help-dropdown-item-text">Credits</span>
           </a>
-          <a href="/privacy-tos.html" class="help-dropdown-item">
+          <a href="/privacy-tos.html" class="help-dropdown-item app-dropdown-item" role="menuitem">
             <span class="help-dropdown-item-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
               <img style="width:14px; height:14px;" src="/images/shield-privacy.svg" alt="">
             </span>
@@ -127,67 +362,11 @@ class SiteHeader extends HTMLElement {
       document.body.appendChild(siteHelpEl);
     }
 
-    // Dropdown toggle logic
+    // Initialize Help dropdown using unified AppDropdown
     const toggleBtn = this.querySelector('#help-dropdown-toggle');
     const dropdownMenu = this.querySelector('#help-dropdown');
-    
     if (toggleBtn && dropdownMenu) {
-      toggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isShown = dropdownMenu.classList.toggle('show');
-        toggleBtn.setAttribute('aria-expanded', isShown);
-      });
-
-      toggleBtn.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowDown' || e.key === 'Down') {
-          e.preventDefault();
-          if (!dropdownMenu.classList.contains('show')) {
-            dropdownMenu.classList.add('show');
-            toggleBtn.setAttribute('aria-expanded', 'true');
-          }
-          const firstItem = dropdownMenu.querySelector('a, button');
-          if (firstItem) firstItem.focus();
-        } else if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
-          e.stopPropagation();
-          dropdownMenu.classList.remove('show');
-          toggleBtn.setAttribute('aria-expanded', 'false');
-          toggleBtn.focus();
-        }
-      });
-      
-      dropdownMenu.addEventListener('keydown', (e) => {
-        const items = Array.from(dropdownMenu.querySelectorAll('a, button'));
-        const currentIndex = items.indexOf(document.activeElement);
-
-        if (e.key === 'ArrowDown' || e.key === 'Down') {
-          e.preventDefault();
-          const nextIndex = (currentIndex + 1) % items.length;
-          items[nextIndex]?.focus();
-        } else if (e.key === 'ArrowUp' || e.key === 'Up') {
-          e.preventDefault();
-          const prevIndex = (currentIndex - 1 + items.length) % items.length;
-          items[prevIndex]?.focus();
-        } else if (e.key === 'Home') {
-          e.preventDefault();
-          items[0]?.focus();
-        } else if (e.key === 'End') {
-          e.preventDefault();
-          items[items.length - 1]?.focus();
-        } else if (e.key === 'Escape') {
-          e.stopPropagation();
-          dropdownMenu.classList.remove('show');
-          toggleBtn.setAttribute('aria-expanded', 'false');
-          toggleBtn.focus();
-        }
-      });
-
-      // Close dropdown when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!this.contains(e.target)) {
-          dropdownMenu.classList.remove('show');
-          toggleBtn.setAttribute('aria-expanded', 'false');
-        }
-      });
+      new AppDropdown(toggleBtn, dropdownMenu, { placement: 'bottom', align: 'end' });
     }
   }
 }

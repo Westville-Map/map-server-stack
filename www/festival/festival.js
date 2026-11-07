@@ -1326,17 +1326,12 @@ function initPrintAndShare() {
     });
   }
 
-  // --- Sharing Dropdown Actions ---
-  if (shareBtn && shareDropdown) {
-    shareBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      shareDropdown.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.share-wrapper')) {
-        shareDropdown.classList.remove('show');
-      }
+  // --- Sharing Dropdown Actions (via AppDropdown) ---
+  let appFestivalShareDropdown = null;
+  if (shareBtn && shareDropdown && window.AppDropdown) {
+    appFestivalShareDropdown = new window.AppDropdown(shareBtn, shareDropdown, {
+      placement: 'bottom',
+      align: 'end'
     });
   }
 
