@@ -1,7 +1,7 @@
 {
-  "version": "2026.11.07.1-test.45243a6",
-  "channel": "testing",
-  "buildDate": "2026-11-07 11:36:46 EST",
+  "version": "2026.11.07.1",
+  "channel": "production",
+  "buildDate": "2026-11-07 11:37:10 EST",
   "timezone": "America/New_York",
-  "gitCommit": "45243a6"
+  "gitCommit": "db3b211"
 }
