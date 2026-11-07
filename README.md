@@ -212,9 +212,9 @@ This mapping portal is powered by excellent open-source projects, infrastructure
 - **OpenFreeMap** (MIT vector tile hosting infrastructure)
 - **Open Sans Typography** (SIL OFL 1.1 typeface by Steve Matteson)
 - **OpenStreetMap Contributors** (ODbL open geographic data)
+- **Parking Icon** (Public domain marker by Benjamin D. Esham)
 - **pdf-lib** (MIT client-side PDF document compiler)
-- **unpkg** (Fastly edge CDN delivering versioned client packages)
-- **Wiki Loves Earth** (CC BY-SA 4.0 park map marker)
+- **Wiki Loves Earth** (CC BY-SA 4.0 park map marker by John Cummings)
 
 For a detailed breakdown of data licenses, external services, and attributions, please navigate to the `/credits.html` page of the live site.
 
@@ -225,15 +225,15 @@ For a detailed breakdown of data licenses, external services, and attributions, 
 This project operates under a hybrid licensing model to encourage collaborative software development while fully protecting the Borough of Westville's public datasets and visual identity:
 
 ### 1. Software Code (AGPL-3.0)
-All software source code—including backend Node/Express scripts (`/app`), server and proxy configurations (`Caddyfile`, `compose.yaml`), and frontend web logic (`.js`, `.css`, `.html` excluding assets)—is licensed under the **[GNU Affero General Public License v3.0](LICENSE)**. 
+All software source code—including backend Node/Express scripts (`/app`), server and proxy configurations (`Caddyfile`, `compose.yaml`), vector tile styling configurations (`/map/welcome_to_westville.json`), and frontend web logic (`.js`, `.css`, `.html` excluding branding assets)—is licensed under the **[GNU Affero General Public License v3.0](LICENSE)**. 
 
 > [!IMPORTANT]
 > Under the AGPL-3.0, anyone who hosts a modified version of this website as a network service **must make their complete modified source code publicly available** to all users of that service. This prevents closed-source copycats from monetizing or wrapping our code engine.
 
-### 2. Branding, Logos & Map Datasets (Proprietary / Restricted)
-All custom branding assets, images, logos, and custom-styled GeoJSON map datasets are **strictly proprietary** and copyrighted by the Borough of Westville. They are excluded from the open-source license:
-* **Branding and Logos**: Located in `/www/images/` and `/map/images/` (see [LICENSE](www/images/LICENSE) and [LICENSE](map/images/LICENSE)).
-* **Map Datasets**: Located in `/map/welcome_to_westville.json` (see [LICENSE](map/welcome_to_westville.json.LICENSE)).
+### 2. Branding, Logos & Municipal Datasets (Proprietary / Restricted)
+Official borough seals, municipal branding, and proprietary municipal GeoJSON datasets are **strictly proprietary** and copyrighted by the Borough of Westville. They are excluded from the open-source software license:
+* **Branding and Logos**: Municipal seals and custom borough branding located in `/www/images/` and `/map/images/` (see [LICENSE](www/images/LICENSE) and [LICENSE](map/images/LICENSE)).
+* **Municipal Datasets**: Flat-file GeoJSON datasets located in `/data/` (dynamically generated and managed on the server).
 
 These elements are Copyright &copy; Borough of Westville. All rights reserved. No commercial reproduction, redistribution, or reuse of these elements is permitted without prior written consent from the Borough.
 

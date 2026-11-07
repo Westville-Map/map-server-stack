@@ -672,7 +672,7 @@ try {
               tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
               tileSize: 256,
               maxzoom: 18,
-              attribution: '<a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Vantor (Aug 2025 WorldView-2, 0.5m), USDA FSA, USGS, GIS User Community'
+              attribution: '<a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Maxar (Aug 2025 WorldView-2, 0.5m), USDA FSA, USGS, GIS User Community'
           }
       };
 

@@ -57,6 +57,23 @@ const COPY_OPERATIONS = [
     src: 'node_modules/pdf-lib/dist/pdf-lib.min.js',
     dest: 'www/vendor/pdf-lib/pdf-lib.min.js',
     stripSourceMap: true
+  },
+  // Upstream vendor licenses
+  {
+    src: 'node_modules/maplibre-gl/LICENSE.txt',
+    dest: 'map/vendor/maplibre-gl/LICENSE'
+  },
+  {
+    src: 'node_modules/maplibre-gl/LICENSE.txt',
+    dest: 'www/vendor/maplibre-gl/LICENSE'
+  },
+  {
+    src: 'node_modules/maplibre-gl-layer-control/LICENSE',
+    dest: 'map/vendor/maplibre-gl-layer-control/LICENSE'
+  },
+  {
+    src: 'node_modules/pdf-lib/LICENSE.md',
+    dest: 'www/vendor/pdf-lib/LICENSE'
   }
 ];
 
@@ -134,8 +151,23 @@ function syncFiles() {
         }
       }
 
+      // Sync SIL Open Font License 1.1 text
+      const oflSrc = path.join(ROOT_DIR, 'node_modules/@fontsource/open-sans/LICENSE');
+      const oflDest = path.join(targetDir, 'OFL.txt');
+      if (fs.existsSync(oflSrc)) {
+        if (isVerifyOnly) {
+          if (!fs.existsSync(oflDest)) {
+            console.error(`[sync-vendor] ERROR: Destination missing: ${oflDest}`);
+            hasError = true;
+          }
+        } else {
+          fs.copyFileSync(oflSrc, oflDest);
+        }
+      }
+
       // Generate local fonts.css
-      const fontsCssContent = `/* Open Sans self-hosted webfont */
+      const fontsCssContent = `/* Open Sans self-hosted webfont (Steve Matteson, SIL Open Font License 1.1) */
+/* See OFL.txt in this directory for license details */
 @font-face {
   font-family: 'Open Sans';
   font-style: normal;
