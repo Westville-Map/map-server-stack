@@ -357,6 +357,10 @@ footer {
   transition: text-decoration-color 0.2s ease, opacity 0.2s ease;
 }
 
+span.footer-version-link {
+  cursor: help;
+}
+
 .footer-version-link:hover {
   text-decoration-color: var(--white);
   opacity: 1;

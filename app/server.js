@@ -43,6 +43,99 @@ function safeCompare(inputToken, actualToken) {
     return crypto.timingSafeEqual(inputHash, actualHash);
 }
 
+// Queue tasks to guarantee serialized, race-free file writes and version increments
+let saveQueue = Promise.resolve();
+function queueSaveTask(task) {
+    const next = saveQueue.then(() => task(), () => task());
+    saveQueue = next;
+    return next;
+}
+
+// Deep JSON semantic comparison
+function areJsonPayloadsEqual(a, b) {
+    if (a === b) return true;
+    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    if (Array.isArray(a)) {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (!areJsonPayloadsEqual(a[i], b[i])) return false;
+        }
+        return true;
+    }
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    for (let i = 0; i < keysA.length; i++) {
+        const k = keysA[i];
+        if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+        if (!areJsonPayloadsEqual(a[k], b[k])) return false;
+    }
+    return true;
+}
+
+// Date and timestamp helpers in America/New_York
+function getNewYorkDate() {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '.');
+}
+
+function getNewYorkTimestamp() {
+    const d = new Date();
+    const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const timeStr = d.toLocaleTimeString('en-US', {
+        timeZone: 'America/New_York',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const tzAbbr = d.toLocaleTimeString('en-US', {
+        timeZone: 'America/New_York',
+        timeZoneName: 'short'
+    }).split(' ').pop();
+    return `${dateStr} ${timeStr} ${tzAbbr}`;
+}
+
+async function getExistingDataVersion() {
+    try {
+        const raw = await fs.readFile(path.join(DATA_DIR, 'data-version.json'), 'utf8');
+        const parsed = JSON.parse(raw);
+        return typeof parsed.version === 'string' ? parsed.version : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+async function incrementDataVersion() {
+    const todayPrefix = getNewYorkDate();
+    const currentVersion = await getExistingDataVersion();
+    let nextPoint = 1;
+
+    if (currentVersion && currentVersion.startsWith(`${todayPrefix}.`)) {
+        const pointStr = currentVersion.slice(todayPrefix.length + 1);
+        const parsedPoint = parseInt(pointStr, 10);
+        if (Number.isFinite(parsedPoint) && parsedPoint >= 1) {
+            nextPoint = parsedPoint + 1;
+        }
+    }
+
+    const newVersion = `${todayPrefix}.${nextPoint}`;
+    const versionPayload = {
+        version: newVersion,
+        lastUpdated: getNewYorkTimestamp(),
+        timezone: 'America/New_York'
+    };
+
+    const tempFileName = `data-version.${crypto.randomBytes(4).toString('hex')}.tmp`;
+    const tempFilePath = path.join(DATA_DIR, tempFileName);
+    const finalFilePath = path.join(DATA_DIR, 'data-version.json');
+
+    await fs.writeFile(tempFilePath, JSON.stringify(versionPayload, null, 2), 'utf8');
+    await fs.rename(tempFilePath, finalFilePath);
+
+    return newVersion;
+}
+
 // Middleware: Validate auth token and feature type BEFORE reading/parsing request body
 function verifyMapDataHeaders(req, res, next) {
     const clientToken = req.headers['x-map-data-token'];
@@ -98,20 +191,60 @@ app.post('/api/map_data_save', verifyMapDataHeaders, jsonParser, async (req, res
             }
         }
 
-        const fileName = featureType === 'taxonomies' ? `${featureType}.json` : `${featureType}.geojson`;
-        const tempFileName = `${featureType}.${crypto.randomBytes(4).toString('hex')}.tmp`;
-        
-        const FINAL_FILE_PATH = path.join(DATA_DIR, fileName);
-        const TEMP_FILE_PATH = path.join(DATA_DIR, tempFileName);
+        const result = await queueSaveTask(async () => {
+            const fileName = featureType === 'taxonomies' ? `${featureType}.json` : `${featureType}.geojson`;
+            const FINAL_FILE_PATH = path.join(DATA_DIR, fileName);
 
-        // Ensure data directory exists
-        await fs.mkdir(DATA_DIR, { recursive: true });
+            // Ensure data directory exists
+            await fs.mkdir(DATA_DIR, { recursive: true });
 
-        // Write to temp file first, then rename to avoid corruption
-        await fs.writeFile(TEMP_FILE_PATH, JSON.stringify(payload, null, null), 'utf8');
-        await fs.rename(TEMP_FILE_PATH, FINAL_FILE_PATH);
+            // Check if file already exists and compare data
+            let hasChanged = true;
+            try {
+                const existingRaw = await fs.readFile(FINAL_FILE_PATH, 'utf8');
+                const newRaw = JSON.stringify(payload);
+                if (existingRaw === newRaw) {
+                    hasChanged = false;
+                } else {
+                    const existingParsed = JSON.parse(existingRaw);
+                    if (areJsonPayloadsEqual(existingParsed, payload)) {
+                        hasChanged = false;
+                    }
+                }
+            } catch (_) {
+                // File does not exist yet or failed to read/parse
+                hasChanged = true;
+            }
 
-        return res.json({ status: 'success', message: 'Data written successfully' });
+            if (!hasChanged) {
+                const currentVersion = await getExistingDataVersion();
+                return {
+                    status: 'success',
+                    message: 'Data unchanged',
+                    changed: false,
+                    version: currentVersion
+                };
+            }
+
+            // Write updated feature dataset atomically
+            const tempFileName = `${featureType}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+            const TEMP_FILE_PATH = path.join(DATA_DIR, tempFileName);
+
+            await fs.writeFile(TEMP_FILE_PATH, JSON.stringify(payload), 'utf8');
+            await fs.rename(TEMP_FILE_PATH, FINAL_FILE_PATH);
+
+            // Bump data version atomically
+            const newVersion = await incrementDataVersion();
+
+            return {
+                status: 'success',
+                message: 'Data written successfully',
+                changed: true,
+                version: newVersion
+            };
+        });
+
+        return res.json(result);
 
     } catch (err) {
         console.error('Error handling map data save:', err);

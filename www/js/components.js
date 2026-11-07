@@ -242,18 +242,42 @@ class SiteFooter extends HTMLElement {
 
   async loadVersion() {
     try {
-      const res = await fetch('/version.json');
-      if (res.ok) {
-        const data = await res.json();
-        const verEl = this.querySelector('#site-footer-version');
-        if (verEl && data && data.version) {
-          const isTest = data.channel === 'testing' || data.version.includes('test');
-          const repoUrl = isTest
-            ? 'https://github.com/Westville-Map/map-server-stack/tree/testing'
-            : 'https://github.com/Westville-Map/map-server-stack';
-          const title = `Version: ${data.version}\nBuilt: ${data.buildDate || 'Unknown'}\nCommit: ${data.gitCommit || ''}`;
-          verEl.innerHTML = `<a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="footer-version-link" title="${title}">v${data.version}</a> - `;
-        }
+      const verEl = this.querySelector('#site-footer-version');
+      if (!verEl) return;
+
+      const [codeRes, dataRes] = await Promise.allSettled([
+        fetch('/version.json'),
+        fetch('/data/data-version.json')
+      ]);
+
+      const parts = [];
+
+      if (codeRes.status === 'fulfilled' && codeRes.value.ok) {
+        try {
+          const codeData = await codeRes.value.json();
+          if (codeData && codeData.version) {
+            const isTest = codeData.channel === 'testing' || codeData.version.includes('test');
+            const repoUrl = isTest
+              ? 'https://github.com/Westville-Map/map-server-stack/tree/testing'
+              : 'https://github.com/Westville-Map/map-server-stack';
+            const title = `Version: ${codeData.version}\nBuilt: ${codeData.buildDate || 'Unknown'}\nCommit: ${codeData.gitCommit || ''}`;
+            parts.push(`<a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="footer-version-link" title="${title}">v${codeData.version}</a>`);
+          }
+        } catch (_) {}
+      }
+
+      if (dataRes.status === 'fulfilled' && dataRes.value.ok) {
+        try {
+          const mapData = await dataRes.value.json();
+          if (mapData && mapData.version) {
+            const dataTitle = `Data Version: ${mapData.version}\nUpdated: ${mapData.lastUpdated || 'Unknown'}`;
+            parts.push(`<span class="footer-version-link" title="${dataTitle}">data: ${mapData.version}</span>`);
+          }
+        } catch (_) {}
+      }
+
+      if (parts.length > 0) {
+        verEl.innerHTML = `${parts.join(' · ')} - `;
       }
     } catch (_) {
       // Fallback silently

@@ -102,6 +102,10 @@ async function runTests() {
 
     // Test 4: Valid uncompressed GeoJSON with valid token should succeed (200)
     {
+        const fs = require('fs').promises;
+        const path = require('path');
+        await fs.unlink(path.join(__dirname, '../data/parks.geojson')).catch(() => {});
+
         const validPayload = JSON.stringify({
             type: 'FeatureCollection',
             features: [
@@ -143,6 +147,88 @@ async function runTests() {
         const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
         assert.ok(elapsedMs < 10, `ReDoS payload took too long: ${elapsedMs.toFixed(2)}ms`);
         console.log(`✓ Test 5 Passed: ip-address@${ipAddressPkg.version} immune to ReDoS (${elapsedMs.toFixed(2)}ms)`);
+    }
+
+    // Test 6: Unchanged GeoJSON upload returns changed: false and keeps same version
+    {
+        const validPayload = JSON.stringify({
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [-75.132, 39.868] },
+                    properties: { name: 'Test Park' }
+                }
+            ]
+        });
+
+        const res = await simulateRequest({
+            method: 'POST',
+            url: '/api/map_data_save',
+            headers: {
+                'content-type': 'application/json',
+                'content-length': String(Buffer.byteLength(validPayload)),
+                'x-map-data-token': 'test-secret-token-12345',
+                'x-feature-type': 'parks'
+            }
+        }, validPayload);
+
+        assert.strictEqual(res.statusCode, 200, `Expected 200 OK, got ${res.statusCode}`);
+        const parsed = JSON.parse(res.body);
+        assert.strictEqual(parsed.status, 'success');
+        assert.strictEqual(parsed.changed, false, 'Expected changed: false for identical data');
+        assert.strictEqual(parsed.message, 'Data unchanged');
+        assert.ok(parsed.version, 'Version should be present in response');
+        console.log(`✓ Test 6 Passed: Unchanged upload detected (changed: false, version: ${parsed.version})`);
+    }
+
+    // Test 7: Modified GeoJSON upload returns changed: true and increments version
+    {
+        // First get current version
+        const fs = require('fs').promises;
+        const path = require('path');
+        const versionFile = path.join(__dirname, '../data/data-version.json');
+        const prevData = JSON.parse(await fs.readFile(versionFile, 'utf8'));
+        const prevVersion = prevData.version;
+
+        const modifiedPayload = JSON.stringify({
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [-75.132, 39.868] },
+                    properties: { name: 'Updated Test Park' }
+                }
+            ]
+        });
+
+        const res = await simulateRequest({
+            method: 'POST',
+            url: '/api/map_data_save',
+            headers: {
+                'content-type': 'application/json',
+                'content-length': String(Buffer.byteLength(modifiedPayload)),
+                'x-map-data-token': 'test-secret-token-12345',
+                'x-feature-type': 'parks'
+            }
+        }, modifiedPayload);
+
+        assert.strictEqual(res.statusCode, 200, `Expected 200 OK, got ${res.statusCode}`);
+        const parsed = JSON.parse(res.body);
+        assert.strictEqual(parsed.status, 'success');
+        assert.strictEqual(parsed.changed, true, 'Expected changed: true for modified data');
+        assert.notStrictEqual(parsed.version, prevVersion, 'Version must increment when data changes');
+
+        const prevN = parseInt(prevVersion.split('.').pop(), 10);
+        const newN = parseInt(parsed.version.split('.').pop(), 10);
+        assert.strictEqual(newN, prevN + 1, `Expected version increment from ${prevVersion} to next integer, got ${parsed.version}`);
+
+        // Verify data-version.json file contents
+        const currentData = JSON.parse(await fs.readFile(versionFile, 'utf8'));
+        assert.strictEqual(currentData.version, parsed.version);
+        assert.strictEqual(currentData.timezone, 'America/New_York');
+        assert.ok(currentData.lastUpdated, 'lastUpdated should be present');
+        console.log(`✓ Test 7 Passed: Modified upload incremented version (${prevVersion} -> ${parsed.version})`);
     }
 
     console.log('--- All Security & Decompression Tests Passed ---');
