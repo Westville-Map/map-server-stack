@@ -218,7 +218,7 @@ class SiteFooter extends HTMLElement {
           </div>
           <div class="footer-brand-title" style="font-size: 1.2rem; font-weight: 700;"><a href="/" style="color: var(--white); text-decoration: none;">Welcome to Westville</a></div>
         </div>
-        <p class="footer-copyright">&copy; 2026 Welcome to Westville Map Project. <span id="site-footer-version"></span>Not an official borough communication.</p>
+        <p class="footer-copyright"><span class="footer-copy-text">&copy; 2026 Welcome to Westville Map Project.</span><span id="site-footer-version" class="footer-version-group"></span><span class="footer-disclaimer-text">Not an official borough communication.</span></p>
         <div class="footer-shortcuts">
           <a href="/credits.html" class="header-btn" ${creditsStyle}>
             <span class="header-btn-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; vertical-align: middle;">
@@ -277,7 +277,7 @@ class SiteFooter extends HTMLElement {
       }
 
       if (parts.length > 0) {
-        verEl.innerHTML = `${parts.join(' · ')} - `;
+        verEl.innerHTML = parts.join(' · ');
       }
     } catch (_) {
       // Fallback silently

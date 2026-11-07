@@ -358,7 +358,21 @@ footer {
 }
 
 span.footer-version-link {
-  cursor: help;
+  cursor: default;
+}
+
+.footer-copy-text,
+.footer-version-group,
+.footer-disclaimer-text {
+  display: inline;
+}
+
+.footer-version-group:not(:empty)::before {
+  content: " ";
+}
+
+.footer-version-group:not(:empty)::after {
+  content: " - ";
 }
 
 .footer-version-link:hover {
@@ -624,6 +638,20 @@ main {
     text-align: center;
     width: 100%;
     margin: 2px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  footer .footer-copy-text,
+  footer .footer-version-group,
+  footer .footer-disclaimer-text {
+    display: block;
+  }
+
+  footer .footer-version-group:not(:empty)::before,
+  footer .footer-version-group:not(:empty)::after {
+    content: "";
   }
 
   .footer-shortcuts {

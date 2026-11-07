@@ -66,7 +66,7 @@ if [[ "$BRANCH" == "testing" ]]; then
 
   SHORT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "dev")
   TEST_VER="${BASE_VER}-test.${SHORT_SHA}"
-  BUILD_DATE=$(TZ="America/New_York" date +"%Y-%m-%d %H:%M:%S %Z")
+  BUILD_DATE=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
 
   update_version_file "www/version.json" "$TEST_VER" "testing" "$BUILD_DATE" "$SHORT_SHA"
   update_version_file "map/version.json" "$TEST_VER" "testing" "$BUILD_DATE" "$SHORT_SHA"

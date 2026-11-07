@@ -228,7 +228,8 @@ async function runTests() {
         assert.strictEqual(currentData.version, parsed.version);
         assert.strictEqual(currentData.timezone, 'America/New_York');
         assert.ok(currentData.lastUpdated, 'lastUpdated should be present');
-        console.log(`✓ Test 7 Passed: Modified upload incremented version (${prevVersion} -> ${parsed.version})`);
+        assert.match(currentData.lastUpdated, /^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM) [A-Z]{3,4}$/, 'lastUpdated should be 12-hour AM/PM format');
+        console.log(`✓ Test 7 Passed: Modified upload incremented version (${prevVersion} -> ${parsed.version}, updated: ${currentData.lastUpdated})`);
     }
 
     console.log('--- All Security & Decompression Tests Passed ---');

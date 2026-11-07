@@ -68,7 +68,7 @@ fi
 
 VERSION="${DATE_TAG}.${NEXT_POINT}"
 TAG="v${VERSION}"
-BUILD_DATE=$(TZ="America/New_York" date +"%Y-%m-%d %H:%M:%S %Z")
+BUILD_DATE=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
 COMMIT_SHA=$(git rev-parse --short HEAD)
 
 echo "🔖 Generating Release Version: ${TAG}"

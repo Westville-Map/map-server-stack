@@ -84,8 +84,8 @@ function getNewYorkTimestamp() {
     const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const timeStr = d.toLocaleTimeString('en-US', {
         timeZone: 'America/New_York',
-        hour12: false,
-        hour: '2-digit',
+        hour12: true,
+        hour: 'numeric',
         minute: '2-digit',
         second: '2-digit'
     });
