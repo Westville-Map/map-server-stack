@@ -44,6 +44,13 @@ class CustomLayerRegistry {
     return ids;
   }
   /**
+   * Get each adapter's layer IDs as a separate list, in adapter order.
+   * @returns One array of layer IDs per registered adapter
+   */
+  getLayerIdGroups() {
+    return Array.from(this.adapters.values(), (adapter) => adapter.getLayerIds());
+  }
+  /**
    * Check if a layer ID is managed by any adapter.
    * @param layerId The layer ID to check
    * @returns true if the layer is managed by an adapter
@@ -151,6 +158,90 @@ class CustomLayerRegistry {
     const adapter = this.getAdapterForLayer(layerId);
     if (adapter && adapter.removeLayer) {
       adapter.removeLayer(layerId);
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Get the layer groups of every adapter. When two adapters define the same
+   * group ID, the first registered adapter's group wins.
+   * @returns The groups, in adapter order
+   */
+  getGroups() {
+    const groups = [];
+    const seen = /* @__PURE__ */ new Set();
+    this.adapters.forEach((adapter) => {
+      var _a;
+      for (const group of ((_a = adapter.getGroups) == null ? void 0 : _a.call(adapter)) ?? []) {
+        if (seen.has(group.id)) continue;
+        seen.add(group.id);
+        groups.push(group);
+      }
+    });
+    return groups;
+  }
+  /**
+   * Get the ID of the group a custom layer belongs to.
+   * @param layerId The layer ID
+   * @returns The group ID, or undefined when the layer is ungrouped
+   */
+  getLayerGroupId(layerId) {
+    var _a;
+    const adapter = this.getAdapterForLayer(layerId);
+    return (_a = adapter == null ? void 0 : adapter.getLayerGroupId) == null ? void 0 : _a.call(adapter, layerId);
+  }
+  /**
+   * Get the adapter that defines a group.
+   * @param groupId The group ID
+   * @returns The adapter or null if no adapter defines the group
+   */
+  getAdapterForGroup(groupId) {
+    var _a;
+    for (const adapter of this.adapters.values()) {
+      if ((_a = adapter.getGroups) == null ? void 0 : _a.call(adapter).some((group) => group.id === groupId)) {
+        return adapter;
+      }
+    }
+    return null;
+  }
+  /**
+   * Set visibility of a group.
+   * @param groupId The group ID
+   * @param visible Whether the group should be visible
+   * @returns true if the operation was handled by an adapter
+   */
+  setGroupVisibility(groupId, visible) {
+    const adapter = this.getAdapterForGroup(groupId);
+    if (adapter == null ? void 0 : adapter.setGroupVisibility) {
+      adapter.setGroupVisibility(groupId, visible);
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Set opacity of a group.
+   * @param groupId The group ID
+   * @param opacity The opacity value (0-1)
+   * @returns true if the operation was handled by an adapter
+   */
+  setGroupOpacity(groupId, opacity) {
+    const adapter = this.getAdapterForGroup(groupId);
+    if (adapter == null ? void 0 : adapter.setGroupOpacity) {
+      adapter.setGroupOpacity(groupId, opacity);
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Record that a group was collapsed or expanded.
+   * @param groupId The group ID
+   * @param collapsed Whether the group is now collapsed
+   * @returns true if the operation was handled by an adapter
+   */
+  setGroupCollapsed(groupId, collapsed) {
+    const adapter = this.getAdapterForGroup(groupId);
+    if (adapter == null ? void 0 : adapter.setGroupCollapsed) {
+      adapter.setGroupCollapsed(groupId, collapsed);
       return true;
     }
     return false;
@@ -700,6 +791,10 @@ class LayerControl {
     __publicField(this, "customLayerUnsubscribe", null);
     __publicField(this, "removedCustomLayerIds", /* @__PURE__ */ new Set());
     __publicField(this, "nativeLayerGroups", /* @__PURE__ */ new Map());
+    /** Layer groups from the custom layer adapters, as of the last panel build */
+    __publicField(this, "groupStates", /* @__PURE__ */ new Map());
+    /** Group IDs, parents, and memberships the panel was last built from */
+    __publicField(this, "groupStructureKey", "");
     __publicField(this, "basemapStyleUrl", null);
     __publicField(this, "basemapLayerIds", null);
     __publicField(this, "widthFrame", null);
@@ -1426,6 +1521,9 @@ class LayerControl {
    * Set visibility of all layers
    */
   setAllLayersVisibility(visible) {
+    this.groupStates.forEach((_group, groupId) => {
+      this.setGroupVisibility(groupId, visible);
+    });
     Object.keys(this.state.layerStates).forEach((layerId) => {
       this.toggleLayerVisibility(layerId, visible);
       const itemEl = this.panel.querySelector(`[data-layer-id="${layerId}"]`);
@@ -1572,7 +1670,10 @@ class LayerControl {
    * Build layer items (called initially and when layers change)
    */
   buildLayerItems() {
-    const existingItems = this.panel.querySelectorAll(".layer-control-item");
+    var _a;
+    const existingItems = this.panel.querySelectorAll(
+      ".layer-control-item, .layer-control-group"
+    );
     existingItems.forEach((item) => item.remove());
     this.styleEditors.clear();
     const orderedLayerIds = this.getUserLayerIdsInMapOrder();
@@ -1585,20 +1686,302 @@ class LayerControl {
     if (this.state.layerStates["Background"]) {
       orderedLayerIds.push("Background");
     }
+    this.groupStates = new Map(
+      (((_a = this.customLayerRegistry) == null ? void 0 : _a.getGroups()) ?? []).map((group) => [
+        group.id,
+        { ...group }
+      ])
+    );
+    this.groupStructureKey = this.computeGroupStructureKey(this.groupStates);
+    const groupContainers = /* @__PURE__ */ new Map();
     orderedLayerIds.forEach((layerId) => {
       const state = this.state.layerStates[layerId];
       if (!state) {
         return;
       }
       if (layerId === "Background" || this.targetLayers.length === 0 || this.targetLayers.includes(layerId)) {
-        this.addLayerItem(layerId, state);
+        const container = layerId === "Background" ? this.panel : this.getGroupContainer(
+          this.getLayerGroupIdOf(layerId),
+          groupContainers,
+          /* @__PURE__ */ new Set()
+        );
+        this.addLayerItem(layerId, state, container);
       }
+    });
+  }
+  /**
+   * Get the ID of the group a layer belongs to, ignoring a group ID that no
+   * adapter defines.
+   * @param layerId The layer ID
+   * @returns The group ID, or undefined when the layer is ungrouped
+   */
+  getLayerGroupIdOf(layerId) {
+    var _a;
+    if (this.groupStates.size === 0) return void 0;
+    const groupId = (_a = this.customLayerRegistry) == null ? void 0 : _a.getLayerGroupId(layerId);
+    return groupId !== void 0 && this.groupStates.has(groupId) ? groupId : void 0;
+  }
+  /**
+   * Get the element a group's rows go into, creating the group (and any
+   * enclosing groups) on first use.
+   * @param groupId The group ID, or undefined for the panel's top level
+   * @param containers Group child containers already created in this build
+   * @param visiting Groups on the current parent chain, to stop on a cycle
+   * @returns The element to append the group's rows to
+   */
+  getGroupContainer(groupId, containers, visiting) {
+    if (groupId === void 0) return this.panel;
+    const existing = containers.get(groupId);
+    if (existing) return existing;
+    const group = this.groupStates.get(groupId);
+    if (!group || visiting.has(groupId)) return this.panel;
+    visiting.add(groupId);
+    const parentId = group.parentId !== void 0 && this.groupStates.has(group.parentId) ? group.parentId : void 0;
+    const parent = this.getGroupContainer(parentId, containers, visiting);
+    const { element, children } = this.createGroupItem(group);
+    parent.appendChild(element);
+    containers.set(groupId, children);
+    return children;
+  }
+  /**
+   * Summarize the group structure the panel is built from: each group's ID
+   * and parent, and each layer's group. A change to any of these needs a
+   * rebuild; a change to a group's name, visibility, opacity, or collapsed
+   * state does not.
+   * @param groups The groups to summarize
+   * @returns A string that changes whenever the structure does
+   */
+  computeGroupStructureKey(groups) {
+    if (groups.size === 0) return "";
+    const memberships = Object.keys(this.state.layerStates).filter((layerId) => layerId !== "Background").map((layerId) => {
+      var _a;
+      return [
+        layerId,
+        ((_a = this.customLayerRegistry) == null ? void 0 : _a.getLayerGroupId(layerId)) ?? null
+      ];
+    });
+    return JSON.stringify({
+      groups: Array.from(groups.values(), (group) => [
+        group.id,
+        group.parentId ?? null
+      ]),
+      memberships
+    });
+  }
+  /**
+   * Create the element for a layer group: a header row with a collapse
+   * toggle, visibility checkbox, name, and opacity slider, followed by a
+   * container for the group's layers and nested groups.
+   * @param group The group to render
+   * @returns The group element and its child container
+   */
+  createGroupItem(group) {
+    const element = document.createElement("div");
+    element.className = "layer-control-group";
+    element.setAttribute("data-group-id", group.id);
+    const row = document.createElement("div");
+    row.className = "layer-control-row layer-control-group-row";
+    if (this.enableDragAndDrop) {
+      row.appendChild(this.createDisabledDragHandle());
+    }
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "layer-control-checkbox layer-control-group-checkbox";
+    checkbox.addEventListener("change", () => {
+      this.setGroupVisibility(group.id, checkbox.checked);
+    });
+    row.appendChild(checkbox);
+    if (this.showLayerSymbol) {
+      const symbol = document.createElement("span");
+      symbol.className = "layer-control-symbol layer-control-group-symbol";
+      symbol.innerHTML = `<svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M1.5 3.5h4.5l1.5 1.5h7v8.5h-13z" fill="#f2c94c" stroke="#b8902a" stroke-width="1"/>
+      </svg>`;
+      symbol.title = "Layer group";
+      row.appendChild(symbol);
+    }
+    const name = document.createElement("span");
+    name.className = "layer-control-name layer-control-group-name";
+    row.appendChild(name);
+    if (this.showOpacitySlider) {
+      const opacity = document.createElement("input");
+      opacity.type = "range";
+      opacity.className = "layer-control-opacity layer-control-group-opacity";
+      opacity.min = "0";
+      opacity.max = "1";
+      opacity.step = "0.01";
+      opacity.addEventListener("mousedown", () => {
+        this.state.userInteractingWithSlider = true;
+      });
+      opacity.addEventListener("mouseup", () => {
+        this.state.userInteractingWithSlider = false;
+      });
+      opacity.addEventListener("input", () => {
+        this.setGroupOpacity(group.id, parseFloat(opacity.value));
+      });
+      row.appendChild(opacity);
+    }
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "layer-control-group-toggle";
+    toggle.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M6 4l4 4-4 4z"/>
+    </svg>`;
+    toggle.addEventListener("click", (e) => {
+      var _a;
+      e.stopPropagation();
+      this.setGroupCollapsed(group.id, !((_a = this.groupStates.get(group.id)) == null ? void 0 : _a.collapsed));
+    });
+    row.appendChild(toggle);
+    const children = document.createElement("div");
+    children.className = "layer-control-group-children";
+    element.appendChild(row);
+    element.appendChild(children);
+    this.updateGroupElement(element, group);
+    return { element, children };
+  }
+  /**
+   * Show a group's state on its element.
+   * @param element The group element
+   * @param group The group state to show
+   */
+  updateGroupElement(element, group) {
+    element.classList.toggle("collapsed", group.collapsed);
+    element.classList.toggle("layer-control-group-hidden", !group.visible);
+    const row = element.querySelector(":scope > .layer-control-group-row");
+    if (!row) return;
+    const toggle = row.querySelector(
+      ".layer-control-group-toggle"
+    );
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", String(!group.collapsed));
+      toggle.title = group.collapsed ? "Expand group" : "Collapse group";
+      toggle.setAttribute(
+        "aria-label",
+        `${group.collapsed ? "Expand" : "Collapse"} ${group.name}`
+      );
+    }
+    const checkbox = row.querySelector(
+      ".layer-control-group-checkbox"
+    );
+    if (checkbox) checkbox.checked = group.visible;
+    const name = row.querySelector(".layer-control-group-name");
+    if (name) {
+      name.textContent = group.name;
+      name.title = group.name;
+    }
+    const opacity = row.querySelector(
+      ".layer-control-group-opacity"
+    );
+    if (opacity) {
+      opacity.value = String(group.opacity);
+      opacity.title = `Opacity: ${Math.round(group.opacity * 100)}%`;
+    }
+  }
+  /**
+   * Get the element of a rendered group.
+   * @param groupId The group ID
+   * @returns The group element, or null when the group is not rendered
+   */
+  getGroupElement(groupId) {
+    const groups = this.panel.querySelectorAll(".layer-control-group");
+    for (const element of Array.from(groups)) {
+      if (element.dataset.groupId === groupId) {
+        return element;
+      }
+    }
+    return null;
+  }
+  /**
+   * Remove group elements left without any layer row, e.g. after their last
+   * layer was removed.
+   */
+  pruneEmptyGroups() {
+    const groups = Array.from(this.panel.querySelectorAll(".layer-control-group"));
+    for (const element of groups.reverse()) {
+      if (!element.querySelector(".layer-control-item")) element.remove();
+    }
+  }
+  /**
+   * Set a group's visibility from the panel and report it to its adapter.
+   * @param groupId The group ID
+   * @param visible Whether the group should be visible
+   */
+  setGroupVisibility(groupId, visible) {
+    var _a;
+    const group = this.groupStates.get(groupId);
+    if (!group) return;
+    group.visible = visible;
+    const element = this.getGroupElement(groupId);
+    if (element) this.updateGroupElement(element, group);
+    this.state.isStyleOperationInProgress = true;
+    (_a = this.customLayerRegistry) == null ? void 0 : _a.setGroupVisibility(groupId, visible);
+    setTimeout(() => {
+      this.state.isStyleOperationInProgress = false;
+    }, 200);
+  }
+  /**
+   * Set a group's opacity from the panel and report it to its adapter.
+   * @param groupId The group ID
+   * @param opacity The opacity value (0-1)
+   */
+  setGroupOpacity(groupId, opacity) {
+    var _a;
+    const group = this.groupStates.get(groupId);
+    if (!group) return;
+    group.opacity = opacity;
+    const element = this.getGroupElement(groupId);
+    if (element) this.updateGroupElement(element, group);
+    this.state.isStyleOperationInProgress = true;
+    (_a = this.customLayerRegistry) == null ? void 0 : _a.setGroupOpacity(groupId, opacity);
+    setTimeout(() => {
+      this.state.isStyleOperationInProgress = false;
+    }, 200);
+  }
+  /**
+   * Collapse or expand a group in the panel and report it to its adapter.
+   * @param groupId The group ID
+   * @param collapsed Whether the group should be collapsed
+   */
+  setGroupCollapsed(groupId, collapsed) {
+    var _a;
+    const group = this.groupStates.get(groupId);
+    if (!group) return;
+    group.collapsed = collapsed;
+    const element = this.getGroupElement(groupId);
+    if (element) this.updateGroupElement(element, group);
+    (_a = this.customLayerRegistry) == null ? void 0 : _a.setGroupCollapsed(groupId, collapsed);
+  }
+  /**
+   * Re-read the layer groups from the custom layer adapters. Call this after
+   * groups change outside the control. The panel is rebuilt when a group was
+   * added, removed, or re-parented, or a layer changed group; otherwise the
+   * group rows' name, visibility, opacity, and collapsed state are updated in
+   * place.
+   */
+  refreshGroups() {
+    var _a;
+    if (!this.panel) return;
+    const next = new Map(
+      (((_a = this.customLayerRegistry) == null ? void 0 : _a.getGroups()) ?? []).map((group) => [
+        group.id,
+        { ...group }
+      ])
+    );
+    if (this.computeGroupStructureKey(next) !== this.groupStructureKey) {
+      this.buildLayerItems();
+      return;
+    }
+    this.groupStates = next;
+    next.forEach((group, groupId) => {
+      const element = this.getGroupElement(groupId);
+      if (element) this.updateGroupElement(element, group);
     });
   }
   /**
    * Add a single layer item to the panel
    */
-  addLayerItem(layerId, state) {
+  addLayerItem(layerId, state, container = this.panel) {
     const item = document.createElement("div");
     item.className = "layer-control-item";
     item.setAttribute("data-layer-id", layerId);
@@ -1682,7 +2065,7 @@ class LayerControl {
         this.showContextMenu(layerId, e.clientX, e.clientY);
       });
     }
-    this.panel.appendChild(item);
+    container.appendChild(item);
   }
   /**
    * Create a symbol element for a layer
@@ -3579,6 +3962,8 @@ class LayerControl {
       }
       if (layersAdded) {
         this.buildLayerItems();
+      } else {
+        this.pruneEmptyGroups();
       }
     } catch (error) {
       console.warn("Failed to check for new layers:", error);
@@ -3859,6 +4244,7 @@ class LayerControl {
    * Includes both MapLibre layers and custom layers managed by adapters.
    */
   getUserLayerIdsInMapOrder() {
+    var _a;
     const style = this.map.getStyle();
     if (!(style == null ? void 0 : style.layers)) return [];
     const mapLayerIds = style.layers.map((l) => l.id);
@@ -3866,11 +4252,11 @@ class LayerControl {
     const userLayerIds = Object.keys(this.state.layerStates).filter(
       (id) => id !== "Background"
     );
-    const mapIndexOf = (id) => {
-      var _a;
+    const resolvedIndexOf = (id) => {
+      var _a2;
       const direct = indexById.get(id);
       if (direct !== void 0) return direct;
-      const nativeIds = (_a = this.customLayerRegistry) == null ? void 0 : _a.getNativeLayerIds(id);
+      const nativeIds = (_a2 = this.customLayerRegistry) == null ? void 0 : _a2.getNativeLayerIds(id);
       if (nativeIds && nativeIds.length > 0) {
         let best = -1;
         for (const nativeId of nativeIds) {
@@ -3879,14 +4265,45 @@ class LayerControl {
         }
         if (best !== -1) return best;
       }
-      return Number.POSITIVE_INFINITY;
+      return void 0;
+    };
+    const anchors = /* @__PURE__ */ new Map();
+    for (const group of ((_a = this.customLayerRegistry) == null ? void 0 : _a.getLayerIdGroups()) ?? []) {
+      const resolved = group.map(resolvedIndexOf);
+      const known = resolved.filter((idx) => idx !== void 0);
+      if (known.length === 0) continue;
+      const ids = known[0] > known[known.length - 1] ? [...group].reverse() : group;
+      const indexes = ids === group ? resolved : [...resolved].reverse();
+      ids.forEach((id, position) => {
+        if (indexes[position] !== void 0) return;
+        for (let below = position - 1; below >= 0; below--) {
+          const idx = indexes[below];
+          if (idx !== void 0) {
+            anchors.set(id, { mapIndex: idx, offset: position - below });
+            return;
+          }
+        }
+        for (let above = position + 1; above < ids.length; above++) {
+          const idx = indexes[above];
+          if (idx !== void 0) {
+            anchors.set(id, { mapIndex: idx, offset: position - above });
+            return;
+          }
+        }
+      });
+    }
+    const stackKeyOf = (id) => {
+      const resolved = resolvedIndexOf(id);
+      if (resolved !== void 0) return { mapIndex: resolved, offset: 0 };
+      return anchors.get(id) ?? { mapIndex: Number.POSITIVE_INFINITY, offset: 0 };
     };
     return userLayerIds.map((id, insertionIndex) => ({
       id,
       insertionIndex,
-      mapIndex: mapIndexOf(id)
+      ...stackKeyOf(id)
     })).sort((a, b) => {
       if (a.mapIndex !== b.mapIndex) return a.mapIndex > b.mapIndex ? -1 : 1;
+      if (a.offset !== b.offset) return b.offset - a.offset;
       return a.insertionIndex - b.insertionIndex;
     }).map((entry) => entry.id);
   }
@@ -3916,6 +4333,10 @@ class LayerControl {
    */
   moveLayerUp(layerId) {
     var _a, _b;
+    if (this.groupStates.size > 0) {
+      this.moveLayerWithinGroup(layerId, "up");
+      return;
+    }
     const layerIds = this.getUserLayerIdsInMapOrder();
     const index = layerIds.indexOf(layerId);
     if (index <= 0) return;
@@ -3943,13 +4364,17 @@ class LayerControl {
     });
     this.state.layerStates = newLayerStates;
     this.buildLayerItems();
-    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, this.getUserLayerIdsInMapOrder());
+    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, orderedIds);
   }
   /**
    * Move a layer to the top (highest rendering order)
    */
   moveLayerToTop(layerId) {
     var _a, _b;
+    if (this.groupStates.size > 0) {
+      this.moveLayerWithinGroup(layerId, "top");
+      return;
+    }
     const layerIds = this.getUserLayerIdsInMapOrder();
     const index = layerIds.indexOf(layerId);
     if (index <= 0) return;
@@ -3974,13 +4399,17 @@ class LayerControl {
     });
     this.state.layerStates = newLayerStates;
     this.buildLayerItems();
-    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, this.getUserLayerIdsInMapOrder());
+    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, orderedIds);
   }
   /**
    * Move a layer down in UI (lower rendering order = move to lower z-index)
    */
   moveLayerDown(layerId) {
     var _a, _b;
+    if (this.groupStates.size > 0) {
+      this.moveLayerWithinGroup(layerId, "down");
+      return;
+    }
     const layerIds = this.getUserLayerIdsInMapOrder();
     const index = layerIds.indexOf(layerId);
     if (index < 0 || index >= layerIds.length - 1) return;
@@ -4010,13 +4439,17 @@ class LayerControl {
     });
     this.state.layerStates = newLayerStates;
     this.buildLayerItems();
-    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, this.getUserLayerIdsInMapOrder());
+    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, orderedIds);
   }
   /**
    * Move a layer to the bottom (lowest rendering order among user layers)
    */
   moveLayerToBottom(layerId) {
     var _a, _b;
+    if (this.groupStates.size > 0) {
+      this.moveLayerWithinGroup(layerId, "bottom");
+      return;
+    }
     const layerIds = this.getUserLayerIdsInMapOrder();
     if (layerIds.length <= 1) return;
     const index = layerIds.indexOf(layerId);
@@ -4049,7 +4482,83 @@ class LayerControl {
     });
     this.state.layerStates = newLayerStates;
     this.buildLayerItems();
-    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, this.getUserLayerIdsInMapOrder());
+    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, orderedIds);
+  }
+  /**
+   * Move a layer within its own group (or among the top-level rows), so the
+   * context-menu moves never carry it out of its group. A nested group counts
+   * as one block: moving up or down steps past the whole block.
+   * @param layerId The layer ID
+   * @param direction Where to move the layer within its group
+   */
+  moveLayerWithinGroup(layerId, direction) {
+    var _a;
+    const order = this.getUserLayerIdsInMapOrder();
+    const groupId = this.getLayerGroupIdOf(layerId);
+    const blocks = [];
+    for (const id of order) {
+      const key = this.getChildKeyWithin(id, groupId);
+      if (key === null) continue;
+      const lastBlock = blocks[blocks.length - 1];
+      if (lastBlock && lastBlock.key === key && key !== `layer:${id}`) {
+        lastBlock.ids.push(id);
+      } else {
+        blocks.push({ key, ids: [id] });
+      }
+    }
+    const position = blocks.findIndex((block2) => block2.key === `layer:${layerId}`);
+    const last = blocks.length - 1;
+    if (position < 0) return;
+    if ((direction === "up" || direction === "top") && position === 0) return;
+    if ((direction === "down" || direction === "bottom") && position === last) {
+      return;
+    }
+    const above = direction === "up" || direction === "top";
+    const block = {
+      up: blocks[position - 1],
+      top: blocks[0],
+      down: blocks[position + 1],
+      bottom: blocks[last]
+    }[direction];
+    const anchor = above ? block.ids[0] : block.ids[block.ids.length - 1];
+    const next = order.filter((id) => id !== layerId);
+    const anchorIndex = next.indexOf(anchor);
+    next.splice(above ? anchorIndex : anchorIndex + 1, 0, layerId);
+    const newLayerStates = {};
+    if (this.state.layerStates["Background"]) {
+      newLayerStates["Background"] = this.state.layerStates["Background"];
+    }
+    next.forEach((id) => {
+      if (this.state.layerStates[id]) {
+        newLayerStates[id] = this.state.layerStates[id];
+      }
+    });
+    this.state.layerStates = newLayerStates;
+    this.applyLayerOrderToMap(next);
+    this.buildLayerItems();
+    (_a = this.onLayerReorder) == null ? void 0 : _a.call(this, next);
+  }
+  /**
+   * Identify which row of a group a layer falls under: the layer itself when
+   * it belongs to the group directly, or the nested group that holds it.
+   * @param layerId The layer ID
+   * @param groupId The group, or undefined for the panel's top level
+   * @returns `layer:<id>` or `group:<id>`, or null when the layer is not
+   *   inside the group at all
+   */
+  getChildKeyWithin(layerId, groupId) {
+    var _a;
+    let current = this.getLayerGroupIdOf(layerId);
+    if (current === groupId) return `layer:${layerId}`;
+    const visited = /* @__PURE__ */ new Set();
+    while (current !== void 0 && !visited.has(current)) {
+      visited.add(current);
+      const parentId = (_a = this.groupStates.get(current)) == null ? void 0 : _a.parentId;
+      const parent = parentId !== void 0 && this.groupStates.has(parentId) ? parentId : void 0;
+      if (parent === groupId) return `group:${current}`;
+      current = parent;
+    }
+    return null;
   }
   /**
    * Show inline remove confirmation instead of browser confirm() dialog.
@@ -4135,6 +4644,7 @@ class LayerControl {
     if (itemEl) {
       itemEl.remove();
     }
+    this.pruneEmptyGroups();
     (_b = this.onLayerRemove) == null ? void 0 : _b.call(this, layerId);
     setTimeout(() => {
       this.state.isStyleOperationInProgress = false;
@@ -4237,10 +4747,9 @@ class LayerControl {
     clone.style.top = `${currentTop + deltaY}px`;
     this.state.drag.startY = e.clientY;
     this.state.drag.currentY = e.clientY;
-    const items = Array.from(
-      this.panel.querySelectorAll(".layer-control-item:not(.dragging)")
-    ).filter(
-      (item) => item.dataset.layerId !== "Background"
+    const scope = placeholder.parentElement;
+    const items = Array.from((scope == null ? void 0 : scope.children) ?? []).filter(
+      (item) => (item.classList.contains("layer-control-item") || item.classList.contains("layer-control-group")) && !item.classList.contains("dragging") && item.dataset.layerId !== "Background"
     );
     for (const item of items) {
       const itemRect = item.getBoundingClientRect();
@@ -4304,8 +4813,7 @@ class LayerControl {
    * Apply UI order to map layers
    */
   applyUIOrderToMap() {
-    var _a, _b;
-    this.state.isStyleOperationInProgress = true;
+    var _a;
     const items = this.panel.querySelectorAll(".layer-control-item");
     const uiLayerIds = [];
     items.forEach((item) => {
@@ -4314,6 +4822,16 @@ class LayerControl {
         uiLayerIds.push(layerId);
       }
     });
+    this.applyLayerOrderToMap(uiLayerIds);
+    (_a = this.onLayerReorder) == null ? void 0 : _a.call(this, uiLayerIds);
+  }
+  /**
+   * Restack the map's MapLibre layers to match a panel order.
+   * @param uiLayerIds User layer IDs top-to-bottom, as the panel lists them
+   */
+  applyLayerOrderToMap(uiLayerIds) {
+    var _a;
+    this.state.isStyleOperationInProgress = true;
     const style = this.map.getStyle();
     const mapLibreLayerIds = new Set(((_a = style == null ? void 0 : style.layers) == null ? void 0 : _a.map((l) => l.id)) || []);
     for (let i = 0; i < uiLayerIds.length; i++) {
@@ -4333,7 +4851,6 @@ class LayerControl {
       } catch (e) {
       }
     }
-    (_b = this.onLayerReorder) == null ? void 0 : _b.call(this, uiLayerIds);
     setTimeout(() => {
       this.state.isStyleOperationInProgress = false;
     }, 200);
